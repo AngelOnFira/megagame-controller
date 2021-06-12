@@ -11,9 +11,15 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+TOKEN = os.getenv('TOKEN') or 'my-discord-token'
+EMAIL = os.getenv('EMAIL') or 'bot@dogood.com'
+PASSWORD = os.getenv('PASSWORD') or 'secret'
+OWNER_ID = os.getenv('OWNER_ID')
 
 
 # Quick-start development settings - unsuitable for production
@@ -37,6 +43,18 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'bot.accounts',
+    'bot.channels',
+    'bot.games',
+    'bot.users',
+
+    'bot.plugins.custom_commands',
+    'bot.plugins.game_notifications',
+    'bot.plugins.reddit',
+    'bot.plugins.remindme',
+    'bot.plugins.stats',
+    'bot.plugins.status',
 ]
 
 MIDDLEWARE = [
@@ -123,3 +141,68 @@ STATIC_URL = '/static/'
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGGING_CONFIG = 'logging.config.dictConfig'
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '%(asctime)s %(levelname)s %(name)s %(module)s %(process)d %(thread)d  %(message)s'
+        },
+        'timestamped': {
+            'format': '%(asctime)s %(levelname)s %(name)s  %(message)s'
+        },
+        'simple': {
+            'format': '%(levelname)s  %(message)s'
+        },
+        'performance': {
+            'format': '%(asctime)s %(process)d | %(thread)d | %(message)s',
+        },
+    },
+    'filters': {},
+    'handlers': {
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'timestamped',
+        },
+    },
+    'loggers': {
+        'bot': {
+            'handlers': ['console'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+        'py.warnings': {
+            'handlers': ['console'],
+        },
+    }
+}
+
+PLUGINS = {
+    'custom_commands': {
+        'enabled': True,
+    },
+    'help': {
+        'enabled': True,
+    },
+    'test': {
+        'enabled': True,
+    },
+    'system': {
+        'enabled': True,
+    },
+    'random_commands': {
+        'enabled': True,
+    },
+    'stats': {
+        'enabled': True,
+    },
+    'status': {
+        'enabled': True,
+    },
+    'refuse_command': {
+        'enabled': True,
+    },
+}
