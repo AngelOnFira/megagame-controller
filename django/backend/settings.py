@@ -16,10 +16,8 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-TOKEN = os.getenv('TOKEN') or 'my-discord-token'
-EMAIL = os.getenv('EMAIL') or 'bot@dogood.com'
-PASSWORD = os.getenv('PASSWORD') or 'secret'
-OWNER_ID = os.getenv('OWNER_ID')
+TOKEN = 'ODU1MTk1ODI5NDA4NDk3NzE0.YMu9Lg.WQf3F5Rutme4V3Y77-NeVhNPxws'
+
 
 
 # Quick-start development settings - unsuitable for production
@@ -44,16 +42,16 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    'bot.accounts',
-    'bot.channels',
-    'bot.games',
-    'bot.users',
+    # 'bot.accounts',
+    # 'bot.channels',
+    # 'bot.games',
+    # 'bot.users',
 
     'bot.plugins.custom_commands',
     'bot.plugins.game_notifications',
     'bot.plugins.reddit',
     'bot.plugins.remindme',
-    'bot.plugins.stats',
+    # 'bot.plugins.stats',
     'bot.plugins.status',
 ]
 
