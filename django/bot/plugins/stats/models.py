@@ -33,7 +33,7 @@ class LoggedMessage(models.Model):
         ordering = ['-timestamp']
 
     def __str__(self):
-        return self.discord_id
+        return str(self.discord_id)
 
 
 class GameSessionQuerySet(models.QuerySet):

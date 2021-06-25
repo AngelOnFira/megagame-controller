@@ -5,7 +5,7 @@ PROJECT_ROOT = os.path.abspath(os.path.join(__file__, os.pardir, os.pardir))
 
 DEBUG = bool(os.getenv('DEBUG', 0))
 
-TOKEN = os.getenv('TOKEN') or 'my-discord-token'
+TOKEN = 'ODU1MTk1ODI5NDA4NDk3NzE0.YMu9Lg.WQf3F5Rutme4V3Y77-NeVhNPxws'
 EMAIL = os.getenv('EMAIL') or 'bot@dogood.com'
 PASSWORD = os.getenv('PASSWORD') or 'secret'
 OWNER_ID = os.getenv('OWNER_ID')
@@ -112,39 +112,39 @@ PRAW_USER_AGENT = 'python:discord-fetcher:v0.0.1 (by /u/xBBTx)'
 
 
 PLUGINS = {
-    'custom_commands': {
-        'enabled': True,
-    },
-    'help': {
-        'enabled': True,
-    },
     'test': {
         'enabled': True,
     },
-    'system': {
-        'enabled': True,
-    },
-    'random_commands': {
-        'enabled': True,
-    },
-    'reddit': {
-        'enabled': True,
-        'useragent': PRAW_USER_AGENT,
-    },
-    'stats': {
-        'enabled': True,
-    },
-    'status': {
-        'enabled': True,
-    },
-    'refuse_command': {
-        'enabled': True,
-    },
-    'minecraft': {
-        'enabled': True,
-        'server': MC_SERVER,
-        'password': MC_SERVER_PASSWORD,
-    }
+    # 'custom_commands': {
+    #     'enabled': True,
+    # },
+    # 'help': {
+    #     'enabled': True,
+    # },
+    # 'system': {
+    #     'enabled': True,
+    # },
+    # 'random_commands': {
+    #     'enabled': True,
+    # },
+    # 'reddit': {
+    #     'enabled': True,
+    #     'useragent': PRAW_USER_AGENT,
+    # },
+    # 'stats': {
+    #     'enabled': True,
+    # },
+    # 'status': {
+    #     'enabled': True,
+    # },
+    # 'refuse_command': {
+    #     'enabled': True,
+    # },
+    # 'minecraft': {
+    #     'enabled': True,
+    #     'server': MC_SERVER,
+    #     'password': MC_SERVER_PASSWORD,
+    # }
 }
 
 
