@@ -31,3 +31,9 @@ export default store(function ({ Vue }) {
 
   return Store;
 });
+
+declare module '@vue/runtime-core' {
+  interface ComponentCustomProperties {
+    $config: Record<string, unknown>;
+  }
+}
