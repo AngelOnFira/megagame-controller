@@ -49,6 +49,7 @@
 
 <script>
 import EssentialLink from 'components/EssentialLink.vue'
+import Counter from 'components/Counter.vue'
 
 const linksList = [
   {
