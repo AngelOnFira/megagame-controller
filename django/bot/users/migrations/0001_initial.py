@@ -7,19 +7,26 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Member',
+            name="Member",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('discord_id', models.CharField(max_length=50, unique=True)),
-                ('name', models.CharField(max_length=255, verbose_name='name')),
-                ('last_seen', models.DateTimeField(blank=True, null=True)),
-                ('is_bot', models.BooleanField(default=False)),
-                ('can_admin_bot', models.BooleanField(default=False)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("discord_id", models.CharField(max_length=50, unique=True)),
+                ("name", models.CharField(max_length=255, verbose_name="name")),
+                ("last_seen", models.DateTimeField(blank=True, null=True)),
+                ("is_bot", models.BooleanField(default=False)),
+                ("can_admin_bot", models.BooleanField(default=False)),
             ],
         ),
     ]

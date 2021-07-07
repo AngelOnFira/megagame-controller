@@ -2,10 +2,10 @@ import asyncio
 import os
 import re
 
-__all__ = ['PREFIX', 'command']
+__all__ = ["PREFIX", "command"]
 
 
-PREFIX = os.getenv('PREFIX', '!')
+PREFIX = os.getenv("PREFIX", "!")
 
 
 class command(object):
@@ -15,7 +15,7 @@ class command(object):
     """
 
     def __init__(self, name=None, pattern=None, help=None):
-        assert not callable(name), 'You forgot the parentheses for the decorator'
+        assert not callable(name), "You forgot the parentheses for the decorator"
 
         self.name = name
         if isinstance(pattern, str):
@@ -28,9 +28,9 @@ class command(object):
         Decorator
         """
         if self.name is None:
-            self.name = func.__name__.replace('_', ' ')
+            self.name = func.__name__.replace("_", " ")
         if self.help is None:
-            self.help = func.__doc__.strip().split('\n')[0] if func.__doc__ else None
+            self.help = func.__doc__.strip().split("\n")[0] if func.__doc__ else None
         func._command = self
         return func
 
@@ -38,13 +38,14 @@ class command(object):
         cmd = "`{prefix}{name}{pattern}`".format(
             prefix=PREFIX,
             name=self.name,
-            pattern=' {}'.format(self.regex.pattern) if self.regex else ''
+            pattern=" {}".format(self.regex.pattern) if self.regex else "",
         )
-        return "{cmd}{spacer}{help}".format(cmd=cmd, help=self.help or '', spacer=' - ' if self.help else '')
+        return "{cmd}{spacer}{help}".format(
+            cmd=cmd, help=self.help or "", spacer=" - " if self.help else ""
+        )
 
 
 class Args(object):
-
     def __init__(self, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)

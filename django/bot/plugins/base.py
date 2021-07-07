@@ -28,7 +28,7 @@ class MethodPool(dict):
             self.add(handler, wrapped)
             self.plugin_modules[plugin.__module__] = plugin
             self.plugin_handlers[plugin] = wrapped
-            logger.debug('Registered %r from %r', method, plugin)
+            logger.debug("Registered %r from %r", method, plugin)
 
     def add(self, name, handler):
         if name not in self:
@@ -50,13 +50,16 @@ class MethodPool(dict):
             for handler in handlers:
                 if handler._has_blocking_io:
                     loop = self.client.loop
-                    future = loop.run_in_executor(None, functools.partial(handler, *args, **kwargs))
+                    future = loop.run_in_executor(
+                        None, functools.partial(handler, *args, **kwargs)
+                    )
                     coro = await future
                     coros.append(coro)
                 else:
                     handler = handler(*args, **kwargs)  # real coroutine can be called
                     coros.append(handler)
             await asyncio.gather(*coros)
+
         return grouped
 
     def bind_to(self, client):
@@ -72,10 +75,11 @@ class MethodPool(dict):
 
 
 class BasePluginMeta(type):
-
     def __new__(mcs, name, bases, attrs):
         new_cls = super().__new__(mcs, name, bases, attrs)
-        new_cls.commands = {}  # required to prevent commands registering with the wrong plugin
+        new_cls.commands = (
+            {}
+        )  # required to prevent commands registering with the wrong plugin
         new_cls._callbacks = {}
         new_cls._event_handlers = {}
 
@@ -88,15 +92,15 @@ class BasePluginMeta(type):
 
         for attr, val in new_cls.__dict__.items():
             # check for direct event handlers
-            if attr.startswith('on_'):
+            if attr.startswith("on_"):
                 new_cls._callbacks[attr] = val
 
             # register the plugin commands
-            elif callable(val) and hasattr(val, '_command'):
-                cmd = '{0}{1}'.format(commands.PREFIX, val._command.name)
+            elif callable(val) and hasattr(val, "_command"):
+                cmd = "{0}{1}".format(commands.PREFIX, val._command.name)
                 new_cls.commands[cmd] = asyncio.coroutine(val)
 
-            elif callable(val) and hasattr(val, '_event'):
+            elif callable(val) and hasattr(val, "_event"):
                 new_cls._event_handlers.setdefault(val._event, [])
                 new_cls._event_handlers[val._event].append(val)
 
@@ -135,7 +139,7 @@ class BasePlugin(metaclass=BasePluginMeta):
                     return handler, command
 
                 # Regex matching, cut of the command part
-                str_to_test = msg[len(cmd):].strip()
+                str_to_test = msg[len(cmd) :].strip()
                 match = handler._command.regex.match(str_to_test)
                 if not match:
                     continue

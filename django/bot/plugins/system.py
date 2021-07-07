@@ -18,7 +18,7 @@ from bot.users.decorators import bot_admin_required
 logger = logging.getLogger(__name__)
 
 
-RE_CHECKOUT = re.compile(r'(?P<branch>.+)$', re.IGNORECASE)
+RE_CHECKOUT = re.compile(r"(?P<branch>.+)$", re.IGNORECASE)
 
 
 class Plugin(BasePlugin):
@@ -38,9 +38,11 @@ class Plugin(BasePlugin):
         FIXME: https://docs.python.org/3/library/asyncio-dev.html#pending-task-destroyed
         """
         author_id = command.message.author.id
-        logger.info('Restart issued by %s, with ID %d', command.message.author.name, author_id)
+        logger.info(
+            "Restart issued by %s, with ID %d", command.message.author.name, author_id
+        )
         await command.trigger_typing()
-        await command.reply('Restarting...')
+        await command.reply("Restarting...")
         raise KeyboardInterrupt
 
     @command()
@@ -67,11 +69,11 @@ class Plugin(BasePlugin):
         Migrates the database forward
         """
         out = StringIO()
-        call_command('migrate', interactive=False, no_color=True, stdout=out)
+        call_command("migrate", interactive=False, no_color=True, stdout=out)
         out.seek(0)
         await command.reply(out.read())
 
     @command(help="Shows your discord user id")
     async def discord_id(self, command):
         member = command.message.author
-        await command.reply('{0.mention}: {0.id}'.format(member))
+        await command.reply("{0.mention}: {0.id}".format(member))

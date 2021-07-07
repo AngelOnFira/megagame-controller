@@ -11,21 +11,20 @@ def get_commands(plugin):
     commands = []
     for attr_name in dir(plugin):
         attr = getattr(plugin, attr_name)
-        if hasattr(attr, '_command'):
+        if hasattr(attr, "_command"):
             commands.append(attr._command)
     return commands
 
 
-RE_PLUGIN = re.compile(r'\.plugin$')
+RE_PLUGIN = re.compile(r"\.plugin$")
 
 
 def module_to_plugin_name(module):
     # strip off the 'plugin' bit if present (complex plugins)
-    return re.sub(RE_PLUGIN, '', module).split('.')[-1]
+    return re.sub(RE_PLUGIN, "", module).split(".")[-1]
 
 
 class Plugin(BasePlugin):
-
     @cached_property
     def plugins(self):
         """
@@ -45,11 +44,13 @@ class Plugin(BasePlugin):
             if not msgs:
                 continue
 
-            help_messages += [
-                '**{plugin}**'.format(plugin=module_to_plugin_name(module))
-            ] + msgs + ['']
+            help_messages += (
+                ["**{plugin}**".format(plugin=module_to_plugin_name(module))]
+                + msgs
+                + [""]
+            )
 
-        msg = '\n'.join(help_messages)
+        msg = "\n".join(help_messages)
         await command.reply(msg)
 
     @command()
@@ -58,7 +59,7 @@ class Plugin(BasePlugin):
         enabled = set(self.plugins)
         disabled = all_plugins ^ enabled
 
-        msg = 'Enabled plugins: `{enabled}`\nDisabled plugins: `{disabled}`'.format(
-            enabled='`, `'.join(enabled), disabled='`, `'.join(disabled)
+        msg = "Enabled plugins: `{enabled}`\nDisabled plugins: `{disabled}`".format(
+            enabled="`, `".join(enabled), disabled="`, `".join(disabled)
         )
         await command.reply(msg)

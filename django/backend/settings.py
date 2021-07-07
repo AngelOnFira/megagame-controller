@@ -46,10 +46,6 @@ INSTALLED_APPS = [
     # "bot.games",
     "bot.users",
     ###
-    "bot.plugins.custom_commands",
-    "bot.plugins.game_notifications",
-    "bot.plugins.reddit",
-    "bot.plugins.remindme",
     "bot.plugins.stats",
     "bot.plugins.status",
     ###

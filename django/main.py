@@ -17,35 +17,35 @@ from django.conf import settings
 from bot.plugins.base import MethodPool
 from bot.plugins.events import EventPool
 
-logger = logging.getLogger('bot')
+logger = logging.getLogger("bot")
 
 client = discord.Client()
 
 
 @client.event
 async def on_ready():
-    logger.info('Logged in as %s, id: %s', client.user.name, client.user.id)
+    logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
 
 
 def main():
-    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
+    os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
     django.setup()  # configures logging etc.
-    logger.info('Starting up bot')
+    logger.info("Starting up bot")
 
     pool = MethodPool()  # pool that holds all callbacks
     event_pool = EventPool()
     for plugin, options in settings.PLUGINS.items():
-        if not options.get('enabled', True):
+        if not options.get("enabled", True):
             continue
 
-        module = 'bot.plugins.%s' % plugin
+        module = "bot.plugins.%s" % plugin
         if module in settings.INSTALLED_APPS:
-            module = '%s.plugin' % module
+            module = "%s.plugin" % module
         _plugin = import_module(module)
         plugin = _plugin.Plugin(client, options)
         pool.register(plugin)
         event_pool.register(plugin)
-        logger.debug('Configured plugin %r', plugin)
+        logger.debug("Configured plugin %r", plugin)
 
     # bind the callback pool
     pool.bind_to(client)
@@ -54,5 +54,5 @@ def main():
     client.run(settings.TOKEN)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

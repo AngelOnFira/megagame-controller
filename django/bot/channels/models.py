@@ -3,6 +3,7 @@ from django.utils.translation import ugettext_lazy as _
 
 from asgiref.sync import sync_to_async
 
+
 class ChannelQuerySet(models.QuerySet):
     async def from_message(self, message):
         discord_id = message.channel.id
