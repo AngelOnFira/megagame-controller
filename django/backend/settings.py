@@ -43,7 +43,7 @@ INSTALLED_APPS = [
     ###
     "bot.accounts",
     "bot.channels",
-    "bot.games",
+    # "bot.games",
     "bot.users",
     ###
     "bot.plugins.custom_commands",
