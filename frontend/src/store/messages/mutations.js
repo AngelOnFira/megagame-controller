@@ -1,10 +1,6 @@
 export default {
-  updateMessages(state, messages) {
+  setMessages(state, messages) {
     state.messages = messages
-  },
-
-  increaseCounter(state) {
-    state.counter2++
   }
 }
 

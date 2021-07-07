@@ -1,8 +1,10 @@
 <template>
   <div class="card card-body m-4">
-    <h3>Composition API + Vuex</h3>
-    <h5 class="text-center">{{ counter2 }} x 3 = {{ times3 }}</h5>
-    <button class="btn btn-primary" @click="inc">Increment</button>
+    <ul id="example-1">
+      <li v-for="message in messages" :key="message.id">
+        {{ message.member_username }}: {{ message.content }}
+      </li>
+    </ul>
   </div>
 </template>
 
@@ -13,24 +15,14 @@ import { useStore } from 'vuex'
 
 export default {
   setup() {
-    // const { counter2 } = useState(['counter2'])
-    // const { times3 } = useGetters(['times3'])
-    // const { increaseCounter } = useMutations(['increaseCounter'])
-
-    // const inc = () => increaseCounter()
-    // return { inc, counter2, times3 }
-
-    // const store = useStore();
     const store = useStore()
 
-    console.log(store);
+    const messages = computed(() => store.state.messages.messages);
 
-    const counter2 = computed(() => store.state.messages.counter2);
-    const times3 = computed(() => store.getters['messages/times3']);
-    const inc = () => store.commit('messages/increaseCounter');
+    store.dispatch('messages/getMessages');
 
     return {
-      counter2, times3, inc
+      messages
     }
   }
 }

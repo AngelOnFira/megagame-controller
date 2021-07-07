@@ -1,3 +1,3 @@
-export function times3(state) {
-  return state.counter2 * 3;
+export function getMessages(state) {
+  return state.messages;
 }

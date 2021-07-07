@@ -1,5 +1,5 @@
 export default function () {
   return {
-    counter2: 0,
+    messages: [],
   }
 }
