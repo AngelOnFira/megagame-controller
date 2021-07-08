@@ -1,6 +1,6 @@
 from bot.plugins.events import receiver
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.utils.translation import gettext_lazy as _
 from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 
@@ -42,15 +42,19 @@ class Member(models.Model):
 
     objects = MemberQuerySet.as_manager()
 
-    player = models.OneToOneField(Player, null=True, blank=True, on_delete=models.CASCADE)
+    player = models.OneToOneField(
+        Player, null=True, blank=True, on_delete=models.CASCADE
+    )
 
     def __str__(self):
         return "<@{} name={}>".format(self.discord_id, self.name)
+
 
 def create_player(sender, instance, created, **kwargs):
     if created:
         player = CreatePlayer.execute({})
         instance.player = player
         instance.save()
+
 
 post_save.connect(create_player, sender=Member)
