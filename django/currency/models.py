@@ -1,5 +1,6 @@
 from django.db import models
 from django_fsm import FSMField, transition
+from django.utils import timezone
 
 
 class Currency(models.Model):
@@ -10,18 +11,21 @@ class Currency(models.Model):
 class Transaction(models.Model):
     amount = models.IntegerField(default=0)
     currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
-    date = models.DateTimeField()
-    wallet = models.ForeignKey('Wallet', on_delete=models.PROTECT)
+
+    created_date = models.DateTimeField(default=timezone.now)
+    completed_date = models.DateTimeField(default=timezone.now)
+
+    wallet = models.ForeignKey("Wallet", on_delete=models.PROTECT, default=None)
 
     state = FSMField(default="new")
 
     @transition(field=state, source="new", target="created")
     def create(self):
-        pass
+        created_date = timezone.now()
 
     @transition(field=state, source="created", target="completed")
     def complete(self):
-        pass
+        completed_date = timezone.now()
 
 
 class Wallet(models.Model):

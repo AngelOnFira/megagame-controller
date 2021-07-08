@@ -59,9 +59,9 @@ class CreateCurrency(Service):
         name = self.cleaned_data["name"]
         description = self.cleaned_data["description"]
 
-        self.currency = Currency.objects.get_or_create(
+        currency, created = Currency.objects.get_or_create(
             name=name,
             description=description,
         )
 
-        return self.currency
+        return currency
