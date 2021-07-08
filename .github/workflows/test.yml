@@ -16,7 +16,9 @@ jobs:
         uses: snok/install-poetry@v1.1.6
       - name: Install dependencies
         run: |
+          cd django
           poetry install
       - name: Test with pytest
         run: |
+          cd django
           poetry run pytest
