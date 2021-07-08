@@ -4,5 +4,5 @@ from django.apps import apps
 models = apps.get_models()
 
 for model in models:
-    if "team.models" in str(model):
+    if "player.models" in str(model):
         admin.site.register(model)

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     ###
     "currency",
     "team",
+    "player",
     ###
     "bot.accounts",
     "bot.channels",
@@ -54,6 +55,7 @@ INSTALLED_APPS = [
     ###
     "drf_yasg",
     "rest_framework",
+    "django_extensions",
 ]
 
 MIDDLEWARE = [
