@@ -1,6 +1,7 @@
 from django import forms
 from service_objects.services import Service
-from .models import Wallet, Transaction, Currency
+
+from .models import Currency, Transaction, Wallet
 
 
 class CreateWallet(Service):
