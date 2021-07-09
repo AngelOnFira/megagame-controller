@@ -2,6 +2,7 @@ from django import forms
 from service_objects.services import Service
 
 from .models import Currency, Transaction, Wallet
+from bot.users.models import Member
 
 
 class CreateWallet(Service):
@@ -22,18 +23,18 @@ class CreateTransaction(Service):
         amount = self.cleaned_data["amount"]
         destination_wallet = self.cleaned_data["destination_wallet"]
 
-        wallet = Wallet.objects.get(pk=destination_wallet)
+        wallet = Wallet.objects.get(pk=Member.objects.get(name="AngelOnFira").player.wallet.id)
+        print(wallet)
+        bank, created = Wallet.objects.get_or_create(name="Bank")
         currency = Currency.objects.get(name=currency_name)
+        # wallet = Wallet.objects.get(pk=destination_wallet)
 
         transaction = Transaction.objects.create(
-            amount=amount, wallet=wallet, currency=currency
+            amount=amount, from_wallet=bank, to_wallet=wallet, currency=currency
         )
 
         transaction.create()
         transaction.save()
-
-        wallet = Wallet.objects.get(pk=destination_wallet)
-        wallet
 
         return transaction
 

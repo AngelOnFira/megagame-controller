@@ -19,9 +19,12 @@ django-fsm = "^2.7.1"
 pytest-django = "^4.4.0"
 django-seed = {git = "https://github.com/Brobin/django-seed.git", rev = "0.3.0"}
 psycopg2-binary = "^2.9.1"
+rich = "^10.5.0"
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"
+isort = "^5.9.2"
+backtrace = {git = "https://github.com/AngelOnFira/backtrace.git", rev = "master"}
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

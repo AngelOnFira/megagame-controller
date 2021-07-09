@@ -157,13 +157,14 @@ LOGGING = {
         "performance": {
             "format": "%(asctime)s %(process)d | %(thread)d | %(message)s",
         },
+        "rich": {"datefmt": "[%X]"},
     },
     "filters": {},
     "handlers": {
         "console": {
+            "class": "rich.logging.RichHandler",
+            "formatter": "rich",
             "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "timestamped",
         },
     },
     "loggers": {
@@ -175,6 +176,7 @@ LOGGING = {
         "py.warnings": {
             "handlers": ["console"],
         },
+        "django": {"handlers": ["console"]},
     },
 }
 

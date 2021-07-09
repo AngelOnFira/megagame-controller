@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db.models.signals import post_save
 
 from player.models import Player
-from player.services import CreatePlayer
+
 
 from asgiref.sync import sync_to_async
 
@@ -51,6 +51,9 @@ class Member(models.Model):
 
 
 def create_player(sender, instance, created, **kwargs):
+    # Have to import here to prevent circular imports
+    from player.services import CreatePlayer
+
     if created:
         player = CreatePlayer.execute({})
         instance.player = player

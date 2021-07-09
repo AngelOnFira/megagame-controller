@@ -15,14 +15,15 @@ class Plugin(BasePlugin):
                 message.content.split(" ")
             )
 
-        print(message.content)
+            print("Message", message.content)
+            print("Currency", currency)
 
-        await sync_to_async(CreateTransaction.execute)(
-            {
-                "currency_name": currency,
-                "amount": amount,
-                "destination_wallet": destination,
-            }
-        )
+            await sync_to_async(CreateTransaction.execute)(
+                {
+                    "currency_name": currency,
+                    "amount": amount,
+                    "destination_wallet": destination,
+                }
+            )
 
-        await message.author.send("Transaction Complete")
+            await message.author.send("Transaction Complete")

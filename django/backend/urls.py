@@ -4,6 +4,7 @@ from django.views.generic import TemplateView
 
 from rest_framework import routers
 from bot.plugins.stats import views as stats_views
+from currency import views as currency_views
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -11,6 +12,7 @@ from drf_yasg import openapi
 
 router = routers.DefaultRouter()
 router.register(r"stats", stats_views.MessageViewSet)
+router.register(r"transactions", currency_views.TransactionViewSet)
 
 schema_view = get_schema_view(
     openapi.Info(
