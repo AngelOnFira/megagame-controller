@@ -41,6 +41,6 @@ class Wallet(models.Model):
     name = models.CharField(max_length=20)
 
 
-class BankAccount(models.Model):
-    name = models.CharField(max_length=20)
-    transactions = models.ForeignKey(Transaction, on_delete=models.PROTECT)
+# class BankAccount(models.Model):
+#     name = models.CharField(max_length=20)
+#     transactions = models.ForeignKey(Transaction, on_delete=models.PROTECT)

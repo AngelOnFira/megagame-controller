@@ -1,15 +1,17 @@
 <template>
   <div class="container">
     <Counter />
+    <Transactions />
   </div>
 </template>
 
 <script>
 import Counter from './components/Counter.vue'
+import Transactions from './components/Transactions.vue'
 
 export default {
   name: 'App',
-  components: { Counter }
+  components: { Counter, Transactions }
 }
 </script>
 
