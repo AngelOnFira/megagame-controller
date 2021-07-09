@@ -38,17 +38,11 @@ def main():
         if not options.get("enabled", True):
             continue
 
-        print(plugin, options)
-
         module = plugin
-
-        print(module)
 
         if module in settings.INSTALLED_APPS:
             module = "%s.plugin" % module
 
-        print(module)
-        
         _plugin = import_module(module)
         plugin = _plugin.Plugin(client, options)
         pool.register(plugin)
