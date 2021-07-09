@@ -10,8 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
-from pathlib import Path
 import os
+from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -179,29 +179,14 @@ LOGGING = {
 }
 
 PLUGINS = {
-    "test": {
+    "bot.plugins.test": {
         "enabled": True,
     },
-    "stats": {
+    "bot.plugins.stats": {
         "enabled": True,
     },
-    "custom_commands": {
-        "enabled": False,
-    },
-    "help": {
-        "enabled": False,
-    },
-    "system": {
-        "enabled": False,
-    },
-    "random_commands": {
-        "enabled": False,
-    },
-    "status": {
-        "enabled": False,
-    },
-    "refuse_command": {
-        "enabled": False,
+    "currency": {
+        "enabled": True,
     },
 }
 

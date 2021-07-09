@@ -1,6 +1,11 @@
 import logging
 import re
 
+from asgiref.sync import sync_to_async
+from bot.channels.models import Channel
+from bot.plugins.base import BasePlugin
+from bot.plugins.commands import command
+from bot.users.models import Member
 from discord.channel import TextChannel
 from discord.enums import Status
 from django.db.models import Count, Q
@@ -8,14 +13,7 @@ from django.utils.timesince import timesince
 from django.utils.timezone import make_aware, now, utc
 from tabulate import tabulate
 
-from bot.channels.models import Channel
-from bot.plugins.base import BasePlugin
-from bot.plugins.commands import command
-from bot.users.models import Member
-
 from .models import LoggedMessage
-
-from asgiref.sync import sync_to_async
 
 logger = logging.getLogger(__name__)
 
