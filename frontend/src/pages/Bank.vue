@@ -1,11 +1,17 @@
 <template>
   <q-page padding>
-    <!-- content -->
+    <Transactions />
   </q-page>
 </template>
 
+
+
 <script>
+// Import components transaction
+import Transactions from '../components/Transactions';
 export default {
-  // name: 'PageName',
+  name: 'Bank',
+  components: { Transactions }
 }
 </script>
+  
