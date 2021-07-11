@@ -4,7 +4,10 @@ export function getTransactions({ commit }) {
   axios.get(`http://localhost:8090/api/transactions/`)
     .then(response => {
       commit('setTransactions', response.data)
-      commit('setElapsedTimes')
+      
+      setInterval(() => {
+        commit('setElapsedTimes')
+      }, 1000)
     })
 }
 
