@@ -8,10 +8,12 @@ class TransactionSerializer(serializers.ModelSerializer):
         fields = "__all__"
         depth = 1
 
+
 class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
         fields = "__all__"
+
 
 class CurrencySerializer(serializers.ModelSerializer):
     class Meta:

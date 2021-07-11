@@ -3,12 +3,14 @@ import { createStore } from 'vuex'
 
 import messages from './messages'
 import bank from './bank'
+import teams from './teams'
 
 
 export default createStore({
   modules: {
     messages,
-    bank
+    bank,
+    teams,
   },
 
   // enable strict mode (adds overhead!)
