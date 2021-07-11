@@ -7,7 +7,7 @@ from player.services import CreatePlayer
 def test_create_player():
     CreatePlayer.execute({})
 
-@pytest.mark.django_db
-def test_send_transaction_message():
-    currency_plugin = CurrencyPlugin()
-    currency_plugin.on_message("!control send "
+# @pytest.mark.django_db
+# def test_send_transaction_message():
+#     currency_plugin = CurrencyPlugin()
+#     currency_plugin.on_message("!control send "
