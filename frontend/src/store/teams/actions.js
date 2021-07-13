@@ -8,8 +8,15 @@ export function getTeams({ commit }) {
 }
 
 export function addTeam({ commit }, name) {
-  axios.post(`http://localhost:8090/api/teams/`, { name })
-    .then(response => {
-      commit('setTeams', response.data)
-    })
+  return new Promise((resolve, reject) => {
+    axios.post(`http://localhost:8090/api/teams/`, { name })
+      .then(response => {
+        // If the request was successful, add the team to the store
+        commit('addTeams', response.data)
+
+        resolve(response);
+      }, (error) => {
+        reject(error);
+      })
+  })
 }

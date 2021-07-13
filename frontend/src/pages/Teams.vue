@@ -78,6 +78,15 @@ export default {
 
           store.dispatch('team/addTeam', {
             name: name.value,
+          }).then(response => {
+          }, error => {
+            $q.notify({
+            color: 'red-5',
+            textColor: 'white',
+            icon: 'warning',
+            message: 'There was an error creating the team: ' + error.message
+          })
+            console.log(error)
           })
         }
       },
