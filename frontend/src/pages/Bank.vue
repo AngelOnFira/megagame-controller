@@ -8,10 +8,10 @@
 
 <script>
 // Import components transaction
-import Transactions from '../components/Transactions';
+import Transactions from "../components/Transactions";
 export default {
-  name: 'Bank',
-  components: { Transactions }
-}
+  name: "Bank",
+  components: { Transactions },
+};
 </script>
   

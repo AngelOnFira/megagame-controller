@@ -9,21 +9,21 @@
 </template>
 
 <script>
-import { useState, useGetters, useMutations } from '../helpers'
-import { computed } from 'vue'
-import { useStore } from 'vuex'
+import { useState, useGetters, useMutations } from "../helpers";
+import { computed } from "vue";
+import { useStore } from "vuex";
 
 export default {
   setup() {
-    const store = useStore()
+    const store = useStore();
 
     const messages = computed(() => store.state.messages.messages);
 
-    store.dispatch('messages/getMessages');
+    store.dispatch("messages/getMessages");
 
     return {
-      messages
-    }
-  }
-}
+      messages,
+    };
+  },
+};
 </script>

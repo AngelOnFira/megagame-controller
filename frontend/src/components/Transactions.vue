@@ -12,9 +12,13 @@
       <q-list>
         <q-item v-for="transaction in transactions" :key="transaction.id">
           <q-item-section>
-            <q-item-label>{{ transaction.from_wallet.name }} -> {{ transaction.to_wallet.name }}</q-item-label>
+            <q-item-label
+              >{{ transaction.from_wallet.name }} ->
+              {{ transaction.to_wallet.name }}</q-item-label
+            >
             <q-item-label caption lines="2"
-              >{{ transaction.amount }} {{ transaction.currency.name }}</q-item-label
+              >{{ transaction.amount }}
+              {{ transaction.currency.name }}</q-item-label
             >
           </q-item-section>
           <q-item-section side top>
@@ -28,20 +32,20 @@
 </template>
 
 <script>
-import { computed } from 'vue'
-import { useStore } from 'vuex'
+import { computed } from "vue";
+import { useStore } from "vuex";
 
 export default {
   setup() {
-    const store = useStore()
+    const store = useStore();
 
     const transactions = computed(() => store.state.bank.transactions);
 
-    store.dispatch('bank/getTransactions');
+    store.dispatch("bank/getTransactions");
 
     return {
-      transactions
-    }
-  }
-}
+      transactions,
+    };
+  },
+};
 </script>
