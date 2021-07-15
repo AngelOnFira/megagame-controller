@@ -1,0 +1,3 @@
+[submodule "frontend/extensions/quasar-draggable-tree"]
+	path = frontend/extensions/quasar-draggable-tree
+	url = git@github.com:AngelOnFira/quasar-draggable-tree.git

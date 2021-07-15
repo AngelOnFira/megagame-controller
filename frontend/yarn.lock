@@ -5381,6 +5381,16 @@ qs@6.7.0:
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.7.0.tgz#41dc1a015e3d581f1621776be31afb2876a9b1bc"
   integrity sha512-VCdBRNFTX1fyE7Nb6FYoURo/SPe62QCaAyzJvUjwRaIsc+NePBEniHlvxFmmX56+HZphIGtV0XeCirBtpDrTyQ==
 
+"quasar-app-extension-qdraggabletree@file:./extensions/quasar-draggable-tree/app-extension":
+  version "0.0.5"
+  dependencies:
+    vuedraggable "^4.0.3"
+
+"quasar-app-extension-qdraggabletree@file:./extensions/quasar-draggable-tree/app-extension/":
+  version "0.0.5"
+  dependencies:
+    vuedraggable "^4.0.3"
+
 quasar@^2.0.0:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/quasar/-/quasar-2.0.1.tgz#31119684cc7a1b918c28c34aa910cc05c2a05299"
@@ -5877,6 +5887,11 @@ sockjs@^0.3.21:
     faye-websocket "^0.11.3"
     uuid "^3.4.0"
     websocket-driver "^0.7.4"
+
+sortablejs@1.10.2:
+  version "1.10.2"
+  resolved "https://registry.yarnpkg.com/sortablejs/-/sortablejs-1.10.2.tgz#6e40364d913f98b85a14f6678f92b5c1221f5290"
+  integrity sha512-YkPGufevysvfwn5rfdlGyrGjt7/CRHwvRPogD/lC+TnvcN29jDpCifKP+rBqf+LRldfXSTh+0CGLcSg0VIxq3A==
 
 source-list-map@^2.0.0, source-list-map@^2.0.1:
   version "2.0.1"
@@ -6419,6 +6434,13 @@ vue@3.1.2:
     "@vue/compiler-dom" "3.1.2"
     "@vue/runtime-dom" "3.1.2"
     "@vue/shared" "3.1.2"
+
+vuedraggable@^4.0.3:
+  version "4.0.3"
+  resolved "https://registry.yarnpkg.com/vuedraggable/-/vuedraggable-4.0.3.tgz#98832a3562d44c73bbe4e205cc2dafce07b6ca14"
+  integrity sha512-NkJYk+UyxgEoSQcgvVZtqY6dYpdXkBHS8aq6CqoJAfXVM9ZRYT0WPdlBbTttG4nCwllU2M5JGGgo9Drt/L0a7w==
+  dependencies:
+    sortablejs "1.10.2"
 
 vuex@^4.0.1:
   version "4.0.2"
