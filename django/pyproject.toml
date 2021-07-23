@@ -20,6 +20,8 @@ pytest-django = "^4.4.0"
 django-seed = {git = "https://github.com/Brobin/django-seed.git", rev = "0.3.0"}
 psycopg2-binary = "^2.9.1"
 rich = "^10.5.0"
+channels = "^3.0.4"
+channels-redis = "^3.3.0"
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"

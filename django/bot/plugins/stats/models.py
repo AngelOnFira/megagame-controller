@@ -21,7 +21,7 @@ class LoggedMessage(models.Model):
         max_length=255
     )  # this can change, only the member.discord_id is a constant
 
-    channel = models.ForeignKey("channels.Channel", on_delete=models.PROTECT)
+    channel = models.ForeignKey("discord_channels.Channel", on_delete=models.PROTECT)
 
     content = models.TextField()
     num_lines = models.PositiveSmallIntegerField(default=1)

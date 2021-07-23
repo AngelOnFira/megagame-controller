@@ -46,7 +46,7 @@ INSTALLED_APPS = [
     "player",
     ###
     "bot.accounts",
-    "bot.channels",
+    "bot.discord_channels",
     # "bot.games",
     "bot.users",
     ###
@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     "rest_framework",
     "django_extensions",
     "service_objects",
+    "channels",
+
 ]
 
 MIDDLEWARE = [
@@ -87,7 +89,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = "backend.wsgi.application"
+ASGI_APPLICATION = "backend.asgi.application"
 
 
 # Database

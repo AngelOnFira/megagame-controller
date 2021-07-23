@@ -2,7 +2,7 @@ import logging
 import re
 
 from asgiref.sync import sync_to_async
-from bot.channels.models import Channel
+from bot.discord_channels.models import Channel
 from bot.plugins.base import BasePlugin
 from bot.plugins.commands import command
 from bot.users.models import Member
