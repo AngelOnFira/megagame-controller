@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "currency",
     "team",
     "player",
+    "tasks",
     ###
     "bot.accounts",
     "bot.discord_channels",
@@ -58,7 +59,7 @@ INSTALLED_APPS = [
     "django_extensions",
     "service_objects",
     "channels",
-
+    "django_seed",
 ]
 
 MIDDLEWARE = [

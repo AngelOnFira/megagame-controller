@@ -43,7 +43,11 @@ class Member(models.Model):
     objects = MemberQuerySet.as_manager()
 
     player = models.OneToOneField(
-        Player, null=True, blank=True, on_delete=models.CASCADE
+        Player,
+        null=True,
+        blank=True,
+        on_delete=models.CASCADE,
+        related_name="discord_member",
     )
 
     def __str__(self):

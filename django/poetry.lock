@@ -376,8 +376,8 @@ toposort = ">=1.5"
 
 [package.source]
 type = "git"
-url = "https://github.com/Brobin/django-seed.git"
-reference = "0.3.0"
+url = "https://github.com/Brobin/django-seed"
+reference = "master"
 resolved_reference = "3765a88d022d21dd2b34d2a0ac9a468d1226bb30"
 
 [[package]]
@@ -962,7 +962,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "00629ced31f7680722a6f26fd4a0d5d2f1256922265a9abf724cbec7c12e3fc7"
+content-hash = "107b4562afe5a332ca8183a1eaae97793bee7837b92b99c5f54bfbcb36eb8d34"
 
 [metadata.files]
 aiohttp = [
