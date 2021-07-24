@@ -4,6 +4,7 @@ import { createStore } from 'vuex'
 import messages from './messages'
 import bank from './bank'
 import teams from './teams'
+import players from './players'
 
 
 export default createStore({
@@ -11,6 +12,7 @@ export default createStore({
     messages,
     bank,
     teams,
+    players
   },
 
   // enable strict mode (adds overhead!)

@@ -21,6 +21,13 @@ const routes = [
       { path: '', component: () => import('pages/Teams.vue') }
     ]
   },
+  {
+    path: '/players',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      { path: '', component: () => import('pages/Players.vue') }
+    ]
+  },
 
 
   // Always leave this as last one,

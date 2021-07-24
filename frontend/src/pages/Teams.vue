@@ -68,19 +68,19 @@ export default {
             message: "You need to accept the license and terms first",
           });
         } else {
-          $q.notify({
-            color: "green-4",
-            textColor: "white",
-            icon: "cloud_done",
-            message: "Submitted",
-          });
-
           store
-            .dispatch("team/addTeam", {
+            .dispatch("teams/addTeam", {
               name: name.value,
             })
             .then(
-              (response) => {},
+              (response) => {
+                $q.notify({
+                  color: "green-4",
+                  textColor: "white",
+                  icon: "cloud_done",
+                  message: "Submitted",
+                });
+              },
               (error) => {
                 $q.notify({
                   color: "red-5",
