@@ -20,6 +20,6 @@ class CreatePlayer(Service):
         #     }
         # )
 
-        player = Player.objects.create(wallet = wallet)
+        player = Player.objects.create(wallet=wallet)
 
         return player

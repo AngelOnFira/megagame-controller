@@ -37,7 +37,6 @@ from asgiref.sync import sync_to_async, async_to_sync
 def run_tasks_sync(client):
     from tasks.models import Task
 
-    print("Running tasks")
     task_list = Task.objects.filter(completed=False)
     for task in task_list:
         user = async_to_sync(client.fetch_user)(task.player.discord_member.discord_id)

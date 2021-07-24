@@ -6,6 +6,7 @@ from rest_framework import routers
 from bot.plugins.stats import views as stats_views
 from currency import views as currency_views
 from team import views as team_views
+from player import views as player_views
 
 from rest_framework import permissions
 from drf_yasg.views import get_schema_view
@@ -15,6 +16,7 @@ router = routers.DefaultRouter()
 router.register(r"stats", stats_views.MessageViewSet)
 router.register(r"transactions", currency_views.TransactionViewSet)
 router.register(r"teams", team_views.TeamViewSet)
+router.register(r"players", player_views.PlayerViewSet)
 
 schema_view = get_schema_view(
     # openapi.Info(
@@ -30,7 +32,9 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    # admin
     path("admin/", admin.site.urls),
+    # third party urls
     path(r"", include(router.urls)),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path(

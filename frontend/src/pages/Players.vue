@@ -8,8 +8,12 @@
         </q-card-section>
 
         <q-card-section class="bg-primary text-white">
-          <q-input standout v-model="form[player.id].value" label="Standout" />
-          <q-btn color="secondary" label="Send" />
+          <q-input standout v-model="form[player.id].value" label="Message" />
+          <q-btn
+            color="secondary"
+            label="Send"
+            @click="handleSend(player.id, form[player.id].value)"
+          />
         </q-card-section>
       </q-card>
     </div>
@@ -28,6 +32,7 @@ export default {
     const form = computed(() => {
       var form = {};
       store.state.players.players.forEach((player) => {
+        // It needs to be a ref so that it can be edited or something
         form[player.id] = ref("");
       });
       return form;
@@ -35,9 +40,15 @@ export default {
 
     store.dispatch("players/getPlayers");
 
+    const handleSend = (playerId, message) => {
+      console.log(playerId, message);
+      store.dispatch("players/sendMessage", { playerId, message });
+    };
+
     return {
       players,
       form,
+      handleSend,
     };
   },
 };
