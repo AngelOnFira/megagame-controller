@@ -6,12 +6,17 @@ from django.db.models.signals import post_save
 
 from player.models import Player
 
+# from .services import CreateMember
+
 
 from asgiref.sync import sync_to_async
 
 
 class MemberQuerySet(models.QuerySet):
     async def _get_member(self, discord_user):
+        # member, created = sync_to_async(CreateMember.execute)(
+        #     {"discord_id": discord_user.id, "discord_name": discord_user.name}
+        # )
         a = await sync_to_async(self.get_or_create)(
             discord_id=discord_user.id, defaults={"name": discord_user.name}
         )

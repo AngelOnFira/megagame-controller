@@ -19,18 +19,33 @@ import asyncio
 
 from bot.plugins.base import MethodPool
 from bot.plugins.events import EventPool
+from asgiref.sync import sync_to_async, async_to_sync
 
 logger = logging.getLogger("bot")
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.members = True
+
+client = discord.Client(intents=intents)
 
 
 @client.event
 async def on_ready():
+    from bot.users.services import CreateMember
+
     logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
 
-
-from asgiref.sync import sync_to_async, async_to_sync
+    # Get all users on the server
+    async for guild in client.fetch_guilds():
+        print(guild.members)
+        for member in guild.members:
+            print(member)
+            await sync_to_async(CreateMember.execute)(
+                {
+                    "discord_id": member.id,
+                    "discord_name": member.name,
+                }
+            )
 
 
 @sync_to_async
