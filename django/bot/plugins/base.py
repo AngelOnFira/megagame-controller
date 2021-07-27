@@ -160,3 +160,6 @@ class BasePlugin(metaclass=BasePluginMeta):
 
     async def on_message_edit(self, before, after):
         pass
+
+    async def on_reaction_add(self, reaction, user):
+        pass

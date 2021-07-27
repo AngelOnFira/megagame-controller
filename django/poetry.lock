@@ -376,8 +376,8 @@ toposort = ">=1.5"
 
 [package.source]
 type = "git"
-url = "https://github.com/Brobin/django-seed"
-reference = "master"
+url = "https://github.com/Brobin/django-seed.git"
+reference = "0.3.0"
 resolved_reference = "3765a88d022d21dd2b34d2a0ac9a468d1226bb30"
 
 [[package]]
@@ -426,6 +426,14 @@ uritemplate = ">=3.0.0"
 
 [package.extras]
 validation = ["swagger-spec-validator (>=2.1.0)"]
+
+[[package]]
+name = "emojis"
+version = "0.6.0"
+description = "Emojis for Python"
+category = "main"
+optional = false
+python-versions = "*"
 
 [[package]]
 name = "faker"
@@ -962,7 +970,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "107b4562afe5a332ca8183a1eaae97793bee7837b92b99c5f54bfbcb36eb8d34"
+content-hash = "2c45ec867e39ec5186121b0164fef614c6fc5e4047cf27aa6666f8bd2ff9041b"
 
 [metadata.files]
 aiohttp = [
@@ -1169,6 +1177,10 @@ djangorestframework = [
 drf-yasg = [
     {file = "drf-yasg-1.20.0.tar.gz", hash = "sha256:d50f197c7f02545d0b736df88c6d5cf874f8fea2507ad85ad7de6ae5bf2d9e5a"},
     {file = "drf_yasg-1.20.0-py2.py3-none-any.whl", hash = "sha256:8b72e5b1875931a8d11af407be3a9a5ba8776541492947a0df5bafda6b7f8267"},
+]
+emojis = [
+    {file = "emojis-0.6.0-py3-none-any.whl", hash = "sha256:7da34c8a78ae262fd68cef9e2c78a3c1feb59784489eeea0f54ba1d4b7111c7c"},
+    {file = "emojis-0.6.0.tar.gz", hash = "sha256:bf605d1f1a27a81cd37fe82eb65781c904467f569295a541c33710b97e4225ec"},
 ]
 faker = [
     {file = "Faker-8.10.0-py3-none-any.whl", hash = "sha256:7df5697bc712bdd2f98051246ffd7bbac10104602727053b736e90d8adcaa5ad"},

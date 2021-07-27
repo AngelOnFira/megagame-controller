@@ -6,6 +6,6 @@ from rest_framework import permissions
 
 
 class TransactionViewSet(viewsets.ModelViewSet):
-    queryset = Transaction.objects.all().order_by("completed_date")
+    queryset = Transaction.objects.all().order_by("modified_date")
     serializer_class = TransactionSerializer
     # permission_classes = [permissions.IsAuthenticated]

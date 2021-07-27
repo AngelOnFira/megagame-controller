@@ -10,17 +10,31 @@ class Currency(models.Model):
 
 
 class Transaction(models.Model):
-    amount = models.IntegerField(default=0)
-    currency = models.ForeignKey(Currency, on_delete=models.PROTECT)
+    current_message_id = models.IntegerField(default=0, unique=True)
+
+    amount = models.IntegerField(default=0, null=True, blank=True)
+    currency = models.ForeignKey(
+        Currency, on_delete=models.PROTECT, null=True, blank=True
+    )
 
     created_date = models.DateTimeField(default=timezone.now)
-    completed_date = models.DateTimeField(default=timezone.now)
+    modified_date = models.DateTimeField(default=timezone.now)
 
     from_wallet = models.ForeignKey(
-        "Wallet", on_delete=models.PROTECT, default=None, related_name="from_wallet"
+        "Wallet",
+        on_delete=models.PROTECT,
+        default=None,
+        related_name="from_wallet",
+        null=True,
+        blank=True,
     )
     to_wallet = models.ForeignKey(
-        "Wallet", on_delete=models.PROTECT, default=None, related_name="to_wallet"
+        "Wallet",
+        on_delete=models.PROTECT,
+        default=None,
+        related_name="to_wallet",
+        null=True,
+        blank=True,
     )
 
     state = FSMField(default="new")
@@ -29,12 +43,27 @@ class Transaction(models.Model):
     @transition(field=state, source="new", target="created")
     def create(self):
         created_date = timezone.now()
-        completed_date = timezone.now()
+        modified_date = timezone.now()
+
+    @transaction.atomic
+    @transition(field=state, source="created", target="destination_set")
+    def set_destination(self):
+        modified_date = timezone.now()
+
+    @transaction.atomic
+    @transition(field=state, source="destination_set", target="currency_set")
+    def set_currency(self):
+        modified_date = timezone.now()
+
+    @transaction.atomic
+    @transition(field=state, source="currency_set", target="amount_set")
+    def set_amount(self):
+        modified_date = timezone.now()
 
     @transaction.atomic
     @transition(field=state, source="created", target="completed")
     def complete(self):
-        completed_date = timezone.now()
+        modified_date = timezone.now()
 
 
 class Wallet(models.Model):
