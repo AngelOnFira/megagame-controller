@@ -15,7 +15,7 @@ class LoggedMessage(models.Model):
     server = models.BigIntegerField(_("server"))
 
     member = models.ForeignKey(
-        "users.Member", related_name="messages_authored", on_delete=models.PROTECT
+        "users.Member", related_name="messages_authored", on_delete=models.CASCADE
     )
     member_username = models.CharField(
         max_length=255

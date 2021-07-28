@@ -11,7 +11,6 @@ class CreatePlayer(Service):
         credits = CreateCurrency.execute(
             {"name": "credits", "description": "Credits can be traded with any player"}
         )
-        print(credits.name)
         # initial_transition = CreateTransaction.execute(
         #     {
         #         "currency_name": credits.name,

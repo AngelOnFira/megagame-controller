@@ -37,9 +37,12 @@ async def on_ready():
 
     # Get all users on the server
     async for guild in client.fetch_guilds():
-        print(guild.members)
-        for member in guild.members:
-            print(member)
+        guild = client.get_guild(guild.id)
+        for user in guild.members:
+            # Create an object for each member
+            member = guild.get_member(user.id)
+            print(member, member.id, user.id)
+            # Todo: make sure username wasn't changed
             await sync_to_async(CreateMember.execute)(
                 {
                     "discord_id": member.id,

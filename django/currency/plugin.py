@@ -3,6 +3,7 @@ import emojis
 
 from asgiref.sync import sync_to_async
 from bot.plugins.base import BasePlugin
+from team.models import Team
 
 from .services import CreateTransaction, UpdateTransaction
 
@@ -33,11 +34,19 @@ class Plugin(BasePlugin):
         if message.content.startswith("!bank"):
 
             # TODO (foan): check that there isn't a traction in progress
-
-            bank_message = await message.channel.send(
-                "Starting transaction\n:one: trade\n:two: purchase"
+            teams_sorted = await sync_to_async(list)(
+                Team.objects.all().order_by("name")
             )
-            for emoji in ["1️⃣", "2️⃣"]:
+
+            team_text = "Starting transaction. Who would you like to trade with?\n\n"
+            emoji_list = []
+
+            for team in teams_sorted:
+                team_text += f"{team.name}: {emojis.encode(team.emoji)}\n"
+                emoji_list.append(emojis.encode(team.emoji))
+
+            bank_message = await message.channel.send(team_text)
+            for emoji in emoji_list:
                 await bank_message.add_reaction(emoji)
 
             await sync_to_async(CreateTransaction.execute)(

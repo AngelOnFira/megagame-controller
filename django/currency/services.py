@@ -38,7 +38,9 @@ class CreateTransaction(Service):
         message_id = self.cleaned_data["message_id"]
         message_sender_id = self.cleaned_data["message_sender_id"]
 
-        player_team = Member.objects.get(id=message_sender_id).player.team
+        print(message_id, message_sender_id)
+
+        player_team = Member.objects.get(discord_id=message_sender_id).player.team
 
         transaction = Transaction.objects.create(
             current_message_id=message_id, from_wallet=player_team.wallet
