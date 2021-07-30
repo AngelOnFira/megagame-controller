@@ -14,4 +14,5 @@ class QueueMessage(Service):
         player = Player.objects.get(id=player_id)
 
         task = Task.objects.create(player=player, description=message)
+
         print("created")

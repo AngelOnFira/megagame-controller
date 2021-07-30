@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     "team",
     "player",
     "tasks",
+    "responses",
     ###
     "bot.accounts",
     "bot.discord_channels",
@@ -191,6 +192,9 @@ PLUGINS = {
         "enabled": True,
     },
     "currency": {
+        "enabled": True,
+    },
+    "responses": {
         "enabled": True,
     },
 }

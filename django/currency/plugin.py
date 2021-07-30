@@ -13,6 +13,7 @@ logger = logging.getLogger(__name__)
 
 class Plugin(BasePlugin):
     async def on_message(self, message):
+        print(message)
         # await message.reply("test")
         if message.content.startswith("!control send"):
             _, command, destination, amount, currency = tuple(

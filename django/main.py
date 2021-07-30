@@ -54,11 +54,18 @@ async def on_ready():
 @sync_to_async
 def run_tasks_sync(client):
     from tasks.models import Task
+    from responses.models import Response
+    from bot.users.models import Member
 
+    # Currently set up to run just message tasks
     task_list = Task.objects.filter(completed=False)
     for task in task_list:
         user = async_to_sync(client.fetch_user)(task.player.discord_member.discord_id)
-        async_to_sync(user.send)(task.description)
+        message = async_to_sync(user.send)(task.description)
+
+        response = Response.objects.create(question_id=message.id)
+        Member.objects.get(discord_id=user.id).player.responses.add(response)
+
         task.completed = True
         task.save()
 

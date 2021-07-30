@@ -36,6 +36,18 @@
           />
         </div>
       </q-form>
+
+      <q-card-section v-for="team in teams" :key="team.id">
+        <div class="text-h6">{{ team.name }}</div>
+        <!-- <discord-picker
+          input
+          :value="value"
+          gif-format="md"
+          @update:value="value = $event"
+          @emoji="setEmoji"
+          @gif="setGif"
+        /> -->
+      </q-card-section>
     </div>
   </q-page>
 </template>
@@ -45,6 +57,8 @@ import { useQuasar } from "quasar";
 import { ref } from "vue";
 import { computed } from "vue";
 import { useStore } from "vuex";
+import DiscordPicker from "vue3-discordpicker";
+
 export default {
   setup() {
     const $q = useQuasar();
@@ -55,10 +69,17 @@ export default {
 
     store.dispatch("teams/getTeams");
 
+    const teams = computed(() => store.state.teams.teams);
+
+    const value = ref("");
+
     return {
       name,
       age,
       accept,
+      teams,
+      DiscordPicker,
+      value,
       onSubmit() {
         if (accept.value !== true && 1 == 2) {
           $q.notify({
@@ -98,6 +119,12 @@ export default {
         name.value = null;
         age.value = null;
         accept.value = false;
+      },
+      setEmoji(emoji) {
+        console.log(emoji);
+      },
+      setGif(gif) {
+        console.log(gif);
       },
     };
   },

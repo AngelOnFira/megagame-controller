@@ -1,7 +1,7 @@
 <template>
   <q-page padding>
     <div class="q-pa-md row items-start q-gutter-md">
-      <q-card class="my-card" v-for="player in players" :key="player.id">
+      <q-card class="my-card full-width" v-for="player in players" :key="player.id">
         <q-card-section class="bg-primary text-white">
           <div class="text-h6">{{ player.name || "Unknown" }}</div>
           <div class="text-subtitle2">{{ player.discord_member.name }}</div>
