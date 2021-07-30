@@ -6,6 +6,7 @@ from bot.plugins.base import BasePlugin
 from team.models import Team
 
 from .services import CreateTransaction, UpdateTransaction
+import json
 
 logger = logging.getLogger(__name__)
 
@@ -39,28 +40,51 @@ class Plugin(BasePlugin):
             )
 
             team_text = "Starting transaction. Who would you like to trade with?\n\n"
-            emoji_list = []
+            emoji_lookup = {}
 
             for team in teams_sorted:
                 team_text += f"{team.name}: {emojis.encode(team.emoji)}\n"
-                emoji_list.append(emojis.encode(team.emoji))
+                emoji_lookup[team.emoji] = team.name
+
+            emoji_lookup_json = json.dumps(emoji_lookup)
+
 
             bank_message = await message.channel.send(team_text)
-            for emoji in emoji_list:
-                await bank_message.add_reaction(emoji)
+            for emoji in emoji_lookup.keys():
+                await bank_message.add_reaction(emojis.encode(emoji))
 
             await sync_to_async(CreateTransaction.execute)(
                 {
                     "message_id": bank_message.id,
                     "message_sender_id": bank_message.author.id,
+                    "emoji_lookup": emoji_lookup,
                 }
             )
 
     async def on_reaction_add(self, reaction, user):
-        # await sync_to_async(UpdateTransaction.execute)(
-        #         {
-        #             "message_id": reaction.message.id,
-        #             "reaction_emoji": emojis.decode(reaction.emoji)
-        #         }
-        #     )
+        # TODO (foan): reactions aren't capturing after a server restart
+
+        # If the reaction is from the bot, ignore it
+        if user.bot:
+            return
+
+        (response, emoji_lookup) = await sync_to_async(UpdateTransaction.execute)(
+                {
+                    "message_id": reaction.message.id,
+                    "reaction_emoji": emojis.decode(reaction.emoji)
+                }
+            )
+
+        if response == emoji_lookup == None:
+            return
+
+        if response != None:
+            await reaction.message.edit(content=response)
+
+        await reaction.message.clear_reactions()
+
+        if emoji_lookup != None:
+            for emoji in emoji_lookup.keys():
+                await reaction.message.add_reaction(emojis.encode(emoji))
+
         return await super().on_reaction_add(reaction, user)

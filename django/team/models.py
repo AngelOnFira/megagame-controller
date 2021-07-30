@@ -1,4 +1,8 @@
 from django.db import models
+from django.db.models.signals import post_save
+
+
+from currency.models import Wallet
 
 # Create your models here.
 class Team(models.Model):
@@ -11,3 +15,14 @@ class Team(models.Model):
     wallet = models.ForeignKey(
         "currency.Wallet", on_delete=models.CASCADE, null=True, blank=True
     )
+
+
+def default_wallet(sender, instance, created, **kwargs):
+
+    if created:
+        wallet, _ = Wallet.objects.get_or_create(name=f"{instance.name}'s wallet")
+        instance.wallet = wallet
+        instance.save()
+
+
+post_save.connect(default_wallet, sender=Team)

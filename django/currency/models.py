@@ -7,6 +7,7 @@ from django.db import transaction
 class Currency(models.Model):
     name = models.CharField(max_length=20, unique=True)
     description = models.TextField(default="")
+    emoji = models.CharField(max_length=30, blank=True)
 
 
 class Transaction(models.Model):
@@ -36,6 +37,8 @@ class Transaction(models.Model):
         null=True,
         blank=True,
     )
+
+    emoji_lookup = models.JSONField(default=None, null=True, blank=True)
 
     state = FSMField(default="new")
 

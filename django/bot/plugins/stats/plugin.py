@@ -54,7 +54,7 @@ class Plugin(BasePlugin):
     async def on_message_edit(self, before, after):
         await super().on_message_edit(before, after)
 
-        logged_message = LoggedMessage.objects.filter(discord_id=before.id).first()
+        logged_message = await sync_to_async(LoggedMessage.objects.filter(discord_id=before.id).first)()
         if not logged_message:
             return
 
@@ -63,7 +63,7 @@ class Plugin(BasePlugin):
                 logged_message.edited_timestamp = make_aware(after.edited_at, utc)
             logged_message.content = after.content
             logged_message.num_lines = len(after.content.splitlines())
-            logged_message.save()
+            await sync_to_async(logged_message.save)()
 
     @command(help="Show the top 10 posters")
     async def stat_messages(self, command):
