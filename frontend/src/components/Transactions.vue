@@ -26,10 +26,7 @@
               >{{ transaction.from_wallet.name }} ->
               {{ transaction.to_wallet.name }}</q-item-label
             >
-            <q-item-label
-              caption
-              lines="2"
-              v-if="transaction.currency !== null"
+            <q-item-label caption lines="2" v-if="transaction.currency !== null"
               >{{ transaction.amount }}
               {{ transaction.currency.name }}</q-item-label
             >
@@ -54,8 +51,6 @@ export default {
     const store = useStore();
 
     const transactions = computed(() => store.state.bank.transactions);
-
-    store.dispatch("bank/getTransactions");
 
     return {
       transactions,

@@ -57,12 +57,30 @@ const linksList = [
 ];
 
 import { defineComponent, ref } from "vue";
+import { Loading } from "quasar";
 
 export default defineComponent({
   name: "MainLayout",
 
   components: {
     EssentialLink,
+  },
+
+  // Fill up the store
+  preFetch({ store }) {
+    Loading.show();
+
+    const players_promise = store.dispatch("players/getPlayers");
+    const teams_promise = store.dispatch("teams/getTeams");
+    const transations_promise = store.dispatch("bank/getTransactions");
+
+    return Promise.all([
+      players_promise,
+      teams_promise,
+      transations_promise,
+    ]).then(() => {
+      Loading.hide();
+    });
   },
 
   setup() {

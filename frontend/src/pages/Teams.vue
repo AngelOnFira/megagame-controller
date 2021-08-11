@@ -39,6 +39,11 @@
 
       <q-card-section v-for="team in teams" :key="team.id">
         <div class="text-h6">{{ team.name }}</div>
+        <div class="p">{{ team.emoji }}</div>
+        <q-card-section v-for="player in team.players" :key="player.id">
+          <div class="text-h6">{{ player.name }}</div>
+          <div class="p">test</div>
+        </q-card-section>
         <!-- <discord-picker
           input
           :value="value"
@@ -48,6 +53,18 @@
           @gif="setGif"
         /> -->
       </q-card-section>
+
+      <!-- <draggable
+        v-model="myArray"
+        group="people"
+        @start="drag = true"
+        @end="drag = false"
+        item-key="id"
+      >
+        <template #item="{ element }">
+          <div>{{ element.name }}</div>
+        </template>
+      </draggable> -->
     </div>
   </q-page>
 </template>
@@ -58,6 +75,7 @@ import { ref } from "vue";
 import { computed } from "vue";
 import { useStore } from "vuex";
 import DiscordPicker from "vue3-discordpicker";
+import draggable from "vuedraggable";
 
 export default {
   setup() {
@@ -73,6 +91,25 @@ export default {
 
     const value = ref("");
 
+    const myArray = [
+      {
+        name: "Jesus",
+        id: 1,
+      },
+      {
+        name: "Paul",
+        id: 2,
+      },
+      {
+        name: "Luc",
+        id: 5,
+      },
+      {
+        name: "Peter",
+        id: 3,
+      },
+    ];
+
     return {
       name,
       age,
@@ -80,6 +117,8 @@ export default {
       teams,
       DiscordPicker,
       value,
+      draggable,
+      myArray,
       onSubmit() {
         if (accept.value !== true && 1 == 2) {
           $q.notify({

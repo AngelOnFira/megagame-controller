@@ -11,12 +11,14 @@
   },
   "dependencies": {
     "@quasar/extras": "^1.0.0",
+    "add": "^2.0.6",
     "axios": "^0.21.1",
     "core-js": "^3.6.5",
     "quasar": "^2.0.0",
-    "quasar-app-extension-qdraggabletree": "file:./extensions/quasar-draggable-tree/app-extension",
     "vue3-discordpicker": "^1.0.7",
-    "vuex": "^4.0.1"
+    "vuedraggable": "^4.0.3",
+    "vuex": "^4.0.1",
+    "yarn": "^1.22.11"
   },
   "devDependencies": {
     "@babel/eslint-parser": "^7.13.14",
