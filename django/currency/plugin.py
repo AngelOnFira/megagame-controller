@@ -1,5 +1,6 @@
 import logging
 import emojis
+import dice
 
 from asgiref.sync import sync_to_async
 from bot.plugins.base import BasePlugin
@@ -49,7 +50,6 @@ class Plugin(BasePlugin):
 
             emoji_lookup_json = json.dumps(emoji_lookup)
 
-
             bank_message = await message.channel.send(team_text)
             for emoji in emoji_lookup.keys():
                 await bank_message.add_reaction(emojis.encode(emoji))
@@ -62,6 +62,9 @@ class Plugin(BasePlugin):
                 }
             )
 
+        if message.content.startswith("!roll"):
+            await message.reply(sum(dice.roll(message.content.split(" ")[1])))
+
     async def on_reaction_add(self, reaction, user):
         # TODO (foan): reactions aren't capturing after a server restart
 
@@ -70,11 +73,11 @@ class Plugin(BasePlugin):
             return
 
         (response, emoji_lookup) = await sync_to_async(UpdateTransaction.execute)(
-                {
-                    "message_id": reaction.message.id,
-                    "reaction_emoji": emojis.decode(reaction.emoji)
-                }
-            )
+            {
+                "message_id": reaction.message.id,
+                "reaction_emoji": emojis.decode(reaction.emoji),
+            }
+        )
 
         if response == emoji_lookup == None:
             return

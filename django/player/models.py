@@ -10,10 +10,15 @@ class Player(models.Model):
     name = models.CharField(max_length=100, default="")
 
     team = models.ForeignKey(
-        "team.Team", on_delete=models.CASCADE, null=True, blank=True
+        "team.Team",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="players",
     )
 
     responses = models.ManyToManyField(Response)
+
 
 def default_team(sender, instance, created, **kwargs):
     # Have to import here to prevent circular imports
