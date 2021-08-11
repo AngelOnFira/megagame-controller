@@ -37,12 +37,36 @@
         </div>
       </q-form>
 
-      <q-card-section v-for="team in teams" :key="team.id">
-        <div class="text-h6">{{ team.name }}</div>
-        <div class="p">{{ team.emoji }}</div>
-        <q-card-section v-for="player in team.players" :key="player.id">
-          <div class="text-h6">{{ player.name }}</div>
-          <div class="p">test</div>
+      <q-card v-for="team in teams" :key="team.id">
+        <q-card-section>
+          <div class="text-h6">{{ team.name }}</div>
+          <div class="p">{{ team.emoji }}</div>
+        </q-card-section>
+        <q-card-section>
+          <div
+            id="team-player-holder-{{team.id}}"
+            @dragenter="onDragEnter"
+            @dragleave="onDragLeave"
+            @dragover="onDragOver"
+            @drop="onDrop"
+            class="drop-target rounded-borders overflow-hidden"
+          >
+            <q-card
+              v-for="player in team.players"
+              :key="player.id"
+              :id="'player-' + player.id"
+              draggable="true"
+              @dragstart="onDragStart"
+              class="box orange"
+            >
+              <q-card-section>
+                <div class="text-h6">
+                  {{ player_lookup[player.id].discord_member.name }}
+                </div>
+                <div class="p">test</div>
+              </q-card-section>
+            </q-card>
+          </div>
         </q-card-section>
         <!-- <discord-picker
           input
@@ -52,7 +76,7 @@
           @emoji="setEmoji"
           @gif="setGif"
         /> -->
-      </q-card-section>
+      </q-card>
 
       <!-- <draggable
         v-model="myArray"
@@ -85,40 +109,81 @@ export default {
     const accept = ref(false);
     const store = useStore();
 
-    store.dispatch("teams/getTeams");
-
     const teams = computed(() => store.state.teams.teams);
+    const player_lookup = computed(() => store.state.players.player_lookup);
 
     const value = ref("");
 
-    const myArray = [
-      {
-        name: "Jesus",
-        id: 1,
-      },
-      {
-        name: "Paul",
-        id: 2,
-      },
-      {
-        name: "Luc",
-        id: 5,
-      },
-      {
-        name: "Peter",
-        id: 3,
-      },
-    ];
+    const status1 = ref([]);
+    const status2 = ref([]);
+
+    const status_obj = computed(() => {
+      var status_obj = {};
+      store.state.teams.teams.forEach((team) => {
+        // It needs to be a ref so that it can be edited or something
+        status_obj[team.id] = ref("");
+      });
+      return status_obj;
+    });
 
     return {
       name,
       age,
       accept,
       teams,
+      player_lookup,
       DiscordPicker,
       value,
       draggable,
-      myArray,
+      // handler(mutationRecords) {
+      //   status1.value = [];
+      //   for (const index in mutationRecords) {
+      //     const record = mutationRecords[index];
+      //     const info = `type: ${record.type}, nodes added: ${
+      //       record.addedNodes.length > 0 ? "true" : "false"
+      //     }, nodes removed: ${
+      //       record.removedNodes.length > 0 ? "true" : "false"
+      //     }, oldValue: ${record.oldValue}`;
+      //     status1.value.push(info);
+      //     // console.log(info);
+      //   }
+      // },
+      // store the id of the draggable element
+      onDragStart(e) {
+        console.log(e);
+        e.dataTransfer.setData("text", e.target.id);
+        e.dataTransfer.dropEffect = "move";
+      },
+      onDragEnter(e) {
+        // don't drop on other draggables
+        if (e.target.draggable !== true) {
+          e.target.classList.add("drag-enter");
+        }
+      },
+      onDragLeave(e) {
+        e.target.classList.remove("drag-enter");
+      },
+      onDragOver(e) {
+        e.preventDefault();
+      },
+      onDrop(e) {
+        e.preventDefault();
+        // don't drop on other draggables
+        if (e.target.draggable === true) {
+          return;
+        }
+        const draggedId = e.dataTransfer.getData("text");
+        const draggedEl = document.getElementById(draggedId);
+        // check if original parent node
+        if (draggedEl.parentNode === e.target) {
+          e.target.classList.remove("drag-enter");
+          return;
+        }
+        // make the exchange
+        draggedEl.parentNode.removeChild(draggedEl);
+        e.target.appendChild(draggedEl);
+        e.target.classList.remove("drag-enter");
+      },
       onSubmit() {
         if (accept.value !== true && 1 == 2) {
           $q.notify({
@@ -169,3 +234,46 @@ export default {
   },
 };
 </script>
+
+<style scoped lang="sass">
+.drop-target
+  width: 200px
+  height: 100px
+  min-width: 200px
+  background-color: gainsboro
+
+.drag-enter
+  outline-style: dashed
+
+.box
+  width: 100px
+  height: 100px
+  float: left
+  cursor: pointer
+
+@media only screen and (max-width: 500px)
+  .drop-target
+    height: 200px
+    width: 100px
+    min-width: 100px
+    background-color: gainsboro
+
+  .box
+    width: 50px
+    height: 50px
+
+.box:nth-child(3)
+  clear: both
+
+.navy
+  background-color: navy
+
+.red
+  background-color: firebrick
+
+.green
+  background-color: darkgreen
+
+.orange
+  background-color: orange
+</style>
