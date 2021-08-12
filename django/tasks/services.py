@@ -1,18 +1,16 @@
 from django import forms
 from service_objects.services import Service
+from service_objects.fields import DictField
 from .models import Task
 from player.models import Player
 
 
-class QueueMessage(Service):
-    player_id = forms.IntegerField()
-    message = forms.CharField()
+class QueueTask(Service):
+    task_type = forms.CharField()
+    payload = DictField()
+
     def process(self):
-        player_id = self.cleaned_data['player_id']
-        message = self.cleaned_data['message']
+        task_type = self.cleaned_data["task_type"]
+        payload = self.cleaned_data["payload"]
 
-        player = Player.objects.get(id=player_id)
-
-        task = Task.objects.create(player=player, description=message)
-
-        print("created")
+        task = Task.objects.create(task_type=task_type, payload=payload)

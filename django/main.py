@@ -56,15 +56,30 @@ def run_tasks_sync(client):
     from tasks.models import Task
     from responses.models import Response
     from bot.users.models import Member
+    from player.models import Player
+    from tasks.models import TaskType
 
     # Currently set up to run just message tasks
     task_list = Task.objects.filter(completed=False)
     for task in task_list:
-        user = async_to_sync(client.fetch_user)(task.player.discord_member.discord_id)
-        message = async_to_sync(user.send)(task.description)
+        if task.task_type == TaskType.MESSAGE:
+            player_id = task.payload["player_id"]
+            message = task.payload["message"]
 
-        response = Response.objects.create(question_id=message.id)
-        Member.objects.get(discord_id=user.id).player.responses.add(response)
+            player = Player.objects.get(id=player_id)
+
+            discord_user = async_to_sync(client.fetch_user)(
+                player.discord_member.discord_id
+            )
+            discord_message = async_to_sync(discord_user.send)(message)
+
+            response = Response.objects.create(question_id=discord_message.id)
+            player.responses.add(response)
+            player.save()
+
+        else:
+            # TASK ERROR
+            print("Error with task")
 
         task.completed = True
         task.save()

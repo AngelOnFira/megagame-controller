@@ -8,7 +8,8 @@ from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.decorators import action
 
-from tasks.services import QueueMessage
+from tasks.services import QueueTask
+from tasks.models import TaskType
 
 
 class PlayerViewSet(viewsets.ModelViewSet):
@@ -23,8 +24,35 @@ class PlayerViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.AllowAny],
     )
     def send_message(self, request):
-        QueueMessage.execute(
-            {"player_id": request.data["playerId"], "message": request.data["message"]}
+        QueueTask.execute(
+            {
+                "task_type": TaskType.MESSAGE,
+                "payload": {
+                    "player_id": request.data["playerId"],
+                    "message": request.data["message"],
+                },
+            }
+        )
+        # print the body
+        print(request.data)
+        return Response(status=HTTP_200_OK)
+
+    @action(
+        methods=["post"],
+        url_path="change-team",
+        url_name="change_team",
+        detail=False,
+        permission_classes=[permissions.AllowAny],
+    )
+    def change_team(self, request):
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CHANGE_TEAM,
+                "payload": {
+                    "player": request.data["playerId"],
+                    "new_team": request.data["teamId"],
+                },
+            }
         )
         # print the body
         print(request.data)

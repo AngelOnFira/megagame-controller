@@ -68,6 +68,7 @@
             </q-card>
           </div>
         </q-card-section>
+      </q-card>
         <!-- <discord-picker
           input
           :value="value"
@@ -76,7 +77,6 @@
           @emoji="setEmoji"
           @gif="setGif"
         /> -->
-      </q-card>
 
       <!-- <draggable
         v-model="myArray"
