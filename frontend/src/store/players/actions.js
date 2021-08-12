@@ -8,9 +8,15 @@ export function getPlayers({ commit }) {
 }
 
 export function sendMessage({ commit }, { playerId, message }) {
-  console.log(playerId, message);
   axios.post(`http://localhost:8090/api/players/send-message/`, { playerId, message })
     .then(response => {
       commit('SET_MESSAGES', response.data)
+    })
+}
+
+export function changeTeam({ commit }, { playerId, teamId }) {
+  axios.post(`http://localhost:8090/api/players/change-team/`, { playerId, teamId })
+    .then(response => {
+      commit('SET_PLAYERS', response.data)
     })
 }

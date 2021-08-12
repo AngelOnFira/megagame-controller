@@ -44,7 +44,7 @@
         </q-card-section>
         <q-card-section>
           <div
-            id="team-player-holder-{{team.id}}"
+            :id="'team-player-holder-' + team.id"
             @dragenter="onDragEnter"
             @dragleave="onDragLeave"
             @dragover="onDragOver"
@@ -173,6 +173,8 @@ export default {
           return;
         }
         const draggedId = e.dataTransfer.getData("text");
+        console.log(draggedId);
+        console.log(e.target.id);
         const draggedEl = document.getElementById(draggedId);
         // check if original parent node
         if (draggedEl.parentNode === e.target) {
@@ -183,6 +185,14 @@ export default {
         draggedEl.parentNode.removeChild(draggedEl);
         e.target.appendChild(draggedEl);
         e.target.classList.remove("drag-enter");
+
+        const playerId = draggedId.split("-").slice(-1)[0];
+        const teamId = e.target.id.split("-").slice(-1)[0];
+
+        store.dispatch("players/changeTeam", {
+          playerId: playerId,
+          teamId: teamId,
+        });
       },
       onSubmit() {
         if (accept.value !== true && 1 == 2) {
