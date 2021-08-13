@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     ###
     "bot.accounts",
     "bot.discord_channels",
+    "bot.discord_roles",
     # "bot.games",
     "bot.users",
     ###

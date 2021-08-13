@@ -9,6 +9,9 @@ class Currency(models.Model):
     description = models.TextField(default="")
     emoji = models.CharField(max_length=30, blank=True)
 
+    def __str__(self):
+        return f"{self.name} (id: {self.id})"
+
 
 class Transaction(models.Model):
     current_message_id = models.IntegerField(default=0, unique=True)
@@ -25,7 +28,7 @@ class Transaction(models.Model):
         "Wallet",
         on_delete=models.PROTECT,
         default=None,
-        related_name="from_wallet",
+        related_name="credits",
         null=True,
         blank=True,
     )
@@ -33,7 +36,7 @@ class Transaction(models.Model):
         "Wallet",
         on_delete=models.PROTECT,
         default=None,
-        related_name="to_wallet",
+        related_name="debits",
         null=True,
         blank=True,
     )

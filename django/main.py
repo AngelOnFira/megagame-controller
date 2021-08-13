@@ -50,6 +50,8 @@ async def on_ready():
                 }
             )
 
+        print(guild.roles)
+
 
 @sync_to_async
 def run_tasks_sync(client):
@@ -76,6 +78,9 @@ def run_tasks_sync(client):
             response = Response.objects.create(question_id=discord_message.id)
             player.responses.add(response)
             player.save()
+
+        if task.task_type == TaskType.TEAM_CHANGE:
+            pass
 
         else:
             # TASK ERROR

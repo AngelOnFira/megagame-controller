@@ -12,7 +12,7 @@ class TransactionSerializer(serializers.ModelSerializer):
 class WalletSerializer(serializers.ModelSerializer):
     class Meta:
         model = Wallet
-        fields = "__all__"
+        fields = ["id"]
 
 
 class CurrencySerializer(serializers.ModelSerializer):

@@ -15,6 +15,7 @@ from drf_yasg import openapi
 router = routers.DefaultRouter()
 router.register(r"stats", stats_views.MessageViewSet)
 router.register(r"transactions", currency_views.TransactionViewSet)
+router.register(r"wallets", currency_views.WalletViewSet)
 router.register(r"teams", team_views.TeamViewSet)
 router.register(r"players", player_views.PlayerViewSet)
 

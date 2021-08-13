@@ -3,6 +3,7 @@ from django.db.models.signals import post_save
 
 
 from currency.models import Wallet
+from bot.discord_roles.models import Role
 
 # Create your models here.
 class Team(models.Model):
@@ -15,6 +16,12 @@ class Team(models.Model):
     wallet = models.ForeignKey(
         "currency.Wallet", on_delete=models.CASCADE, null=True, blank=True
     )
+
+    # role = models.ForeignKey(
+    #     "bot.discord_roles.Role", on_delete=models.CASCADE, null=True, blank=True
+    # )
+
+    role = models.OneToOneField(Role, on_delete=models.CASCADE, null=True, blank=True)
 
 
 def default_wallet(sender, instance, created, **kwargs):
