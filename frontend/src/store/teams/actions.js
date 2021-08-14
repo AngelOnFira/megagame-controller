@@ -7,10 +7,9 @@ export function getTeams({ commit }) {
     })
 }
 
-export function addTeam({ commit }, { name }) {
-  console.log(name)
+export function createTeam({ commit }, { team_name, team_emoji }) {
   return new Promise((resolve, reject) => {
-    axios.post(`http://localhost:8090/api/teams/`, { name })
+    axios.post(`http://localhost:8090/api/teams/`, { name: team_name, emoji: team_emoji })
       .then(response => {
         // If the request was successful, add the team to the store
         commit('addTeamToState', response.data)

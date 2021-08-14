@@ -33,6 +33,9 @@ client = discord.Client(intents=intents)
 async def on_ready():
     from bot.users.services import CreateMember
 
+    from bot.discord_guilds.models import Guild
+    from bot.discord_guilds.services import CreateGuild
+
     logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
 
     # Get all users on the server
@@ -49,6 +52,12 @@ async def on_ready():
                     "discord_name": member.name,
                 }
             )
+
+        await sync_to_async(CreateGuild.execute)(
+            {
+                "discord_id": guild.id,
+            }
+        )
 
         print(guild.roles)
 
@@ -81,6 +90,9 @@ def run_tasks_sync(client):
 
         if task.task_type == TaskType.TEAM_CHANGE:
             pass
+
+        if task.task_type == TaskType.ADD_ROLE:
+            roles = gui
 
         else:
             # TASK ERROR

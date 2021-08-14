@@ -4,9 +4,18 @@
       <q-form @submit="onSubmit" @reset="onReset" class="q-gutter-md">
         <q-input
           filled
-          v-model="name"
-          label="Your name *"
-          hint="Name and surname"
+          v-model="team_name"
+          label="Team *"
+          hint="The name of the team"
+          lazy-rules
+          :rules="[(val) => (val && val.length > 0) || 'Please type something']"
+        />
+
+        <q-input
+          filled
+          v-model="team_emoji"
+          label="Team emoji *"
+          hint="Emoji to show off for the team"
           lazy-rules
           :rules="[(val) => (val && val.length > 0) || 'Please type something']"
         />
@@ -69,7 +78,7 @@
           </div>
         </q-card-section>
       </q-card>
-        <!-- <discord-picker
+      <!-- <discord-picker
           input
           :value="value"
           gif-format="md"
@@ -103,11 +112,11 @@ import draggable from "vuedraggable";
 
 export default {
   setup() {
-    const $q = useQuasar();
-    const name = ref(null);
-    const age = ref(null);
-    const accept = ref(false);
     const store = useStore();
+
+    const $q = useQuasar();
+    const team_name = ref(null);
+    const team_emoji = ref(null);
 
     const teams = computed(() => store.state.teams.teams);
     const player_lookup = computed(() => store.state.players.player_lookup);
@@ -126,12 +135,19 @@ export default {
       return status_obj;
     });
 
+    const handleSendTeamForm = (team_name, team_emoji) => {
+      store.dispatch("teams/createTeam", { team_name, team_emoji });
+    };
+
     return {
-      name,
-      age,
-      accept,
+      // form variables
+      team_name,
+      team_emoji,
+
+      // computed values
       teams,
       player_lookup,
+
       DiscordPicker,
       value,
       draggable,
@@ -195,39 +211,31 @@ export default {
         });
       },
       onSubmit() {
-        if (accept.value !== true && 1 == 2) {
-          $q.notify({
-            color: "red-5",
-            textColor: "white",
-            icon: "warning",
-            message: "You need to accept the license and terms first",
-          });
-        } else {
-          store
-            .dispatch("teams/addTeam", {
-              name: name.value,
-            })
-            .then(
-              (response) => {
-                $q.notify({
-                  color: "green-4",
-                  textColor: "white",
-                  icon: "cloud_done",
-                  message: "Submitted",
-                });
-              },
-              (error) => {
-                $q.notify({
-                  color: "red-5",
-                  textColor: "white",
-                  icon: "warning",
-                  message:
-                    "There was an error creating the team: " + error.message,
-                });
-                console.log(error);
-              }
-            );
-        }
+        store
+          .dispatch("teams/createTeam", {
+            team_name: team_name.value,
+            team_emoji: team_emoji.value,
+          })
+          .then(
+            (response) => {
+              $q.notify({
+                color: "green-4",
+                textColor: "white",
+                icon: "cloud_done",
+                message: "Submitted",
+              });
+            },
+            (error) => {
+              $q.notify({
+                color: "red-5",
+                textColor: "white",
+                icon: "warning",
+                message:
+                  "There was an error creating the team: " + error.message,
+              });
+              console.log(error);
+            }
+          );
       },
       onReset() {
         name.value = null;
@@ -240,6 +248,7 @@ export default {
       setGif(gif) {
         console.log(gif);
       },
+      handleSendTeamForm,
     };
   },
 };

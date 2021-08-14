@@ -11,7 +11,7 @@ class Player(models.Model):
 
     team = models.ForeignKey(
         "team.Team",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="players",

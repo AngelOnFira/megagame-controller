@@ -5,6 +5,10 @@ from django.utils.translation import gettext_lazy as _
 class TaskType(models.TextChoices):
     MESSAGE = "MG", _("Message")
     CHANGE_TEAM = "CT", _("Change Team")
+    ADD_ROLE = (
+        "AR",
+        _("Add Role"),
+    )
 
 
 class Task(models.Model):

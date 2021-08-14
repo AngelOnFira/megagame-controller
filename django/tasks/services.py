@@ -2,7 +2,6 @@ from django import forms
 from service_objects.services import Service
 from service_objects.fields import DictField
 from .models import Task
-from player.models import Player
 
 
 class QueueTask(Service):
