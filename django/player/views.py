@@ -1,4 +1,5 @@
 from .models import Player
+from team.models import Team
 from .serializers import PlayerSerializer
 
 from rest_framework import viewsets
@@ -45,12 +46,16 @@ class PlayerViewSet(viewsets.ModelViewSet):
         permission_classes=[permissions.AllowAny],
     )
     def change_team(self, request):
+        player = Player.objects.get(id=request.data["playerId"])
+        team = Team.objects.get(id=request.data["teamId"])
+
+
         QueueTask.execute(
             {
                 "task_type": TaskType.CHANGE_TEAM,
                 "payload": {
-                    "player": request.data["playerId"],
-                    "new_team": request.data["teamId"],
+                    "player_id": request.data["playerId"],
+                    "new_team_id": request.data["teamId"],
                 },
             }
         )

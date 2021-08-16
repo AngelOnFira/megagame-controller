@@ -3,6 +3,7 @@ from currency.models import Wallet
 from django.db.models.signals import post_save
 from team.models import Team
 from responses.models import Response
+from bot.discord_guilds.models import Guild
 
 
 class Player(models.Model):
@@ -19,14 +20,23 @@ class Player(models.Model):
 
     responses = models.ManyToManyField(Response)
 
+    guild = models.ForeignKey(
+        "discord_guilds.Guild", on_delete=models.CASCADE, null=True
+    )
+
 
 def default_team(sender, instance, created, **kwargs):
     # Have to import here to prevent circular imports
     from player.services import CreatePlayer
 
     if created:
-        team, _ = Team.objects.get_or_create(name="temp team")
+        team, _ = Team.objects.get_or_create(name="null")
         instance.team = team
+
+        # TODO: Properly set guild
+        guild = Guild.objects.all().first()
+        instance.guild = guild
+
         instance.save()
 
 
