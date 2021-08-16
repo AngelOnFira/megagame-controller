@@ -90,7 +90,7 @@ def run_tasks_sync(client):
             player.responses.add(response)
             player.save()
 
-        if task.task_type == TaskType.CHANGE_TEAM:
+        elif task.task_type == TaskType.CHANGE_TEAM:
             player_id = task.payload["player_id"]
             new_team_id = task.payload["new_team_id"]
 
@@ -98,22 +98,26 @@ def run_tasks_sync(client):
             team = Team.objects.get(id=new_team_id)
 
             guild = client.get_guild(player.guild.discord_id)
-            discord_member = guild.get_member(player.discord_member.discord_id)
-            raise Exception(discord_member)
 
-            print(discord_member)
+            # TODO: Try to change this to get_member
+            discord_member = async_to_sync(guild.fetch_member)(
+                player.discord_member.discord_id
+            )
 
             teams = [team for team in Team.objects.all()]
             team_names = [team.name for team in teams]
 
+            # raise Exception([guild.get_role(team.role.discord_id) for team in teams])
+
             # Will remove all roles from the player
             async_to_sync(discord_member.remove_roles)(
-                [guild.get_role(team.role.discord_id) for team in teams]
+                *[guild.get_role(team.role.discord_id) for team in teams]
             )
 
-            print(team_names)
+            # Add the new team role
+            async_to_sync(discord_member.add_roles)(guild.get_role(team.role.discord_id))
 
-        if task.task_type == TaskType.ADD_ROLE:
+        elif task.task_type == TaskType.ADD_ROLE:
             team_id = task.payload["team_id"]
 
             team = Team.objects.get(id=team_id)
