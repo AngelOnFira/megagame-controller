@@ -152,28 +152,27 @@ def run_tasks_sync(client):
 
             guild = client.get_guild(team.guild.discord_id)
 
+            if guild is None:
+                raise Exception("Guild not found")
+
             everyone_role = guild.default_role
-            everyone_permissions = discord.PermissionOverwrite()
-            everyone_permissions.view_channel = False
 
-            team_role_id, _ = Category.objects.get_or_create(
-                discord_id=team.role.discord_id
-            )
-
+            team_role_id = team.role.discord_id
             team_role = guild.get_role(team_role_id)
-
-            team_permissions = discord.PermissionOverwrite()
-            team_permissions.view_channel = True
 
             category_channel = async_to_sync(guild.create_category)(
                 team.name,
                 overwrites={
-                    everyone_role: everyone_permissions,
-                    team_role: team_permissions,
+                    everyone_role: discord.PermissionOverwrite(view_channel=False),
+                    team_role: discord.PermissionOverwrite(view_channel=True),
                 },
             )
 
-            team.category = category_channel.id
+            # raise Exception(category_channel)
+
+            team.category, _ = Category.objects.get_or_create(
+                discord_id=category_channel.id
+            )
 
             team.save()
 
@@ -185,10 +184,12 @@ def run_tasks_sync(client):
 
             guild = client.get_guild(team.guild.discord_id)
 
-            category_channel = async_to_sync(guild.create_category_channel)(
+            # TODO: Remove fetch needed for cache busting
+            category = async_to_sync(guild.fetch_channel)(team.category.discord_id)
+
+            text_channel = async_to_sync(guild.create_text_channel)(
                 channel_name,
-                permissions_synced=True,
-                category=guild.get_channel(team.category.id),
+                category=category,
             )
 
         else:
