@@ -256,8 +256,8 @@ export default {
 
 <style scoped lang="sass">
 .drop-target
-  width: 200px
-  height: 100px
+  width: 400px
+  height: 400px
   min-width: 200px
   background-color: gainsboro
 

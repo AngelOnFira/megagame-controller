@@ -70,7 +70,7 @@ def run_tasks_sync(client):
     from team.models import Team
     from player.models import Player
     from tasks.models import TaskType
-    from bot.discord_roles.models import Role
+    from bot.discord_roles.models import Role, Category
 
     # Currently set up to run just message tasks
     task_list = Task.objects.filter(completed=False)
@@ -115,9 +115,11 @@ def run_tasks_sync(client):
             )
 
             # Add the new team role
-            async_to_sync(discord_member.add_roles)(guild.get_role(team.role.discord_id))
+            async_to_sync(discord_member.add_roles)(
+                guild.get_role(team.role.discord_id)
+            )
 
-        elif task.task_type == TaskType.ADD_ROLE:
+        elif task.task_type == TaskType.CREATE_ROLE:
             team_id = task.payload["team_id"]
 
             team = Team.objects.get(id=team_id)
@@ -142,6 +144,52 @@ def run_tasks_sync(client):
 
             team.role = new_role
             team.save()
+
+        elif task.task_type == TaskType.CREATE_CATEGORY:
+            team_id = task.payload["team_id"]
+
+            team = Team.objects.get(id=team_id)
+
+            guild = client.get_guild(team.guild.discord_id)
+
+            everyone_role = guild.default_role
+            everyone_permissions = discord.PermissionOverwrite()
+            everyone_permissions.view_channel = False
+
+            team_role_id, _ = Category.objects.get_or_create(
+                discord_id=team.role.discord_id
+            )
+
+            team_role = guild.get_role(team_role_id)
+
+            team_permissions = discord.PermissionOverwrite()
+            team_permissions.view_channel = True
+
+            category_channel = async_to_sync(guild.create_category)(
+                team.name,
+                overwrites={
+                    everyone_role: everyone_permissions,
+                    team_role: team_permissions,
+                },
+            )
+
+            team.category = category_channel.id
+
+            team.save()
+
+        elif task.task_type == TaskType.CREATE_CHANNEL:
+            team_id = task.payload["team_id"]
+            channel_name = task.payload["channel_name"]
+
+            team = Team.objects.get(id=team_id)
+
+            guild = client.get_guild(team.guild.discord_id)
+
+            category_channel = async_to_sync(guild.create_category_channel)(
+                channel_name,
+                permissions_synced=True,
+                category=guild.get_channel(team.category.id),
+            )
 
         else:
             # TASK ERROR

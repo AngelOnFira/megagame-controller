@@ -28,6 +28,10 @@ class Team(models.Model):
         "discord_roles.Role", on_delete=models.CASCADE, null=True, blank=True
     )
 
+    category = models.OneToOneField(
+        "discord_roles.Category", on_delete=models.CASCADE, null=True, blank=True
+    )
+
 
 def default_wallet(sender, instance, created, **kwargs):
 
@@ -44,9 +48,30 @@ def default_wallet(sender, instance, created, **kwargs):
         # Create the role for the team
         QueueTask.execute(
             {
-                "task_type": TaskType.ADD_ROLE,
+                "task_type": TaskType.CREATE_ROLE,
                 "payload": {
                     "team_id": instance.id,
+                },
+            }
+        )
+
+        # Create a category for the team
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CATEGORY,
+                "payload": {
+                    "role_id": instance.id,
+                },
+            }
+        )
+
+        # Create a channel for the team
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CHANNEL,
+                "payload": {
+                    "team_id": instance.id,
+                    "channel_name": "general",
                 },
             }
         )

@@ -5,9 +5,17 @@ from django.utils.translation import gettext_lazy as _
 class TaskType(models.TextChoices):
     MESSAGE = "MG", _("Message")
     CHANGE_TEAM = "CT", _("Change Team")
-    ADD_ROLE = (
-        "AR",
-        _("Add Role"),
+    CREATE_ROLE = (
+        "RO",
+        _("Create Role"),
+    )
+    CREATE_CATEGORY = (
+        "CA",
+        _("Create Category"),
+    )
+    CREATE_CHANNEL = (
+        "CH",
+        _("Create Channel"),
     )
 
 
