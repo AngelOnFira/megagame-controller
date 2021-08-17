@@ -32,6 +32,9 @@ class Team(models.Model):
         "discord_roles.Category", on_delete=models.CASCADE, null=True, blank=True
     )
 
+    def __str__(self):
+        return f"{self.name} ({self.id})"
+
 
 def default_wallet(sender, instance, created, **kwargs):
 

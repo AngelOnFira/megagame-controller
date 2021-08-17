@@ -15,22 +15,6 @@ logger = logging.getLogger(__name__)
 
 # TODO: Refactor to not have duplicate dropdown code
 class CountrySelectDropdown(discord.ui.Select):
-    async def __init__(self):
-
-        options = []
-
-        
-
-        # The placeholder is what will be shown when no option is chosen
-        # The min and max values indicate we can only pick one of the three options
-        # The options parameter defines the dropdown options. We defined this above
-        super().__init__(
-            placeholder="Which country do you want to trade with?",
-            min_values=1,
-            max_values=1,
-            options=options,
-        )
-
     async def callback(self, interaction: discord.Interaction):
         # Use the interaction object to send a response message containing
         # the user's favourite colour or choice. The self object refers to the
@@ -41,18 +25,29 @@ class CountrySelectDropdown(discord.ui.Select):
         )
 
     # Yucky, but need to get database stuff
-    async def set_options(self):
+    async def init(self):
         teams = await sync_to_async(list)(Team.objects.all())
 
+        options = []
+
         for team in teams:
-            if team.emoji == None:
+            if team.emoji == "":
                 continue
+
+            print(team.emoji)
 
             options.append(
                 discord.SelectOption(
                     label=team.name, description="", emoji=emojis.encode(team.emoji)
                 )
             )
+
+        super().__init__(
+            placeholder="Which country do you want to trade with?",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
 
 
 class CountrySelectDropdownView(discord.ui.View):
@@ -63,7 +58,8 @@ class CountrySelectDropdownView(discord.ui.View):
         self.add_item(CountrySelectDropdown())
 
     async def init(self):
-
+        for child in self.children:
+            await child.init()
 
 
 class Plugin(BasePlugin):
@@ -121,7 +117,7 @@ class Plugin(BasePlugin):
 
         if message.content.startswith("!sys"):
             view = CountrySelectDropdownView()
-            view.init()
+            await view.init()
             await message.channel.send("test", view=view)
 
     async def on_reaction_add(self, reaction, user):
