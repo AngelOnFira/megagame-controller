@@ -2,6 +2,7 @@ import logging
 import emojis
 import dice
 import discord
+import asyncio
 
 from asgiref.sync import sync_to_async
 from bot.plugins.base import BasePlugin
@@ -12,34 +13,57 @@ import json
 
 logger = logging.getLogger(__name__)
 
-class Dropdown(discord.ui.Select):
-    def __init__(self):
+# TODO: Refactor to not have duplicate dropdown code
+class CountrySelectDropdown(discord.ui.Select):
+    async def __init__(self):
 
-        # Set the options that will be presented inside the dropdown
-        options = [
-            discord.SelectOption(label='Red', description='Your favourite colour is red', emoji='🟥'),
-            discord.SelectOption(label='Green', description='Your favourite colour is green', emoji='🟦'),
-            discord.SelectOption(label='Blue', description='Your favourite colour is blue', emoji='🟩')
-        ]
+        options = []
+
+        
 
         # The placeholder is what will be shown when no option is chosen
         # The min and max values indicate we can only pick one of the three options
         # The options parameter defines the dropdown options. We defined this above
-        super().__init__(placeholder='Choose your favourite colour...', min_values=1, max_values=1, options=options)
+        super().__init__(
+            placeholder="Which country do you want to trade with?",
+            min_values=1,
+            max_values=1,
+            options=options,
+        )
 
     async def callback(self, interaction: discord.Interaction):
         # Use the interaction object to send a response message containing
         # the user's favourite colour or choice. The self object refers to the
-        # Select object, and the values attribute gets a list of the user's 
+        # Select object, and the values attribute gets a list of the user's
         # selected options. We only want the first one.
-        await interaction.response.send_message(f'Your favourite colour is {self.values[0]}')
+        await interaction.response.send_message(
+            f"Your favourite colour is {self.values[0]}"
+        )
 
-class DropdownView(discord.ui.View):
+    # Yucky, but need to get database stuff
+    async def set_options(self):
+        teams = await sync_to_async(list)(Team.objects.all())
+
+        for team in teams:
+            if team.emoji == None:
+                continue
+
+            options.append(
+                discord.SelectOption(
+                    label=team.name, description="", emoji=emojis.encode(team.emoji)
+                )
+            )
+
+
+class CountrySelectDropdownView(discord.ui.View):
     def __init__(self):
         super().__init__()
 
         # Adds the dropdown to our view object.
-        self.add_item(Dropdown())
+        self.add_item(CountrySelectDropdown())
+
+    async def init(self):
+
 
 
 class Plugin(BasePlugin):
@@ -96,7 +120,8 @@ class Plugin(BasePlugin):
             await message.reply(sum(dice.roll(message.content.split(" ")[1])))
 
         if message.content.startswith("!sys"):
-            view = DropdownView()
+            view = CountrySelectDropdownView()
+            view.init()
             await message.channel.send("test", view=view)
 
     async def on_reaction_add(self, reaction, user):
