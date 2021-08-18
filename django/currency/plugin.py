@@ -13,53 +13,14 @@ import json
 
 logger = logging.getLogger(__name__)
 
-# TODO: Refactor to not have duplicate dropdown code
-class CountrySelectDropdown(discord.ui.Select):
+
+class Dropdown(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
-        # Use the interaction object to send a response message containing
-        # the user's favourite colour or choice. The self object refers to the
-        # Select object, and the values attribute gets a list of the user's
-        # selected options. We only want the first one.
-        await interaction.response.send_message(
-            f"Your favourite colour is {self.values[0]}"
-        )
+        await self.callback_function(self, interaction)
 
-    # Yucky, but need to get database stuff
-    async def init(self):
-        teams = await sync_to_async(list)(Team.objects.all())
-
-        options = []
-
-        for team in teams:
-            if team.emoji == "":
-                continue
-
-            print(team.emoji)
-
-            options.append(
-                discord.SelectOption(
-                    label=team.name, description="", emoji=emojis.encode(team.emoji)
-                )
-            )
-
-        super().__init__(
-            placeholder="Which country do you want to trade with?",
-            min_values=1,
-            max_values=1,
-            options=options,
-        )
-
-
-class CountrySelectDropdownView(discord.ui.View):
-    def __init__(self):
-        super().__init__()
-
-        # Adds the dropdown to our view object.
-        self.add_item(CountrySelectDropdown())
-
-    async def init(self):
-        for child in self.children:
-            await child.init()
+    def __init__(self, options, callback):
+        super().__init__(**options)
+        self.callback_function = callback
 
 
 class Plugin(BasePlugin):
@@ -116,8 +77,41 @@ class Plugin(BasePlugin):
             await message.reply(sum(dice.roll(message.content.split(" ")[1])))
 
         if message.content.startswith("!sys"):
-            view = CountrySelectDropdownView()
-            await view.init()
+            view = discord.ui.View()
+
+            teams = await sync_to_async(list)(Team.objects.all())
+
+            options = []
+
+            for team in teams:
+                if team.emoji == "":
+                    continue
+
+                print(team.emoji)
+
+                options.append(
+                    discord.SelectOption(
+                        label=team.name, description="", emoji=emojis.encode(team.emoji)
+                    )
+                )
+
+            async def callback(self: Dropdown, interaction: discord.Interaction):
+                await interaction.response.send_message(
+                    f"Your favourite colour is {self.values[0]}"
+                )
+
+            view.add_item(
+                Dropdown(
+                    {
+                        "placeholder": "Which country do you want to trade with?",
+                        "min_values": 1,
+                        "max_values": 1,
+                        "options": options,
+                    },
+                    callback,
+                )
+            )
+            # await view.init()
             await message.channel.send("test", view=view)
 
     async def on_reaction_add(self, reaction, user):
