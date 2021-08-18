@@ -7,6 +7,8 @@ import asyncio
 from asgiref.sync import sync_to_async
 from bot.plugins.base import BasePlugin
 from team.models import Team
+from tasks.services import QueueTask
+from tasks.models import TaskType
 
 from .services import CreateTransaction, UpdateTransaction
 import json
@@ -77,42 +79,15 @@ class Plugin(BasePlugin):
             await message.reply(sum(dice.roll(message.content.split(" ")[1])))
 
         if message.content.startswith("!sys"):
-            view = discord.ui.View()
-
-            teams = await sync_to_async(list)(Team.objects.all())
-
-            options = []
-
-            for team in teams:
-                if team.emoji == "":
-                    continue
-
-                print(team.emoji)
-
-                options.append(
-                    discord.SelectOption(
-                        label=team.name, description="", emoji=emojis.encode(team.emoji)
-                    )
-                )
-
-            async def callback(self: Dropdown, interaction: discord.Interaction):
-                await interaction.response.send_message(
-                    f"Your favourite colour is {self.values[0]}"
-                )
-
-            view.add_item(
-                Dropdown(
-                    {
-                        "placeholder": "Which country do you want to trade with?",
-                        "min_values": 1,
-                        "max_values": 1,
-                        "options": options,
+            await sync_to_async(QueueTask.execute)(
+                {
+                    "task_type": TaskType.CREATE_DROPDOWN,
+                    "payload": {
+                        "guild_id": message.guild.id,
+                        "channel_id": message.channel.id,
                     },
-                    callback,
-                )
+                }
             )
-            # await view.init()
-            await message.channel.send("test", view=view)
 
     async def on_reaction_add(self, reaction, user):
         # TODO (foan): reactions aren't capturing after a server restart

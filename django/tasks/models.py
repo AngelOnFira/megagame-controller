@@ -17,6 +17,10 @@ class TaskType(models.TextChoices):
         "CH",
         _("Create Channel"),
     )
+    CREATE_DROPDOWN = (
+        "DR",
+        _("Create Dropdown"),
+    )
 
 
 class Task(models.Model):

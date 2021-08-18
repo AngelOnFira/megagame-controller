@@ -12,6 +12,7 @@ from importlib import import_module
 import os
 import discord
 import django
+import emojis
 import time
 from django.conf import settings
 from discord.ext import tasks
@@ -60,6 +61,15 @@ async def on_ready():
         )
 
         print(guild.roles)
+
+
+class Dropdown(discord.ui.Select):
+    async def callback(self, interaction: discord.Interaction):
+        await self.callback_function(self, interaction)
+
+    def __init__(self, options, callback):
+        super().__init__(**options)
+        self.callback_function = callback
 
 
 @sync_to_async
@@ -191,6 +201,45 @@ def run_tasks_sync(client):
                 channel_name,
                 category=category,
             )
+
+        elif task.task_type == TaskType.CREATE_DROPDOWN:
+            guild_id = task.payload["guild_id"]
+            channel_id = task.payload["channel_id"]
+
+            view = discord.ui.View()
+
+            async def callback(self: Dropdown, interaction: discord.Interaction):
+                await interaction.response.send_message(
+                    f"Your favourite colour is {self.values[0]}"
+                )
+
+            options = []
+
+            for team in Team.objects.all():
+                if team.emoji == "":
+                    continue
+
+                print(team.emoji)
+
+                options.append(
+                    discord.SelectOption(
+                        label=team.name, description="", emoji=emojis.encode(team.emoji)
+                    )
+                )
+
+            view.add_item(
+                Dropdown(
+                    {
+                        "placeholder": "Which country do you want to trade with?",
+                        "min_values": 1,
+                        "max_values": 1,
+                        "options": options,
+                    },
+                    callback,
+                )
+            )
+            channel = client.get_guild(guild_id).get_channel(channel_id)
+            async_to_sync(channel.send)("test", view=view)
 
         else:
             # TASK ERROR
