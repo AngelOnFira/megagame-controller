@@ -79,12 +79,34 @@ class Plugin(BasePlugin):
             await message.reply(sum(dice.roll(message.content.split(" ")[1])))
 
         if message.content.startswith("!sys"):
+            teams = await sync_to_async(list)(Team.objects.all())
+
+            options = []
+
+            for team in teams:
+                if team.emoji == "":
+                    continue
+
+                options.append(
+                    {
+                        "label": team.name,
+                        "description": "",
+                        "emoji": emojis.encode(team.emoji),
+                    }
+                )
+
             await sync_to_async(QueueTask.execute)(
                 {
                     "task_type": TaskType.CREATE_DROPDOWN,
                     "payload": {
                         "guild_id": message.guild.id,
                         "channel_id": message.channel.id,
+                        "dropdown": {
+                            "placeholder": "Which country do you want to trade with?",
+                            "min_values": 1,
+                            "max_values": 1,
+                            "options": options,
+                        },
                     },
                 }
             )

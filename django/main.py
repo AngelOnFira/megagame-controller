@@ -203,6 +203,7 @@ def run_tasks_sync(client, view):
         elif task.task_type == TaskType.CREATE_DROPDOWN:
             guild_id = task.payload["guild_id"]
             channel_id = task.payload["channel_id"]
+            dropdown = task.payload["dropdown"]
 
             async def callback(self: Dropdown, interaction: discord.Interaction):
                 await interaction.response.send_message(
@@ -211,17 +212,8 @@ def run_tasks_sync(client, view):
 
             options = []
 
-            for team in Team.objects.all():
-                if team.emoji == "":
-                    continue
-
-                print(team.emoji)
-
-                options.append(
-                    discord.SelectOption(
-                        label=team.name, description="", emoji=emojis.encode(team.emoji)
-                    )
-                )
+            for option in dropdown["options"]:
+                options.append(discord.SelectOption(**option))
 
             view.add_item(
                 Dropdown(
