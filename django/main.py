@@ -73,7 +73,7 @@ class Dropdown(discord.ui.Select):
 
 
 @sync_to_async
-def run_tasks_sync(client):
+def run_tasks_sync(client, view):
     from tasks.models import Task
     from responses.models import Response
     from bot.users.models import Member
@@ -178,8 +178,6 @@ def run_tasks_sync(client):
                 },
             )
 
-            # raise Exception(category_channel)
-
             team.category, _ = Category.objects.get_or_create(
                 discord_id=category_channel.id
             )
@@ -205,8 +203,6 @@ def run_tasks_sync(client):
         elif task.task_type == TaskType.CREATE_DROPDOWN:
             guild_id = task.payload["guild_id"]
             channel_id = task.payload["channel_id"]
-
-            view = discord.ui.View()
 
             async def callback(self: Dropdown, interaction: discord.Interaction):
                 await interaction.response.send_message(
@@ -249,13 +245,15 @@ def run_tasks_sync(client):
         task.save()
 
 
-# Todo: better way to periodically run tasks
-async def run_tasks(client):
-    from tasks.models import Task
+# Check for new tasks once a second
+@tasks.loop(seconds=1)
+async def background_task():
 
-    while True:
-        await asyncio.sleep(1)
-        await run_tasks_sync(client)
+    # Have to create view out here as the tasks are run in sync and don't have
+    # access to the event loop
+    view = discord.ui.View()
+
+    await run_tasks_sync(client, view)
 
 
 if __name__ == "__main__":
@@ -283,7 +281,9 @@ if __name__ == "__main__":
     # bind the callback pool
     pool.bind_to(client)
 
-    client.loop.create_task(run_tasks(client))
+    # client.loop.create_task(run_tasks(client))
+
+    background_task.start()
 
     # login & start
     client.run(settings.TOKEN)
