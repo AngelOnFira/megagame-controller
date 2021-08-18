@@ -49,7 +49,6 @@ class PlayerViewSet(viewsets.ModelViewSet):
         player = Player.objects.get(id=request.data["playerId"])
         team = Team.objects.get(id=request.data["teamId"])
 
-
         QueueTask.execute(
             {
                 "task_type": TaskType.CHANGE_TEAM,

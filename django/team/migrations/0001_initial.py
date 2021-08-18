@@ -9,24 +9,55 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('discord_guilds', '0001_initial'),
-        ('currency', '0001_initial'),
-        ('discord_roles', '0001_initial'),
+        ("discord_guilds", "0001_initial"),
+        ("currency", "0001_initial"),
+        ("discord_roles", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Team',
+            name="Team",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=100, unique=True)),
-                ('description', models.TextField(blank=True)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('emoji', models.CharField(blank=True, max_length=30)),
-                ('guild', models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='discord_guilds.guild')),
-                ('role', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='discord_roles.role')),
-                ('wallet', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='currency.wallet')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("name", models.CharField(max_length=100, unique=True)),
+                ("description", models.TextField(blank=True)),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                ("emoji", models.CharField(blank=True, max_length=30)),
+                (
+                    "guild",
+                    models.ForeignKey(
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="discord_guilds.guild",
+                    ),
+                ),
+                (
+                    "role",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="discord_roles.role",
+                    ),
+                ),
+                (
+                    "wallet",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        to="currency.wallet",
+                    ),
+                ),
             ],
         ),
     ]

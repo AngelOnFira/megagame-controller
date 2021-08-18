@@ -7,14 +7,19 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('discord_roles', '0003_category'),
-        ('team', '0001_initial'),
+        ("discord_roles", "0003_category"),
+        ("team", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='team',
-            name='category',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, to='discord_roles.category'),
+            model_name="team",
+            name="category",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="discord_roles.category",
+            ),
         ),
     ]

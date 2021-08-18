@@ -16,5 +16,6 @@ from asgiref.sync import sync_to_async
 class Role(models.Model):
     discord_id = models.BigIntegerField(unique=True)
 
+
 class Category(models.Model):
     discord_id = models.BigIntegerField(unique=True)

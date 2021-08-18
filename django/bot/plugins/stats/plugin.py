@@ -54,7 +54,9 @@ class Plugin(BasePlugin):
     async def on_message_edit(self, before, after):
         await super().on_message_edit(before, after)
 
-        logged_message = await sync_to_async(LoggedMessage.objects.filter(discord_id=before.id).first)()
+        logged_message = await sync_to_async(
+            LoggedMessage.objects.filter(discord_id=before.id).first
+        )()
         if not logged_message:
             return
 
