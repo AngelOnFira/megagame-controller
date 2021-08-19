@@ -19,7 +19,10 @@ class Team(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    emoji = models.CharField(max_length=30, blank=True)
+    emoji = models.OneToOneField(
+        "id_emojis.IDEmoji", on_delete=models.CASCADE, related_name="team"
+    )
+
     wallet = models.ForeignKey(
         "currency.Wallet", on_delete=models.CASCADE, null=True, blank=True
     )

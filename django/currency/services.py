@@ -59,12 +59,16 @@ class CreateTransaction(Service):
 
 
 class UpdateTransaction(Service):
-    message_id = forms.IntegerField()
-    reaction_emoji = forms.CharField()
+    interaction_id = forms.IntegerField()
+    interaction_data = forms.CharField()
 
     def process(self):
-        message_id = self.cleaned_data["message_id"]
-        reaction_emoji = self.cleaned_data["reaction_emoji"]
+        interaction_id = self.cleaned_data["interaction_id"]
+        interaction_data = self.cleaned_data["interaction_data"]
+
+        print(interaction_id, interaction_data)
+
+        return
 
         transaction = Transaction.objects.get(current_message_id=message_id)
 

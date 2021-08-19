@@ -8,7 +8,7 @@ from asgiref.sync import sync_to_async
 from bot.plugins.base import BasePlugin
 from team.models import Team
 from tasks.services import QueueTask
-from tasks.models import TaskType
+from tasks.models import Task, TaskType
 
 from .services import CreateTransaction, UpdateTransaction
 import json
@@ -82,6 +82,7 @@ class Plugin(BasePlugin):
             teams = await sync_to_async(list)(Team.objects.all())
 
             options = []
+            emoji_lookup = {}
 
             for team in teams:
                 if team.emoji == "":
@@ -95,12 +96,15 @@ class Plugin(BasePlugin):
                     }
                 )
 
+                emoji_lookup[team.emoji] = team.id
+
             await sync_to_async(QueueTask.execute)(
                 {
                     "task_type": TaskType.CREATE_DROPDOWN,
                     "payload": {
                         "guild_id": message.guild.id,
                         "channel_id": message.channel.id,
+                        "do_next": TaskType.CREATE_TRANSACTION,
                         "dropdown": {
                             "placeholder": "Which country do you want to trade with?",
                             "min_values": 1,

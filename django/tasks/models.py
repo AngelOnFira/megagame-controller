@@ -6,20 +6,24 @@ class TaskType(models.TextChoices):
     MESSAGE = "MG", _("Message")
     CHANGE_TEAM = "CT", _("Change Team")
     CREATE_ROLE = (
-        "RO",
+        "CRO",
         _("Create Role"),
     )
     CREATE_CATEGORY = (
-        "CA",
+        "CCA",
         _("Create Category"),
     )
     CREATE_CHANNEL = (
-        "CH",
+        "CCH",
         _("Create Channel"),
     )
     CREATE_DROPDOWN = (
-        "DR",
+        "CDR",
         _("Create Dropdown"),
+    )
+    CREATE_TRANSACTION = (
+        "CTR",
+        _("Create Transaction"),
     )
 
 
@@ -29,7 +33,7 @@ class Task(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     task_type = models.CharField(
-        max_length=2, choices=TaskType.choices, default=TaskType.MESSAGE
+        max_length=3, choices=TaskType.choices, default=TaskType.MESSAGE
     )
 
     payload = models.JSONField(default=dict)

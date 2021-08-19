@@ -67,9 +67,10 @@ class Dropdown(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
         await self.callback_function(self, interaction)
 
-    def __init__(self, options, callback):
+    def __init__(self, options, callback, do_next):
         super().__init__(**options)
         self.callback_function = callback
+        self.do_next = do_next
 
 
 @sync_to_async
@@ -81,6 +82,7 @@ def run_tasks_sync(client, view):
     from player.models import Player
     from tasks.models import TaskType
     from bot.discord_roles.models import Role, Category
+    from currency.services import CreateTransaction, UpdateTransaction
 
     # Currently set up to run just message tasks
     task_list = Task.objects.filter(completed=False)
@@ -204,11 +206,17 @@ def run_tasks_sync(client, view):
             guild_id = task.payload["guild_id"]
             channel_id = task.payload["channel_id"]
             dropdown = task.payload["dropdown"]
+            emoji_lookup = task.payload["emoji_lookup"]
+            do_next = task.payload["do_next"]
 
             async def callback(self: Dropdown, interaction: discord.Interaction):
-                await interaction.response.send_message(
-                    f"Your favourite colour is {self.values[0]}"
-                )
+                if self.do_next == TaskType.CREATE_TRANSACTION:
+                    await sync_to_async(UpdateTransaction.execute)(
+                        {
+                            "interaction_id": interaction.id,
+                            "interaction_data": interaction.message,
+                        }
+                    )
 
             options = []
 
@@ -224,6 +232,7 @@ def run_tasks_sync(client, view):
                         "options": options,
                     },
                     callback,
+                    do_next=do_next,
                 )
             )
             channel = client.get_guild(guild_id).get_channel(channel_id)
