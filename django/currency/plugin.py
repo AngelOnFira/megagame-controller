@@ -82,9 +82,10 @@ class Plugin(BasePlugin):
             teams = await sync_to_async(list)(Team.objects.all())
 
             options = []
-            emoji_lookup = {}
+            team_lookup = {}
 
             for team in teams:
+                print(team)
                 if team.emoji == None:
                     continue
 
@@ -92,11 +93,11 @@ class Plugin(BasePlugin):
                     {
                         "label": team.name,
                         "description": "",
-                        "emoji": team.emoji.emoji,
+                        "emoji": team.emoji,
                     }
                 )
 
-                emoji_lookup[team.emoji.emoji] = team.emoji.id
+                team_lookup[team.name] = team.id
 
             await sync_to_async(QueueTask.execute)(
                 {
@@ -106,7 +107,7 @@ class Plugin(BasePlugin):
                         "channel_id": message.channel.id,
                         "do_next": {
                             "type": TaskType.CREATE_TRANSACTION,
-                            "emoji_lookup": emoji_lookup,
+                            "team_lookup": team_lookup,
                         },
                         "dropdown": {
                             "placeholder": "Which country do you want to trade with?",

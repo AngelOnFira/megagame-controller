@@ -39,30 +39,39 @@ async def on_ready():
 
     logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
 
+    # Needed to prepare the cache
+    # async for guild in client.fetch_guilds():
+    #     guild = client.get_guild(guild.id)
+
     # Get all users on the server
-    async for guild in client.fetch_guilds():
-        guild = client.get_guild(guild.id)
-        for user in guild.members:
-            # Create an object for each member
-            member = guild.get_member(user.id)
-            print(member, member.id, user.id)
-            # Todo: make sure username wasn't changed
-            await sync_to_async(CreateMember.execute)(
-                {
-                    "discord_id": member.id,
-                    "discord_name": member.name,
-                }
-            )
+    # async for guild in client.fetch_guilds():
+    #     guild = client.get_guild(guild.id)
+    #     for user in guild.members:
+    #         # Create an object for each member
+    #         member = guild.get_member(user.id)
+    #         print(member, member.id, user.id)
+    #         # Todo: make sure username wasn't changed
+    #         await sync_to_async(CreateMember.execute)(
+    #             {
+    #                 "discord_id": member.id,
+    #                 "discord_name": member.name,
+    #             }
+    #         )
 
-        await sync_to_async(CreateGuild.execute)(
-            {
-                "discord_id": guild.id,
-            }
-        )
+    #     await sync_to_async(CreateGuild.execute)(
+    #         {
+    #             "discord_id": guild.id,
+    #         }
+    #     )
 
-        print(guild.roles)
+    #     print(guild.roles)
 
     background_task.start()
+
+
+# @client.event
+# async def on_connect():
+#     background_task.start()
 
 
 class Dropdown(discord.ui.Select):

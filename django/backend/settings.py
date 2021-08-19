@@ -46,7 +46,6 @@ INSTALLED_APPS = [
     "player",
     "tasks",
     "responses",
-    "id_emojis",
     ###
     "bot.accounts",
     "bot.discord_channels",

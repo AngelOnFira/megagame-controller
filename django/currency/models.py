@@ -7,9 +7,9 @@ from django.db import transaction
 class Currency(models.Model):
     name = models.CharField(max_length=20, unique=True)
     description = models.TextField(default="")
-    emoji = models.OneToOneField(
-        "id_emojis.IDEmoji", on_delete=models.CASCADE, related_name="currency"
-    )
+
+    emoji = models.CharField(max_length=1, blank=True, null=True)
+
 
     def __str__(self):
         return f"{self.name} (id: {self.id})"

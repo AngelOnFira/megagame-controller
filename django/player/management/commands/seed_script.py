@@ -9,11 +9,11 @@ from tasks.models import Task
 from team.models import Team
 from bot.plugins.stats.models import LoggedMessage
 from currency.models import Currency
-from id_emojis.models import IDEmoji
 import emojis
 from bot.users.models import Member
 from tasks.models import Task
 from bot.discord_guilds.models import Guild
+from bot.accounts.models import User
 
 
 class Command(BaseCommand):
@@ -31,8 +31,10 @@ class Command(BaseCommand):
         # Transaction.objects.all().delete()
         Task.objects.all().delete()
         Currency.objects.all().delete()
-        IDEmoji.objects.all().delete()
         Wallet.objects.all().delete()
+
+        if len(User.objects.filter(username="f")) == 0:
+            User.objects.create_superuser('f', 'f@f.com', 'timmytimmy')
 
         # Wallet.objects.all().delete()
 
@@ -42,28 +44,16 @@ class Command(BaseCommand):
         currencies = ["Credits", "Action card", "Interceptor"]
 
         for i in range(len(emoji_list)):
-
-            seeder.add_entity(
-                IDEmoji,
-                1,
-                {
-                    "emoji": emoji_list[i],
-                    "emoji_text": emojis.decode(emoji_list[i]),
-                },
-            )
-
-            emoji = seeder.execute()
-
             seeder.add_entity(
                 Currency,
                 1,
                 {
                     "name": currencies[i],
-                    "emoji": IDEmoji.objects.get(id=emoji[IDEmoji][0]),
+                    "emoji": emoji_list[i],
                 },
             )
 
-            emoji = seeder.execute()
+        emoji = seeder.execute()
 
         guild = Guild.objects.all().first()
         emoji_list = ["🇨🇦", "🇬🇧", "🇺🇸", "🇫🇷", "🇩🇪", "🇮🇹"]
@@ -78,15 +68,6 @@ class Command(BaseCommand):
         ]
 
         for i in range(len(emoji_list)):
-            seeder.add_entity(
-                IDEmoji,
-                1,
-                {
-                    "emoji": emoji_list[i],
-                    "emoji_text": emoji_names[i],
-                },
-            )
-
             seeder.add_entity(Wallet, 1, {"name": f"{country_names[i]}'s wallet"})
 
             results = seeder.execute()
@@ -96,7 +77,7 @@ class Command(BaseCommand):
                 1,
                 {
                     "name": country_names[i],
-                    "emoji": IDEmoji.objects.get(id=results[IDEmoji][0]),
+                    "emoji": emoji_list[i],
                     "wallet": Wallet.objects.get(id=results[Wallet][0]),
                     "guild": guild,
                 },

@@ -7,6 +7,7 @@ from bot.discord_roles.models import Role
 from tasks.services import QueueTask
 from tasks.models import TaskType
 from bot.discord_guilds.models import Guild
+import emojis
 
 # Create your models here.
 class Team(models.Model):
@@ -19,9 +20,7 @@ class Team(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    emoji = models.OneToOneField(
-        "id_emojis.IDEmoji", on_delete=models.CASCADE, related_name="team", null=True
-    )
+    emoji = models.CharField(max_length=1, blank=True, null=True)
 
     wallet = models.ForeignKey(
         "currency.Wallet", on_delete=models.CASCADE, null=True, blank=True
@@ -37,7 +36,7 @@ class Team(models.Model):
 
     def __str__(self):
         if self.emoji:
-            return f"{self.name} {self.emoji.emoji_text} ({self.id})"
+            return f"{self.name} {emojis.decode(self.emoji)} ({self.id})"
 
         return f"{self.name} ({self.id})"
 
@@ -45,6 +44,11 @@ class Team(models.Model):
 def default_wallet(sender, instance, created, **kwargs):
 
     if created:
+        # If a guild is not set, choose the first one
+        if not instance.guild:
+            instance.guild = Guild.objects.first()
+
+
         wallet, _ = Wallet.objects.get_or_create(name=f"{instance.name}'s wallet")
         instance.wallet = wallet
 

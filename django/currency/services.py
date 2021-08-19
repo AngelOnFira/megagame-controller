@@ -62,16 +62,16 @@ class CreateTransaction(Service):
 class UpdateTransaction(Service):
     interaction_id = forms.IntegerField()
     interaction_data = forms.CharField()
-    emoji_lookup = DictField()
+    # emoji_lookup = DictField()
     values = ListField()
 
     def process(self):
         interaction_id = self.cleaned_data["interaction_id"]
         interaction_data = self.cleaned_data["interaction_data"]
-        emoji_lookup = self.cleaned_data["emoji_lookup"]
+        # emoji_lookup = self.cleaned_data["emoji_lookup"]
         values = self.cleaned_data["values"]
 
-        print(emoji_lookup, values)
+        print(values)
 
         return
 
