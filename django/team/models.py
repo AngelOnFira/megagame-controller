@@ -20,7 +20,7 @@ class Team(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
     emoji = models.OneToOneField(
-        "id_emojis.IDEmoji", on_delete=models.CASCADE, related_name="team"
+        "id_emojis.IDEmoji", on_delete=models.CASCADE, related_name="team", null=True
     )
 
     wallet = models.ForeignKey(
@@ -36,6 +36,9 @@ class Team(models.Model):
     )
 
     def __str__(self):
+        if self.emoji:
+            return f"{self.name} {self.emoji.emoji_text} ({self.id})"
+
         return f"{self.name} ({self.id})"
 
 
@@ -66,7 +69,7 @@ def default_wallet(sender, instance, created, **kwargs):
             {
                 "task_type": TaskType.CREATE_CATEGORY,
                 "payload": {
-                    "role_id": instance.id,
+                    "team_id": instance.id,
                 },
             }
         )

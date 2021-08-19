@@ -6,6 +6,7 @@ from team.models import Team
 from bot.users.models import Member
 import json
 import emojis
+from service_objects.fields import ListField, DictField
 
 
 class CreateWallet(Service):
@@ -61,12 +62,16 @@ class CreateTransaction(Service):
 class UpdateTransaction(Service):
     interaction_id = forms.IntegerField()
     interaction_data = forms.CharField()
+    emoji_lookup = DictField()
+    values = ListField()
 
     def process(self):
         interaction_id = self.cleaned_data["interaction_id"]
         interaction_data = self.cleaned_data["interaction_data"]
+        emoji_lookup = self.cleaned_data["emoji_lookup"]
+        values = self.cleaned_data["values"]
 
-        print(interaction_id, interaction_data)
+        print(emoji_lookup, values)
 
         return
 

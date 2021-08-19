@@ -62,6 +62,8 @@ async def on_ready():
 
         print(guild.roles)
 
+    background_task.start()
+
 
 class Dropdown(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
@@ -206,15 +208,16 @@ def run_tasks_sync(client, view):
             guild_id = task.payload["guild_id"]
             channel_id = task.payload["channel_id"]
             dropdown = task.payload["dropdown"]
-            emoji_lookup = task.payload["emoji_lookup"]
             do_next = task.payload["do_next"]
 
             async def callback(self: Dropdown, interaction: discord.Interaction):
-                if self.do_next == TaskType.CREATE_TRANSACTION:
+                if self.do_next["type"] == TaskType.CREATE_TRANSACTION:
                     await sync_to_async(UpdateTransaction.execute)(
                         {
                             "interaction_id": interaction.id,
                             "interaction_data": interaction.message,
+                            "emoji_lookup": self.do_next["emoji_lookup"],
+                            "values": self.values,
                         }
                     )
 
@@ -281,10 +284,6 @@ if __name__ == "__main__":
 
     # bind the callback pool
     pool.bind_to(client)
-
-    # client.loop.create_task(run_tasks(client))
-
-    background_task.start()
 
     # login & start
     client.run(settings.TOKEN)

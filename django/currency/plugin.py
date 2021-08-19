@@ -85,18 +85,18 @@ class Plugin(BasePlugin):
             emoji_lookup = {}
 
             for team in teams:
-                if team.emoji == "":
+                if team.emoji == None:
                     continue
 
                 options.append(
                     {
                         "label": team.name,
                         "description": "",
-                        "emoji": emojis.encode(team.emoji),
+                        "emoji": team.emoji.emoji,
                     }
                 )
 
-                emoji_lookup[team.emoji] = team.id
+                emoji_lookup[team.emoji.emoji] = team.emoji.id
 
             await sync_to_async(QueueTask.execute)(
                 {
@@ -104,7 +104,10 @@ class Plugin(BasePlugin):
                     "payload": {
                         "guild_id": message.guild.id,
                         "channel_id": message.channel.id,
-                        "do_next": TaskType.CREATE_TRANSACTION,
+                        "do_next": {
+                            "type": TaskType.CREATE_TRANSACTION,
+                            "emoji_lookup": emoji_lookup,
+                        },
                         "dropdown": {
                             "placeholder": "Which country do you want to trade with?",
                             "min_values": 1,

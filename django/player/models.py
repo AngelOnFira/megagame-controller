@@ -37,6 +37,9 @@ def default_team(sender, instance, created, **kwargs):
         guild = Guild.objects.all().first()
         instance.guild = guild
 
+        team.guild = guild
+        team.save()
+        
         instance.save()
 
 

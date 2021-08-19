@@ -8,9 +8,6 @@ class CreatePlayer(Service):
     def process(self):
         wallet = CreateWallet.execute({})
 
-        credits = CreateCurrency.execute(
-            {"name": "credits", "description": "Credits can be traded with any player"}
-        )
         # initial_transition = CreateTransaction.execute(
         #     {
         #         "currency_name": credits.name,
