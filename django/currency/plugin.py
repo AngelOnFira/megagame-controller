@@ -85,15 +85,14 @@ class Plugin(BasePlugin):
             team_lookup = {}
 
             for team in teams:
-                print(team)
-                if team.emoji == None:
+                if not team.emoji:
                     continue
 
                 options.append(
                     {
                         "label": team.name,
                         "description": "",
-                        "emoji": team.emoji,
+                        "emoji": emojis.encode(team.emoji),
                     }
                 )
 

@@ -225,7 +225,7 @@ def run_tasks_sync(client, view):
                         {
                             "interaction_id": interaction.id,
                             "interaction_data": interaction.message,
-                            "emoji_lookup": self.do_next["emoji_lookup"],
+                            "team_lookup": self.do_next["team_lookup"],
                             "values": self.values,
                         }
                     )
@@ -248,6 +248,7 @@ def run_tasks_sync(client, view):
                 )
             )
             channel = client.get_guild(guild_id).get_channel(channel_id)
+            print(view)
             async_to_sync(channel.send)("test", view=view)
 
         else:

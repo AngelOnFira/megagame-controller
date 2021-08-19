@@ -77,7 +77,7 @@ class Command(BaseCommand):
                 1,
                 {
                     "name": country_names[i],
-                    "emoji": emoji_list[i],
+                    "emoji": emojis.decode(emoji_list[i]),
                     "wallet": Wallet.objects.get(id=results[Wallet][0]),
                     "guild": guild,
                 },

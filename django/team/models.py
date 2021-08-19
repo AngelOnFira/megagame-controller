@@ -20,7 +20,7 @@ class Team(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
-    emoji = models.CharField(max_length=1, blank=True, null=True)
+    emoji = models.CharField(max_length=30, blank=True, null=True)
 
     wallet = models.ForeignKey(
         "currency.Wallet", on_delete=models.CASCADE, null=True, blank=True
@@ -58,36 +58,36 @@ def default_wallet(sender, instance, created, **kwargs):
 
         instance.save()
 
-        # Create the role for the team
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_ROLE,
-                "payload": {
-                    "team_id": instance.id,
-                },
-            }
-        )
+        # # Create the role for the team
+        # QueueTask.execute(
+        #     {
+        #         "task_type": TaskType.CREATE_ROLE,
+        #         "payload": {
+        #             "team_id": instance.id,
+        #         },
+        #     }
+        # )
 
-        # Create a category for the team
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_CATEGORY,
-                "payload": {
-                    "team_id": instance.id,
-                },
-            }
-        )
+        # # Create a category for the team
+        # QueueTask.execute(
+        #     {
+        #         "task_type": TaskType.CREATE_CATEGORY,
+        #         "payload": {
+        #             "team_id": instance.id,
+        #         },
+        #     }
+        # )
 
-        # Create a channel for the team
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_CHANNEL,
-                "payload": {
-                    "team_id": instance.id,
-                    "channel_name": "general",
-                },
-            }
-        )
+        # # Create a channel for the team
+        # QueueTask.execute(
+        #     {
+        #         "task_type": TaskType.CREATE_CHANNEL,
+        #         "payload": {
+        #             "team_id": instance.id,
+        #             "channel_name": "general",
+        #         },
+        #     }
+        # )
 
 
 post_save.connect(default_wallet, sender=Team)
