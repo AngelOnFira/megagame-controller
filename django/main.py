@@ -33,8 +33,8 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    from bot.discord_guilds.models import Guild
-    from bot.discord_guilds.services import CreateGuild
+    from bot.discord_models.models import Guild
+    from bot.discord_models.services import CreateGuild
     from bot.users.services import CreateMember
 
     logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
@@ -98,13 +98,13 @@ class Button(discord.ui.Button):
 
 @sync_to_async
 def run_tasks_sync(client, view):
-    from bot.discord_roles.models import Category, Role
+    from bot.discord_models.models import Category, Role
     from bot.users.models import Member
-    from currency.services import CreateTrade, SelectTradeReceiver
-    from player.models import Player
+    from currencies.services import CreateTrade, SelectTradeReceiver
+    from players.models import Player
     from responses.models import Response
     from tasks.models import Task, TaskType
-    from team.models import Team
+    from teams.models import Team
 
     # Currently set up to run just message tasks
     task_list = Task.objects.filter(completed=False)
@@ -260,11 +260,17 @@ def run_tasks_sync(client, view):
             async_to_sync(channel.send)("test", view=view)
 
         elif task.task_type == TaskType.CREATE_BUTTONS:
-            view.add_item(Button(0, 0, {
-                "style": discord.ButtonStyle.secondary,
-                "label": "Test",
-                "row": 0,
-            }))
+            view.add_item(
+                Button(
+                    0,
+                    0,
+                    {
+                        "style": discord.ButtonStyle.secondary,
+                        "label": "Test",
+                        "row": 0,
+                    },
+                )
+            )
 
             channel = client.get_guild(guild_id).get_channel(channel_id)
             async_to_sync(channel.send)("test", view=view)

@@ -6,7 +6,7 @@ from discord.channel import TextChannel
 from discord.enums import Status
 from tabulate import tabulate
 
-from bot.discord_channels.models import Channel
+from bot.discord_models.models import Channel
 from bot.plugins.base import BasePlugin
 from bot.plugins.commands import command
 from bot.users.models import Member

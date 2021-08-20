@@ -5,7 +5,7 @@ from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils.translation import gettext_lazy as _
-from player.models import Player
+from players.models import Player
 
 # from .services import CreateMember
 
@@ -59,7 +59,7 @@ class Member(models.Model):
 
 def create_player(sender, instance, created, **kwargs):
     # Have to import here to prevent circular imports
-    from player.services import CreatePlayer
+    from players.services import CreatePlayer
 
     if created:
         player = CreatePlayer.execute({})

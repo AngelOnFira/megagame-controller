@@ -41,17 +41,14 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     ###
-    "currency",
-    "team",
-    "player",
+    "currencies",
+    "teams",
+    "players",
     "tasks",
     "responses",
     ###
     "bot.accounts",
-    "bot.discord_channels",
-    "bot.discord_roles",
-    "bot.discord_guilds",
-    # "bot.games",
+    "bot.discord_models",
     "bot.users",
     ###
     "bot.plugins.stats",
@@ -193,7 +190,7 @@ PLUGINS = {
     "bot.plugins.stats": {
         "enabled": True,
     },
-    "currency": {
+    "currencies": {
         "enabled": True,
     },
     "responses": {
