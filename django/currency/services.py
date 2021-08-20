@@ -1,7 +1,7 @@
 from django import forms
 from service_objects.services import Service
 
-from .models import Currency, Transaction, Wallet
+from .models import Currency, Transaction, Wallet, Trade
 from team.models import Team
 from bot.users.models import Member
 import json
@@ -33,30 +33,22 @@ class CreateCurrency(Service):
         return currency
 
 
-class CreateTransaction(Service):
-    message_id = forms.IntegerField()
-    message_sender_id = forms.IntegerField()
-    emoji_lookup = forms.JSONField()
+class CreateTrade(Service):
+    message_sender_id = forms.CharField()
+    team_lookup = DictField()
 
     def process(self):
-        message_id = self.cleaned_data["message_id"]
         message_sender_id = self.cleaned_data["message_sender_id"]
-        emoji_lookup = self.cleaned_data["emoji_lookup"]
-
-        print(message_id, message_sender_id)
+        team_lookup = self.cleaned_data["team_lookup"]
 
         player_team = Member.objects.get(discord_id=message_sender_id).player.team
 
-        transaction = Transaction.objects.create(
-            current_message_id=message_id,
-            from_wallet=player_team.wallet,
-            emoji_lookup=emoji_lookup,
+        trade = Trade.objects.create(
+            initiating_party=player_team,
+            team_lookup=team_lookup,
         )
 
-        transaction.create()
-        transaction.save()
-
-        return transaction
+        return trade
 
 
 class UpdateTransaction(Service):

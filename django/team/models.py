@@ -48,7 +48,6 @@ def default_wallet(sender, instance, created, **kwargs):
         if not instance.guild:
             instance.guild = Guild.objects.first()
 
-
         wallet, _ = Wallet.objects.get_or_create(name=f"{instance.name}'s wallet")
         instance.wallet = wallet
 

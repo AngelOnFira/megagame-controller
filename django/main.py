@@ -93,7 +93,7 @@ def run_tasks_sync(client, view):
     from player.models import Player
     from tasks.models import TaskType
     from bot.discord_roles.models import Role, Category
-    from currency.services import CreateTransaction, UpdateTransaction
+    from currency.services import CreateTrade, UpdateTransaction
 
     # Currently set up to run just message tasks
     task_list = Task.objects.filter(completed=False)

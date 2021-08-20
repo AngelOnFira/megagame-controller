@@ -10,7 +10,7 @@ from team.models import Team
 from tasks.services import QueueTask
 from tasks.models import Task, TaskType
 
-from .services import CreateTransaction, UpdateTransaction
+from .services import CreateTrade, UpdateTransaction
 import json
 
 logger = logging.getLogger(__name__)
@@ -27,54 +27,6 @@ class Dropdown(discord.ui.Select):
 
 class Plugin(BasePlugin):
     async def on_message(self, message):
-        print(message)
-        # await message.reply("test")
-        if message.content.startswith("!control send"):
-            _, command, destination, amount, currency = tuple(
-                message.content.split(" ")
-            )
-
-            print("Message", message.content)
-            print("Currency", currency)
-
-            # await sync_to_async(CreateTransaction.execute)(
-            #     {
-            #         "currency_name": currency,
-            #         "amount": amount,
-            #         "destination_wallet": destination,
-            #     }
-            # )
-
-            await message.author.send("Transaction Complete")
-
-        if message.content.startswith("!bank"):
-
-            # TODO (foan): check that there isn't a traction in progress
-            teams_sorted = await sync_to_async(list)(
-                Team.objects.all().order_by("name")
-            )
-
-            team_text = "Starting transaction. Who would you like to trade with?\n\n"
-            emoji_lookup = {}
-
-            for team in teams_sorted:
-                team_text += f"{team.name}: {emojis.encode(team.emoji)}\n"
-                emoji_lookup[team.emoji] = team.name
-
-            emoji_lookup_json = json.dumps(emoji_lookup)
-
-            bank_message = await message.channel.send(team_text)
-            for emoji in emoji_lookup.keys():
-                await bank_message.add_reaction(emojis.encode(emoji))
-
-            await sync_to_async(CreateTransaction.execute)(
-                {
-                    "message_id": bank_message.id,
-                    "message_sender_id": bank_message.author.id,
-                    "emoji_lookup": emoji_lookup,
-                }
-            )
-
         if message.content.startswith("!roll"):
             await message.reply(sum(dice.roll(message.content.split(" ")[1])))
 
@@ -98,6 +50,13 @@ class Plugin(BasePlugin):
 
                 team_lookup[team.name] = team.id
 
+            transaction = await sync_to_async(CreateTrade.execute)(
+                {
+                    "message_sender_id": message.author.id,
+                    "team_lookup": team_lookup,
+                }
+            )
+
             await sync_to_async(QueueTask.execute)(
                 {
                     "task_type": TaskType.CREATE_DROPDOWN,
@@ -107,6 +66,7 @@ class Plugin(BasePlugin):
                         "do_next": {
                             "type": TaskType.CREATE_TRANSACTION,
                             "team_lookup": team_lookup,
+                            "transaction_id": transaction.id,
                         },
                         "dropdown": {
                             "placeholder": "Which country do you want to trade with?",
