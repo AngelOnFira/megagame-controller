@@ -9,6 +9,8 @@ from django import forms
 from team.models import Team
 
 from .models import Currency, Trade, Transaction, Wallet
+from tasks.services import QueueTask
+from tasks.models import TaskType
 
 
 class CreateWallet(Service):
@@ -65,6 +67,28 @@ class SelectTradeReceiver(Service):
 
         trade.set_receiver(values)
         trade.save()
+
+        QueueTask.execute(
+                {
+                    "task_type": TaskType.CREATE_DROPDOWN,
+                    "payload": {
+                        "guild_id": message.guild.id,
+                        "channel_id": message.channel.id,
+                        "do_next": {
+                            "type": TaskType.TRADE_SELECT_RECEIVER,
+                            "payload": {
+                                "trade_id": trade.id,
+                            },
+                        },
+                        "dropdown": {
+                            "placeholder": "Which country do you want to trade with?",
+                            "min_values": 1,
+                            "max_values": 1,
+                            "options": options,
+                        },
+                    },
+                }
+            )
 
         # create channel for the trade
         # create table of items to trade

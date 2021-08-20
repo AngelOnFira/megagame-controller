@@ -33,7 +33,7 @@ class Command(BaseCommand):
         Wallet.objects.all().delete()
 
         if len(User.objects.filter(username="f")) == 0:
-            User.objects.create_superuser("f", "f@f.com", "timmytimmy")
+            User.objects.create_superuser("f", "f@f.com", "password")
 
         # Wallet.objects.all().delete()
 

@@ -84,6 +84,18 @@ class Dropdown(discord.ui.Select):
         self.do_next = do_next
 
 
+class Button(discord.ui.Button):
+    # async def callback(self, interaction: discord.Interaction):
+    #     await self.callback_function(self, interaction)
+
+    def __init__(self, x: int, y: int, options: dict, callback=False, do_next=False):
+        super().__init__(**options)
+        self.x = x
+        self.y = y
+        # self.callback_function = callback
+        # self.do_next = do_next
+
+
 @sync_to_async
 def run_tasks_sync(client, view):
     from bot.discord_roles.models import Category, Role
@@ -245,7 +257,16 @@ def run_tasks_sync(client, view):
                 )
             )
             channel = client.get_guild(guild_id).get_channel(channel_id)
-            print(view)
+            async_to_sync(channel.send)("test", view=view)
+
+        elif task.task_type == TaskType.CREATE_BUTTONS:
+            view.add_item(Button(0, 0, {
+                "style": discord.ButtonStyle.secondary,
+                "label": "Test",
+                "row": 0,
+            }))
+
+            channel = client.get_guild(guild_id).get_channel(channel_id)
             async_to_sync(channel.send)("test", view=view)
 
         else:

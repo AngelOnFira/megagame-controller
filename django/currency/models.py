@@ -30,6 +30,13 @@ class Trade(models.Model):
         blank=True,
     )
 
+    discord_channel = models.ForeignKey(
+        "discord_channel.Channel", on_delete=models.PROTECT, null=True, blank=True
+    )
+    discord_guild = models.ForeignKey(
+        "discord_guild.Guild", on_delete=models.PROTECT, null=True, blank=True
+    )
+
     team_lookup = models.JSONField(default=dict, blank=True, null=True)
     currency_lookup = models.JSONField(default=dict, blank=True, null=True)
 

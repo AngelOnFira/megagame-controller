@@ -4,6 +4,7 @@ import logging
 
 import dice
 import discord
+from discord.guild import Guild
 import emojis
 from asgiref.sync import sync_to_async
 
@@ -11,6 +12,7 @@ from bot.plugins.base import BasePlugin
 from tasks.models import Task, TaskType
 from tasks.services import QueueTask
 from team.models import Team
+from bot.discord_channels.models import Channel
 
 from .services import CreateTrade, SelectTradeReceiver
 
@@ -58,10 +60,43 @@ class Plugin(BasePlugin):
                 }
             )
 
+            discord_channel = await sync_to_async(Channel.objects.get_or_create)(
+                discord_id=message.channel.id
+            )
+            discord_guild = await sync_to_async(Guild.objects.get_or_create)(
+                message.guild.id
+            )
+
+            trade.discord_channel = discord_channel
+            trade.discord_guild = discord_guild
+
             await sync_to_async(trade.create)()
             await sync_to_async(trade.save)()
 
             await sync_to_async(QueueTask.execute)(
+                {
+                    "task_type": TaskType.CREATE_DROPDOWN,
+                    "payload": {
+                        "guild_id": message.guild.id,
+                        "channel_id": message.channel.id,
+                        "do_next": {
+                            "type": TaskType.TRADE_SELECT_RECEIVER,
+                            "payload": {
+                                "trade_id": trade.id,
+                            },
+                        },
+                        "dropdown": {
+                            "placeholder": "Which country do you want to trade with?",
+                            "min_values": 1,
+                            "max_values": 1,
+                            "options": options,
+                        },
+                    },
+                }
+            )
+
+        if message.content.startswith("!grid"):
+            QueueTask.execute(
                 {
                     "task_type": TaskType.CREATE_DROPDOWN,
                     "payload": {
