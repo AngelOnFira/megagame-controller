@@ -39,7 +39,7 @@ def default_team(sender, instance, created, **kwargs):
 
         team.guild = guild
         team.save()
-        
+
         instance.save()
 
 

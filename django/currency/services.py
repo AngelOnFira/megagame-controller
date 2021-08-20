@@ -63,7 +63,6 @@ class SelectTradeReceiver(Service):
 
         trade: Trade = Trade.objects.get(id=payload["trade_id"])
 
-        
         trade.set_receiver(values)
         trade.save()
 

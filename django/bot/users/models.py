@@ -10,8 +10,6 @@ from player.models import Player
 # from .services import CreateMember
 
 
-
-
 class MemberQuerySet(models.QuerySet):
     async def _get_member(self, discord_user):
         # member, created = sync_to_async(CreateMember.execute)(

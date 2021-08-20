@@ -9,20 +9,37 @@ class Migration(migrations.Migration):
     initial = True
 
     dependencies = [
-        ('player', '0001_initial'),
+        ("player", "0001_initial"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Member',
+            name="Member",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('discord_id', models.CharField(max_length=50, unique=True)),
-                ('name', models.CharField(max_length=255, verbose_name='name')),
-                ('last_seen', models.DateTimeField(blank=True, null=True)),
-                ('is_bot', models.BooleanField(default=False)),
-                ('can_admin_bot', models.BooleanField(default=False)),
-                ('player', models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='discord_member', to='player.player')),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("discord_id", models.CharField(max_length=50, unique=True)),
+                ("name", models.CharField(max_length=255, verbose_name="name")),
+                ("last_seen", models.DateTimeField(blank=True, null=True)),
+                ("is_bot", models.BooleanField(default=False)),
+                ("can_admin_bot", models.BooleanField(default=False)),
+                (
+                    "player",
+                    models.OneToOneField(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="discord_member",
+                        to="player.player",
+                    ),
+                ),
             ],
         ),
     ]

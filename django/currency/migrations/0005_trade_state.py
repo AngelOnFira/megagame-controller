@@ -8,13 +8,13 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('currency', '0004_auto_20210819_2119'),
+        ("currency", "0004_auto_20210819_2119"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='trade',
-            name='state',
-            field=django_fsm.FSMField(default='new', max_length=50),
+            model_name="trade",
+            name="state",
+            field=django_fsm.FSMField(default="new", max_length=50),
         ),
     ]

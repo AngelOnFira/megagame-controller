@@ -7,17 +7,24 @@ class Migration(migrations.Migration):
 
     initial = True
 
-    dependencies = [
-    ]
+    dependencies = []
 
     operations = [
         migrations.CreateModel(
-            name='Channel',
+            name="Channel",
             fields=[
-                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('discord_id', models.BigIntegerField(unique=True)),
-                ('name', models.CharField(max_length=50, verbose_name='name')),
-                ('allow_nsfw', models.BooleanField(default=False)),
+                (
+                    "id",
+                    models.BigAutoField(
+                        auto_created=True,
+                        primary_key=True,
+                        serialize=False,
+                        verbose_name="ID",
+                    ),
+                ),
+                ("discord_id", models.BigIntegerField(unique=True)),
+                ("name", models.CharField(max_length=50, verbose_name="name")),
+                ("allow_nsfw", models.BooleanField(default=False)),
             ],
         ),
     ]
