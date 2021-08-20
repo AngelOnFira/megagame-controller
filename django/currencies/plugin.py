@@ -6,10 +6,10 @@ import dice
 import discord
 import emojis
 from asgiref.sync import sync_to_async
-from discord.guild import Guild
 
-from bot.discord_models.models import Channel
+from bot.discord_models.models import Channel, Guild
 from bot.plugins.base import BasePlugin
+from currencies.models import Currency
 from tasks.models import Task, TaskType
 from tasks.services import QueueTask
 from teams.models import Team
@@ -60,10 +60,10 @@ class Plugin(BasePlugin):
                 }
             )
 
-            discord_channel = await sync_to_async(Channel.objects.get_or_create)(
+            discord_channel, _ = await sync_to_async(Channel.objects.get_or_create)(
                 discord_id=message.channel.id
             )
-            discord_guild = await sync_to_async(Guild.objects.get_or_create)(
+            discord_guild, _ = await sync_to_async(Guild.objects.get_or_create)(
                 message.guild.id
             )
 
@@ -96,41 +96,49 @@ class Plugin(BasePlugin):
             )
 
         if message.content.startswith("!grid"):
+            currencies: Currency = await sync_to_async(list)(Currency.objects.all())
+
+            button_rows = []
+
+            currency: Currency
+            for currency in currencies:
+                row = []
+                currency_button = {
+                    "x": 4,
+                    "y": 0,
+                    "style": discord.ButtonStyle.primary,
+                    "emoji": emojis.encode(currency.emoji),
+                    "disabled": True,
+                    "label": currency.name,
+                }
+                row.append(currency_button)
+
+                for j, label in enumerate(["-5", "-1", "+1", "+5"]):
+                    style = (
+                        discord.ButtonStyle.danger
+                        if j < 2
+                        else discord.ButtonStyle.success
+                    )
+
+                    value_button = {
+                        "x": j,
+                        "y": 0,
+                        "style": style,
+                        "disabled": False,
+                        "label": label,
+                    }
+
+                    row.append(value_button)
+
+                button_rows.append(row)
+
             await sync_to_async(QueueTask.execute)(
                 {
                     "task_type": TaskType.CREATE_BUTTONS,
-                    "channel_id": message.channel.id,
                     "payload": {
                         "channel_id": message.channel.id,
                         "guild_id": message.guild.id,
+                        "button_rows": button_rows,
                     },
                 }
             )
-
-    async def on_reaction_add(self, reaction, user):
-        # TODO (foan): reactions aren't capturing after a server restart
-
-        # If the reaction is from the bot, ignore it
-        if user.bot:
-            return
-
-        (response, emoji_lookup) = await sync_to_async(SelectTradeReceiver.execute)(
-            {
-                "message_id": reaction.message.id,
-                "reaction_emoji": emojis.decode(reaction.emoji),
-            }
-        )
-
-        if response == emoji_lookup == None:
-            return
-
-        if response != None:
-            await reaction.message.edit(content=response)
-
-        await reaction.message.clear_reactions()
-
-        if emoji_lookup != None:
-            for emoji in emoji_lookup.keys():
-                await reaction.message.add_reaction(emojis.encode(emoji))
-
-        return await super().on_reaction_add(reaction, user)

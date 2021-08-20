@@ -1,6 +1,6 @@
-from currencies.services import CreateWallet
 from service_objects.services import Service
 
+from currencies.services import CreateWallet
 from django import forms
 
 from .models import Player

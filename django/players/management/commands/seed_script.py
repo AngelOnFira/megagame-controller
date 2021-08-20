@@ -49,7 +49,7 @@ class Command(BaseCommand):
                 1,
                 {
                     "name": currencies[i],
-                    "emoji": emoji_list[i],
+                    "emoji": emojis.decode(emoji_list[i]),
                 },
             )
 
@@ -57,7 +57,6 @@ class Command(BaseCommand):
 
         guild = Guild.objects.all().first()
         emoji_list = ["🇨🇦", "🇬🇧", "🇺🇸", "🇫🇷", "🇩🇪", "🇮🇹"]
-        emoji_names = [":canada:", ":uk:", ":us:", ":france:", ":de:", ":italy:"]
         country_names = [
             "Canada",
             "United Kingdom",

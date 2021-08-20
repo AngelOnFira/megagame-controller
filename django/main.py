@@ -39,39 +39,27 @@ async def on_ready():
 
     logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
 
-    # Needed to prepare the cache
-    # async for guild in client.fetch_guilds():
-    #     guild = client.get_guild(guild.id)
-
     # Get all users on the server
-    # async for guild in client.fetch_guilds():
-    #     guild = client.get_guild(guild.id)
-    #     for user in guild.members:
-    #         # Create an object for each member
-    #         member = guild.get_member(user.id)
-    #         print(member, member.id, user.id)
-    #         # Todo: make sure username wasn't changed
-    #         await sync_to_async(CreateMember.execute)(
-    #             {
-    #                 "discord_id": member.id,
-    #                 "discord_name": member.name,
-    #             }
-    #         )
+    async for guild in client.fetch_guilds():
+        guild = client.get_guild(guild.id)
+        for user in guild.members:
+            # Create an object for each member
+            member = guild.get_member(user.id)
+            # Todo: make sure username wasn't changed
+            await sync_to_async(CreateMember.execute)(
+                {
+                    "discord_id": member.id,
+                    "discord_name": member.name,
+                }
+            )
 
-    #     await sync_to_async(CreateGuild.execute)(
-    #         {
-    #             "discord_id": guild.id,
-    #         }
-    #     )
-
-    #     print(guild.roles)
+        await sync_to_async(CreateGuild.execute)(
+            {
+                "discord_id": guild.id,
+            }
+        )
 
     background_task.start()
-
-
-# @client.event
-# async def on_connect():
-#     background_task.start()
 
 
 class Dropdown(discord.ui.Select):
@@ -97,7 +85,7 @@ class Button(discord.ui.Button):
 
 
 @sync_to_async
-def run_tasks_sync(client, view):
+def run_tasks_sync(client, view: discord.ui.View):
     from bot.discord_models.models import Category, Role
     from bot.users.models import Member
     from currencies.services import CreateTrade, SelectTradeReceiver
@@ -262,21 +250,42 @@ def run_tasks_sync(client, view):
         elif task.task_type == TaskType.CREATE_BUTTONS:
             guild_id = task.payload["guild_id"]
             channel_id = task.payload["channel_id"]
-            
-            view.add_item(
-                Button(
-                    0,
-                    0,
-                    {
-                        "style": discord.ButtonStyle.secondary,
-                        "label": "Test",
-                        "row": 0,
-                    },
-                )
-            )
+            button_rows = task.payload["button_rows"]
 
             channel = client.get_guild(guild_id).get_channel(channel_id)
-            async_to_sync(channel.send)("test", view=view)
+            from pprint import pprint
+
+            pprint(button_rows)
+
+            for row in button_rows:
+                print(row)
+                for button in row:
+                    print(button)
+                    options_dict = {
+                        "style": button["style"][1],
+                        "label": button["label"],
+                        "row": button["y"],
+                    }
+
+                    if "emoji" in button:
+                        options_dict["emoji"] = button["emoji"]
+
+                    if "disabled" in button:
+                        options_dict["disabled"] = button["disabled"]
+
+                    button = Button(
+                        button["x"],
+                        button["y"],
+                        options_dict,
+                    )
+
+                    view.add_item(button)
+
+                async_to_sync(channel.send)(" adf", view=view)
+
+                children = view.children
+                for child in children:
+                    view.remove_item(child)
 
         else:
             # TASK ERROR
