@@ -1,5 +1,6 @@
-from .models import LoggedMessage
 from rest_framework import serializers
+
+from .models import LoggedMessage
 
 
 class MessageSerializer(serializers.ModelSerializer):

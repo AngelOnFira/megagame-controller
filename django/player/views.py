@@ -1,16 +1,14 @@
-from .models import Player
-from team.models import Team
-from .serializers import PlayerSerializer
-
-from rest_framework import viewsets
-from rest_framework import permissions
-
+from rest_framework import permissions, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
-from rest_framework.decorators import action
 
-from tasks.services import QueueTask
 from tasks.models import TaskType
+from tasks.services import QueueTask
+from team.models import Team
+
+from .models import Player
+from .serializers import PlayerSerializer
 
 
 class PlayerViewSet(viewsets.ModelViewSet):

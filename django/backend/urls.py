@@ -1,16 +1,14 @@
+from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions, routers
+
+from bot.plugins.stats import views as stats_views
+from currency import views as currency_views
 from django.contrib import admin
 from django.urls import include, path
 from django.views.generic import TemplateView
-
-from rest_framework import routers
-from bot.plugins.stats import views as stats_views
-from currency import views as currency_views
-from team import views as team_views
 from player import views as player_views
-
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
-from drf_yasg import openapi
+from team import views as team_views
 
 router = routers.DefaultRouter()
 router.register(r"stats", stats_views.MessageViewSet)

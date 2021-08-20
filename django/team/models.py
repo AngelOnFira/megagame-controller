@@ -1,13 +1,13 @@
+import emojis
+
+from bot.discord_guilds.models import Guild
+from bot.discord_roles.models import Role
+from currency.models import Wallet
 from django.db import models
 from django.db.models.signals import post_save
-
-
-from currency.models import Wallet
-from bot.discord_roles.models import Role
-from tasks.services import QueueTask
 from tasks.models import TaskType
-from bot.discord_guilds.models import Guild
-import emojis
+from tasks.services import QueueTask
+
 
 # Create your models here.
 class Team(models.Model):

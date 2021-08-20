@@ -1,7 +1,9 @@
-from django import forms
 from service_objects.services import Service
-from .models import Player
+
 from currency.services import CreateWallet
+from django import forms
+
+from .models import Player
 
 
 class CreatePlayer(Service):

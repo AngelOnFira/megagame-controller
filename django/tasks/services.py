@@ -1,6 +1,8 @@
-from django import forms
-from service_objects.services import Service
 from service_objects.fields import DictField
+from service_objects.services import Service
+
+from django import forms
+
 from .models import Task
 
 

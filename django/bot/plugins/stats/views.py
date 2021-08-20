@@ -1,8 +1,7 @@
+from rest_framework import permissions, viewsets
+
 from .models import LoggedMessage
 from .serializers import MessageSerializer
-
-from rest_framework import viewsets
-from rest_framework import permissions
 
 
 class MessageViewSet(viewsets.ModelViewSet):

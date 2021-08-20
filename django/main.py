@@ -6,22 +6,22 @@ Main entry point for the bot.
 This module performs the start-up, login and reads out the settings to configure
 the bot.
 """
+import asyncio
 import logging
+import os
+import time
 from importlib import import_module
 
-import os
-from aiohttp import payload
 import discord
-import django
 import emojis
-import time
-from django.conf import settings
+from aiohttp import payload
+from asgiref.sync import async_to_sync, sync_to_async
 from discord.ext import tasks
-import asyncio
 
+import django
 from bot.plugins.base import MethodPool
 from bot.plugins.events import EventPool
-from asgiref.sync import sync_to_async, async_to_sync
+from django.conf import settings
 
 logger = logging.getLogger("bot")
 
@@ -33,10 +33,9 @@ client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
-    from bot.users.services import CreateMember
-
     from bot.discord_guilds.models import Guild
     from bot.discord_guilds.services import CreateGuild
+    from bot.users.services import CreateMember
 
     logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
 
@@ -87,14 +86,13 @@ class Dropdown(discord.ui.Select):
 
 @sync_to_async
 def run_tasks_sync(client, view):
-    from tasks.models import Task
-    from responses.models import Response
+    from bot.discord_roles.models import Category, Role
     from bot.users.models import Member
-    from team.models import Team
-    from player.models import Player
-    from tasks.models import TaskType
-    from bot.discord_roles.models import Role, Category
     from currency.services import CreateTrade, SelectTradeReceiver
+    from player.models import Player
+    from responses.models import Response
+    from tasks.models import Task, TaskType
+    from team.models import Team
 
     # Currently set up to run just message tasks
     task_list = Task.objects.filter(completed=False)

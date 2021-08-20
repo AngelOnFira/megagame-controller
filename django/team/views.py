@@ -1,11 +1,9 @@
-from .models import Team
-from .serializers import TeamSerializer
-
-from rest_framework import viewsets
-from rest_framework import permissions
-
+from rest_framework import permissions, viewsets
 from rest_framework.response import Response
 from rest_framework.status import HTTP_201_CREATED
+
+from .models import Team
+from .serializers import TeamSerializer
 
 
 class TeamViewSet(viewsets.ModelViewSet):

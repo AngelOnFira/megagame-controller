@@ -1,12 +1,12 @@
 from typing import Union
 
 import discord
+
+from bot.users.models import Member
 from django.db import models
 from django.db.models import Count, Sum
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-
-from bot.users.models import Member
 
 
 class LoggedMessage(models.Model):

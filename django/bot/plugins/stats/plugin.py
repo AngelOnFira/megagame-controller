@@ -2,16 +2,17 @@ import logging
 import re
 
 from asgiref.sync import sync_to_async
+from discord.channel import TextChannel
+from discord.enums import Status
+from tabulate import tabulate
+
 from bot.discord_channels.models import Channel
 from bot.plugins.base import BasePlugin
 from bot.plugins.commands import command
 from bot.users.models import Member
-from discord.channel import TextChannel
-from discord.enums import Status
 from django.db.models import Count, Q
 from django.utils.timesince import timesince
 from django.utils.timezone import make_aware, now, utc
-from tabulate import tabulate
 
 from .models import LoggedMessage
 

@@ -1,19 +1,18 @@
 import random
-from django.core.management.base import BaseCommand
-from django_seed import Seed
-from django.conf import settings
 
+import emojis
+from django_seed import Seed
+
+from bot.accounts.models import User
+from bot.discord_guilds.models import Guild
+from bot.plugins.stats.models import LoggedMessage
+from bot.users.models import Member
+from currency.models import Currency, Trade, Transaction, Wallet
+from django.conf import settings
+from django.core.management.base import BaseCommand
 from player.models import Player
-from currency.models import Currency, Transaction, Wallet, Trade
 from tasks.models import Task
 from team.models import Team
-from bot.plugins.stats.models import LoggedMessage
-from currency.models import Currency
-import emojis
-from bot.users.models import Member
-from tasks.models import Task
-from bot.discord_guilds.models import Guild
-from bot.accounts.models import User
 
 
 class Command(BaseCommand):

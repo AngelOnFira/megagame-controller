@@ -1,5 +1,6 @@
-from .models import Transaction, Currency, Wallet
 from rest_framework import serializers
+
+from .models import Currency, Transaction, Wallet
 
 
 class TransactionSerializer(serializers.ModelSerializer):

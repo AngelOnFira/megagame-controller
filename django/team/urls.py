@@ -1,5 +1,6 @@
-from .views import TeamViewSet
 from rest_framework import renderers
+
+from .views import TeamViewSet
 
 # team_list = TeamViewSet.as_view({
 #     'get': 'list',

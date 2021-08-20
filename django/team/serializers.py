@@ -1,6 +1,8 @@
-from .models import Team
 from rest_framework import serializers
+
 from player.models import Player
+
+from .models import Team
 
 
 class TeamPlayerSerializer(serializers.ModelSerializer):

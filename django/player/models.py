@@ -1,9 +1,9 @@
-from django.db import models
-from currency.models import Wallet
-from django.db.models.signals import post_save
-from team.models import Team
-from responses.models import Response
 from bot.discord_guilds.models import Guild
+from currency.models import Wallet
+from django.db import models
+from django.db.models.signals import post_save
+from responses.models import Response
+from team.models import Team
 
 
 class Player(models.Model):

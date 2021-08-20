@@ -1,12 +1,11 @@
-from .models import Transaction, Wallet
-from .serializers import TransactionSerializer, WalletSerializer
+from collections import defaultdict
 
-from rest_framework import viewsets
-from rest_framework import permissions
+from rest_framework import permissions, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
-from collections import defaultdict
+from .models import Transaction, Wallet
+from .serializers import TransactionSerializer, WalletSerializer
 
 
 class TransactionViewSet(viewsets.ModelViewSet):

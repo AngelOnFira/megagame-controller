@@ -1,4 +1,5 @@
 import pytest
+
 from currency.plugin import Plugin as CurrencyPlugin
 from player.services import CreatePlayer
 

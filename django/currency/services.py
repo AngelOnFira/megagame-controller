@@ -1,12 +1,14 @@
-from django import forms
+import json
+
+import emojis
+from service_objects.fields import DictField, ListField
 from service_objects.services import Service
 
-from .models import Currency, Transaction, Wallet, Trade
-from team.models import Team
 from bot.users.models import Member
-import json
-import emojis
-from service_objects.fields import ListField, DictField
+from django import forms
+from team.models import Team
+
+from .models import Currency, Trade, Transaction, Wallet
 
 
 class CreateWallet(Service):
