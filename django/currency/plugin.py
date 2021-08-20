@@ -10,7 +10,7 @@ from team.models import Team
 from tasks.services import QueueTask
 from tasks.models import Task, TaskType
 
-from .services import CreateTrade, UpdateTransaction
+from .services import CreateTrade, SelectTradeReceiver
 import json
 
 logger = logging.getLogger(__name__)
@@ -50,12 +50,15 @@ class Plugin(BasePlugin):
 
                 team_lookup[team.name] = team.id
 
-            transaction = await sync_to_async(CreateTrade.execute)(
+            trade = await sync_to_async(CreateTrade.execute)(
                 {
                     "message_sender_id": message.author.id,
                     "team_lookup": team_lookup,
                 }
             )
+
+            await sync_to_async(trade.create)()
+            await sync_to_async(trade.save)()
 
             await sync_to_async(QueueTask.execute)(
                 {
@@ -64,9 +67,10 @@ class Plugin(BasePlugin):
                         "guild_id": message.guild.id,
                         "channel_id": message.channel.id,
                         "do_next": {
-                            "type": TaskType.CREATE_TRANSACTION,
-                            "team_lookup": team_lookup,
-                            "transaction_id": transaction.id,
+                            "type": TaskType.TRADE_SELECT_RECEIVER,
+                            "payload": {
+                                "trade_id": trade.id,
+                            },
                         },
                         "dropdown": {
                             "placeholder": "Which country do you want to trade with?",
@@ -85,7 +89,7 @@ class Plugin(BasePlugin):
         if user.bot:
             return
 
-        (response, emoji_lookup) = await sync_to_async(UpdateTransaction.execute)(
+        (response, emoji_lookup) = await sync_to_async(SelectTradeReceiver.execute)(
             {
                 "message_id": reaction.message.id,
                 "reaction_emoji": emojis.decode(reaction.emoji),

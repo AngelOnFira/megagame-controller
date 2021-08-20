@@ -21,7 +21,7 @@ class TaskType(models.TextChoices):
         "CDR",
         _("Create Dropdown"),
     )
-    CREATE_TRANSACTION = (
+    TRADE_SELECT_RECEIVER = (
         "CTR",
         _("Create Transaction"),
     )

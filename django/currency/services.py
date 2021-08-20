@@ -51,51 +51,49 @@ class CreateTrade(Service):
         return trade
 
 
-class UpdateTransaction(Service):
-    interaction_id = forms.IntegerField()
-    interaction_data = forms.CharField()
-    team_lookup = DictField()
+class SelectTradeReceiver(Service):
+    payload = DictField()
     values = ListField()
 
     def process(self):
-        interaction_id = self.cleaned_data["interaction_id"]
-        interaction_data = self.cleaned_data["interaction_data"]
-        team_lookup = self.cleaned_data["team_lookup"]
+        payload = self.cleaned_data["payload"]
         values = self.cleaned_data["values"]
 
-        print(values)
+        trade: Trade = Trade.objects.get(id=payload["trade_id"])
 
-        return
+        
+        trade.set_receiver(values)
+        trade.save()
 
-        transaction = Transaction.objects.get(current_message_id=message_id)
+        # create channel for the trade
+        # create table of items to trade
 
-        # TODO: Return error
-        if reaction_emoji not in transaction.emoji_lookup:
-            pass
+        # # TODO: Return error
+        # if reaction_emoji not in trade.emoji_lookup:
+        #     pass
 
-        if transaction.state == "created":
-            team = Team.objects.get(emoji=reaction_emoji)
-            transaction.to_wallet = team.wallet
-            transaction.set_destination()
-            transaction.save()
+        # if transaction.state == "created":
+        #     team = Team.objects.get(emoji=reaction_emoji)
+        #     transaction.to_wallet = team.wallet
+        #     transaction.save()
 
-            currency_text = "What currency would you like to trade?\n\n"
-            emoji_lookup = {}
+        #     currency_text = "What currency would you like to trade?\n\n"
+        #     emoji_lookup = {}
 
-            for currency in Currency.objects.all().order_by("name"):
-                currency_text += f"{currency.name}: {emojis.encode(currency.emoji)}\n"
-                emoji_lookup[currency.emoji] = currency.id
+        #     for currency in Currency.objects.all().order_by("name"):
+        #         currency_text += f"{currency.name}: {emojis.encode(currency.emoji)}\n"
+        #         emoji_lookup[currency.emoji] = currency.id
 
-            transaction.emoji_lookup = emoji_lookup
+        #     transaction.emoji_lookup = emoji_lookup
 
-            return (currency_text, emoji_lookup)
+        #     return (currency_text, emoji_lookup)
 
-        elif transaction.state == "destination_set":
-            transaction.state = "completed"
-            transaction.set_currency()
-            transaction.save()
+        # elif transaction.state == "destination_set":
+        #     transaction.state = "completed"
+        #     transaction.set_currency()
+        #     transaction.save()
 
-        return (None, None)
+        # return (None, None)
 
 
 # class TransactionBegin(Service):

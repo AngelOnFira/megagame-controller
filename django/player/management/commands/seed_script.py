@@ -4,7 +4,7 @@ from django_seed import Seed
 from django.conf import settings
 
 from player.models import Player
-from currency.models import Currency, Transaction, Wallet
+from currency.models import Currency, Transaction, Wallet, Trade
 from tasks.models import Task
 from team.models import Team
 from bot.plugins.stats.models import LoggedMessage
@@ -27,14 +27,14 @@ class Command(BaseCommand):
         # LoggedMessage.objects.all().delete()
         Player.objects.all().delete()
         Member.objects.all().delete()
+        Trade.objects.all().delete()
         Team.objects.all().delete()
-        # Transaction.objects.all().delete()
         Task.objects.all().delete()
         Currency.objects.all().delete()
         Wallet.objects.all().delete()
 
         if len(User.objects.filter(username="f")) == 0:
-            User.objects.create_superuser('f', 'f@f.com', 'timmytimmy')
+            User.objects.create_superuser("f", "f@f.com", "timmytimmy")
 
         # Wallet.objects.all().delete()
 
@@ -67,10 +67,15 @@ class Command(BaseCommand):
             "Italy",
         ]
 
+        credits_currency = Currency.objects.get(name="Credits")
+        bank_wallet = Wallet.objects.get_or_create(name="Bank")[0]
+
         for i in range(len(emoji_list)):
             seeder.add_entity(Wallet, 1, {"name": f"{country_names[i]}'s wallet"})
 
             results = seeder.execute()
+
+            team_wallet_id = results[Wallet][0]
 
             seeder.add_entity(
                 Team,
@@ -78,10 +83,24 @@ class Command(BaseCommand):
                 {
                     "name": country_names[i],
                     "emoji": emojis.decode(emoji_list[i]),
-                    "wallet": Wallet.objects.get(id=results[Wallet][0]),
+                    "wallet": Wallet.objects.get(id=team_wallet_id),
                     "guild": guild,
                 },
             )
+
+            seeder.add_entity(
+                Transaction,
+                1,
+                {
+                    "amount": random.randint(10, 15),
+                    "currency": credits_currency,
+                    "from_wallet": bank_wallet,
+                    "to_wallet": Wallet.objects.get(id=team_wallet_id),
+                    "state": "completed",
+                },
+            )
+
+            seeder.execute()
 
         # # Add a wallet
         # seeder.add_entity(Wallet, 3)

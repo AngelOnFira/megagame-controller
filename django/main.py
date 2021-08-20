@@ -10,6 +10,7 @@ import logging
 from importlib import import_module
 
 import os
+from aiohttp import payload
 import discord
 import django
 import emojis
@@ -93,7 +94,7 @@ def run_tasks_sync(client, view):
     from player.models import Player
     from tasks.models import TaskType
     from bot.discord_roles.models import Role, Category
-    from currency.services import CreateTrade, UpdateTransaction
+    from currency.services import CreateTrade, SelectTradeReceiver
 
     # Currently set up to run just message tasks
     task_list = Task.objects.filter(completed=False)
@@ -220,12 +221,10 @@ def run_tasks_sync(client, view):
             do_next = task.payload["do_next"]
 
             async def callback(self: Dropdown, interaction: discord.Interaction):
-                if self.do_next["type"] == TaskType.CREATE_TRANSACTION:
-                    await sync_to_async(UpdateTransaction.execute)(
+                if self.do_next["type"] == TaskType.TRADE_SELECT_RECEIVER:
+                    await sync_to_async(SelectTradeReceiver.execute)(
                         {
-                            "interaction_id": interaction.id,
-                            "interaction_data": interaction.message,
-                            "team_lookup": self.do_next["team_lookup"],
+                            "payload": self.do_next["payload"],
                             "values": self.values,
                         }
                     )

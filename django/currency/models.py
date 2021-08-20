@@ -33,6 +33,22 @@ class Trade(models.Model):
     team_lookup = models.JSONField(default=dict, blank=True, null=True)
     currency_lookup = models.JSONField(default=dict, blank=True, null=True)
 
+    state = FSMField(default="new")
+
+    @transaction.atomic
+    @transition(field=state, source="new", target="created")
+    def create(self):
+        self.created_date = timezone.now()
+        self.modified_date = timezone.now()
+
+    @transaction.atomic
+    @transition(field=state, source="created", target="receiving_party_set")
+    def set_receiver(self, values):
+        from team.models import Team
+
+        self.receiving_party = Team.objects.get(id=self.team_lookup[values[0]])
+        self.modified_date = timezone.now()
+
 
 class Transaction(models.Model):
     # current_message_id = models.IntegerField(default=0, unique=True)
@@ -94,7 +110,7 @@ class Transaction(models.Model):
 
 
 class Wallet(models.Model):
-    name = models.CharField(max_length=20)
+    name = models.CharField(max_length=40)
 
 
 # class BankAccount(models.Model):
