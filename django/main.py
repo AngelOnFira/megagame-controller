@@ -260,6 +260,9 @@ def run_tasks_sync(client, view):
             async_to_sync(channel.send)("test", view=view)
 
         elif task.task_type == TaskType.CREATE_BUTTONS:
+            guild_id = task.payload["guild_id"]
+            channel_id = task.payload["channel_id"]
+            
             view.add_item(
                 Button(
                     0,

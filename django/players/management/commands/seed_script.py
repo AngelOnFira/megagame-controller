@@ -26,6 +26,7 @@ class Command(BaseCommand):
         # LoggedMessage.objects.all().delete()
         Player.objects.all().delete()
         Member.objects.all().delete()
+        Transaction.objects.all().delete()
         Trade.objects.all().delete()
         Team.objects.all().delete()
         Task.objects.all().delete()

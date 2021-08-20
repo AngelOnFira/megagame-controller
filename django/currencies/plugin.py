@@ -96,24 +96,13 @@ class Plugin(BasePlugin):
             )
 
         if message.content.startswith("!grid"):
-            QueueTask.execute(
+            await sync_to_async(QueueTask.execute)(
                 {
-                    "task_type": TaskType.CREATE_DROPDOWN,
+                    "task_type": TaskType.CREATE_BUTTONS,
+                    "channel_id": message.channel.id,
                     "payload": {
-                        "guild_id": message.guild.id,
                         "channel_id": message.channel.id,
-                        "do_next": {
-                            "type": TaskType.TRADE_SELECT_RECEIVER,
-                            "payload": {
-                                "trade_id": trade.id,
-                            },
-                        },
-                        "dropdown": {
-                            "placeholder": "Which country do you want to trade with?",
-                            "min_values": 1,
-                            "max_values": 1,
-                            "options": options,
-                        },
+                        "guild_id": message.guild.id,
                     },
                 }
             )

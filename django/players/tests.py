@@ -1,6 +1,6 @@
 import pytest
-from currency.plugin import Plugin as CurrencyPlugin
-from player.services import CreatePlayer
+from currencies.plugin import Plugin as CurrencyPlugin
+from players.services import CreatePlayer
 
 
 @pytest.mark.django_db
