@@ -101,17 +101,8 @@ class Plugin(BasePlugin):
             button_rows = []
 
             currency: Currency
-            for currency in currencies:
+            for i, currency in enumerate(currencies):
                 row = []
-                currency_button = {
-                    "x": 4,
-                    "y": 0,
-                    "style": discord.ButtonStyle.primary,
-                    "emoji": emojis.encode(currency.emoji),
-                    "disabled": True,
-                    "label": currency.name,
-                }
-                row.append(currency_button)
 
                 for j, label in enumerate(["-5", "-1", "+1", "+5"]):
                     style = (
@@ -122,13 +113,23 @@ class Plugin(BasePlugin):
 
                     value_button = {
                         "x": j,
-                        "y": 0,
+                        "y": i,
                         "style": style,
                         "disabled": False,
                         "label": label,
                     }
 
                     row.append(value_button)
+
+                currency_button = {
+                    "x": 4,
+                    "y": i,
+                    "style": discord.ButtonStyle.primary,
+                    "emoji": emojis.encode(currency.emoji),
+                    "disabled": True,
+                    "label": currency.name,
+                }
+                row.append(currency_button)
 
                 button_rows.append(row)
 

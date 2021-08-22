@@ -1,7 +1,8 @@
 import json
 
+import discord
 import emojis
-from service_objects.fields import DictField, ListField
+from service_objects.fields import DictField, ListField, ModelField
 from service_objects.services import Service
 
 from bot.users.models import Member
@@ -11,6 +12,19 @@ from tasks.services import QueueTask
 from teams.models import Team
 
 from .models import Currency, Trade, Transaction, Wallet
+
+
+class CreateTradeEmbed(Service):
+    trade = ModelField(Trade)
+
+    def process(self):
+        trade: Trade = self.cleaned_data["trade"]
+
+        embed = discord.Embed(
+            title=f"Trade for {trade.initiating_party.name} & {trade.receiving_party.name}"
+        )
+
+        return embed
 
 
 class CreateWallet(Service):

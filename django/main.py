@@ -21,6 +21,7 @@ from discord.ext import tasks
 import django
 from bot.plugins.base import MethodPool
 from bot.plugins.events import EventPool
+from django.apps import AppConfig
 from django.conf import settings
 
 logger = logging.getLogger("bot")
@@ -83,12 +84,72 @@ class Button(discord.ui.Button):
         # self.callback_function = callback
         # self.do_next = do_next
 
+    async def callback(self, interaction: discord.Interaction):
+        assert self.view is not None
+        self.disabled = True
+
+        content = "test"
+
+        await interaction.response.edit_message(content=content, view=self.view)
+
+
+@sync_to_async
+def build_trade_buttons(channel_id, guild_id, trade_id):
+    from currencies.models import Currency
+    from tasks.models import TaskType
+    from tasks.services import QueueTask
+
+    button_rows = []
+
+    currency: Currency
+    for i, currency in enumerate(Currency.objects.all()):
+        row = []
+
+        for j, label in enumerate(["-5", "-1", "+1", "+5"]):
+            style = discord.ButtonStyle.danger if j < 2 else discord.ButtonStyle.success
+
+            value_button = {
+                "x": j,
+                "y": i,
+                "style": style,
+                "disabled": False,
+                "label": label,
+            }
+
+            row.append(value_button)
+
+        currency_button = {
+            "x": 4,
+            "y": i,
+            "style": discord.ButtonStyle.primary,
+            "emoji": emojis.encode(currency.emoji),
+            "disabled": True,
+            "label": currency.name,
+        }
+        row.append(currency_button)
+
+        button_rows.append(row)
+
+    QueueTask.execute(
+        {
+            "task_type": TaskType.CREATE_BUTTONS,
+            "payload": {
+                "channel_id": channel_id,
+                "guild_id": guild_id,
+                "button_rows": button_rows,
+                "trade_id": trade_id,
+            },
+        }
+    )
+
 
 @sync_to_async
 def run_tasks_sync(client, view: discord.ui.View):
     from bot.discord_models.models import Category, Role
     from bot.users.models import Member
-    from currencies.services import CreateTrade, SelectTradeReceiver
+    from currencies.models import Trade
+    from currencies.services import (CreateTrade, CreateTradeEmbed,
+                                     SelectTradeReceiver)
     from players.models import Player
     from responses.models import Response
     from tasks.models import Task, TaskType
@@ -227,6 +288,10 @@ def run_tasks_sync(client, view: discord.ui.View):
                         }
                     )
 
+                    await build_trade_buttons(
+                        channel_id, guild_id, self.do_next["payload"]["trade_id"]
+                    )
+
             options = []
 
             for option in dropdown["options"]:
@@ -245,22 +310,21 @@ def run_tasks_sync(client, view: discord.ui.View):
                 )
             )
             channel = client.get_guild(guild_id).get_channel(channel_id)
-            async_to_sync(channel.send)("test", view=view)
+
+            embedVar = discord.Embed(title=" ads", description=" d", color=0x00FF00)
+
+            async_to_sync(channel.send)(embed=embedVar, view=view)
 
         elif task.task_type == TaskType.CREATE_BUTTONS:
             guild_id = task.payload["guild_id"]
             channel_id = task.payload["channel_id"]
             button_rows = task.payload["button_rows"]
+            trade_id = task.payload["trade_id"]
 
             channel = client.get_guild(guild_id).get_channel(channel_id)
-            from pprint import pprint
-
-            pprint(button_rows)
 
             for row in button_rows:
-                print(row)
                 for button in row:
-                    print(button)
                     options_dict = {
                         "style": button["style"][1],
                         "label": button["label"],
@@ -281,11 +345,17 @@ def run_tasks_sync(client, view: discord.ui.View):
 
                     view.add_item(button)
 
-                async_to_sync(channel.send)(" adf", view=view)
+                # children = view.children
+                # for child in children:
+                #     view.remove_item(child)
 
-                children = view.children
-                for child in children:
-                    view.remove_item(child)
+            embed = CreateTradeEmbed.execute({"trade": Trade.objects.get(id=trade_id)})
+
+            # embedVar = discord.Embed(title="Title", description="Desc", color=0x00ff00)
+            # embedVar.add_field(name="Field1", value="hi", inline=False)
+            # embedVar.add_field(name="Field2", value="hi2", inline=False)
+
+            async_to_sync(channel.send)(embed=embed, view=view)
 
         else:
             # TASK ERROR
