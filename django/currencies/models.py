@@ -64,6 +64,7 @@ class Transaction(models.Model):
     currency = models.ForeignKey(
         Currency, on_delete=models.PROTECT, null=True, blank=True
     )
+    trade = models.ForeignKey(Trade, on_delete=models.PROTECT, null=True, blank=True)
 
     created_date = models.DateTimeField(default=timezone.now)
     modified_date = models.DateTimeField(default=timezone.now)
@@ -84,8 +85,6 @@ class Transaction(models.Model):
         null=True,
         blank=True,
     )
-
-    emoji_lookup = models.JSONField(default=None, null=True, blank=True)
 
     state = FSMField(default="new")
 

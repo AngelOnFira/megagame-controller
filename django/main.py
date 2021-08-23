@@ -85,10 +85,53 @@ class Button(discord.ui.Button):
         # self.do_next = do_next
 
     async def callback(self, interaction: discord.Interaction):
+        from currencies.models import Currency, Trade, Transaction
+
         assert self.view is not None
         self.disabled = True
 
         content = "test"
+
+        # Get the id
+        # Get a transaction model and add or remove from the currency
+
+        currency_id, trade_id, adjustment = self.custom_id.split("|")
+
+        currency = await sync_to_async(Currency.objects.get)(id=currency_id)
+
+        # Have to wrap it since it needs a prefetch
+        @sync_to_async
+        def get_trade(trade_id):
+            trade = Trade.objects.prefetch_related(
+                "initiating_party", "receiving_party"
+            ).get(id=trade_id)
+
+            from_wallet = trade.initiating_party.wallet
+            to_wallet = trade.receiving_party.wallet
+
+            return trade, from_wallet, to_wallet
+
+        trade, from_wallet, to_wallet = await get_trade(trade_id)
+
+        print(trade)
+
+        transaction, _ = await sync_to_async(Transaction.objects.get_or_create)(
+            trade=trade,
+            currency=currency,
+            defaults={
+                "amount": 0,
+                # TODO: Once team for button is tracked, swap this out
+                "from_wallet": from_wallet,
+                "to_wallet": to_wallet,
+            },
+        )
+
+        adjustment_int = int(adjustment)
+
+        transaction.amount += adjustment_int
+        transaction.amount = max(transaction.amount, 0)
+
+        # TODO: Make sure they have enough money
 
         await interaction.response.edit_message(content=content, view=self.view)
 
@@ -108,12 +151,15 @@ def build_trade_buttons(channel_id, guild_id, trade_id):
         for j, label in enumerate(["-5", "-1", "+1", "+5"]):
             style = discord.ButtonStyle.danger if j < 2 else discord.ButtonStyle.success
 
+            # TODO: Track which team this button is associated with
+
             value_button = {
                 "x": j,
                 "y": i,
                 "style": style,
                 "disabled": False,
                 "label": label,
+                "custom_id": f"{currency.id}|{trade_id}|{label}",
             }
 
             row.append(value_button)
@@ -148,8 +194,7 @@ def run_tasks_sync(client, view: discord.ui.View):
     from bot.discord_models.models import Category, Role
     from bot.users.models import Member
     from currencies.models import Trade
-    from currencies.services import (CreateTrade, CreateTradeEmbed,
-                                     SelectTradeReceiver)
+    from currencies.services import CreateTrade, CreateTradeEmbed, SelectTradeReceiver
     from players.models import Player
     from responses.models import Response
     from tasks.models import Task, TaskType
@@ -336,6 +381,9 @@ def run_tasks_sync(client, view: discord.ui.View):
 
                     if "disabled" in button:
                         options_dict["disabled"] = button["disabled"]
+
+                    if "custom_id" in button:
+                        options_dict["custom_id"] = button["custom_id"]
 
                     button = Button(
                         button["x"],
