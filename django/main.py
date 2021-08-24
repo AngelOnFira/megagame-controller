@@ -86,9 +86,9 @@ class Button(discord.ui.Button):
 
     async def callback(self, interaction: discord.Interaction):
         from currencies.models import Currency, Trade, Transaction
+        from currencies.services import CreateTradeEmbed
 
         assert self.view is not None
-        self.disabled = True
 
         content = "test"
 
@@ -113,8 +113,6 @@ class Button(discord.ui.Button):
 
         trade, from_wallet, to_wallet = await get_trade(trade_id)
 
-        print(trade)
-
         transaction, _ = await sync_to_async(Transaction.objects.get_or_create)(
             trade=trade,
             currency=currency,
@@ -131,9 +129,16 @@ class Button(discord.ui.Button):
         transaction.amount += adjustment_int
         transaction.amount = max(transaction.amount, 0)
 
+        if transaction.amount == 0:
+            await sync_to_async(transaction.delete)()
+        else:
+            await sync_to_async(transaction.save)()
+
         # TODO: Make sure they have enough money
 
-        await interaction.response.edit_message(content=content, view=self.view)
+        embed = await sync_to_async(CreateTradeEmbed.execute)({"trade": trade})
+
+        await interaction.response.edit_message(embed=embed, view=self.view)
 
 
 @sync_to_async
