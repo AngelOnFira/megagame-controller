@@ -15,8 +15,6 @@ class ChannelAdmin(admin.ModelAdmin):
     search_fields = ("name",)
 
 
-admin.register(Role)
-
-
+@admin.register(Role)
 class RoleAdmin(admin.ModelAdmin):
     pass

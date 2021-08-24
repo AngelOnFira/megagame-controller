@@ -31,6 +31,7 @@ class Channel(models.Model):
 
 class Role(models.Model):
     discord_id = models.BigIntegerField(unique=True)
+    name = models.CharField(_("name"), max_length=50, default="")
 
 
 class Category(models.Model):

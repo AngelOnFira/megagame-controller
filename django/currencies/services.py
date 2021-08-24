@@ -29,7 +29,9 @@ class CreateTradeEmbed(Service):
         for transaction in Transaction.objects.filter(
             trade=trade, from_wallet=trade.initiating_party.wallet
         ):
-            initiating_party_transactions += f"{transaction.amount} {transaction.currency.name}\n"
+            initiating_party_transactions += (
+                f"{transaction.amount} {transaction.currency.name}\n"
+            )
 
         embed.add_field(
             name="Initiating Party",
@@ -41,7 +43,9 @@ class CreateTradeEmbed(Service):
         for transaction in Transaction.objects.filter(
             trade=trade, from_wallet=trade.receiving_party.wallet
         ):
-            receiving_party_transactions += f"{transaction.amount} {transaction.currency.name}\n"
+            receiving_party_transactions += (
+                f"{transaction.amount} {transaction.currency.name}\n"
+            )
 
         embed.add_field(
             name="Receiving Party",

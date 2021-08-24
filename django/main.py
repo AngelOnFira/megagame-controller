@@ -31,12 +31,15 @@ intents.members = True
 
 client = discord.Client(intents=intents)
 
+TEAM_ROLE_COLOUR = discord.Colour.red()
+
 
 @client.event
 async def on_ready():
-    from bot.discord_models.models import Guild
+    from bot.discord_models.models import Category, Channel, Guild, Role
     from bot.discord_models.services import CreateGuild
     from bot.users.services import CreateMember
+    from teams.models import Team
 
     logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
 
@@ -59,6 +62,31 @@ async def on_ready():
                 "discord_id": guild.id,
             }
         )
+
+        print("Deleting channels that aren't in the database...")
+        channels_stored = await sync_to_async(list)(Channel.objects.all())
+        for channel in guild.channels:
+            if (
+                not channel.name.startswith("test-")
+                and isinstance(channel, discord.TextChannel)
+                and channel.id not in channels_stored
+            ):
+                await channel.delete()
+
+        print("Deleting categories that aren't in the database...")
+        categories_stored = await sync_to_async(list)(Category.objects.all())
+        for category in guild.categories:
+            if (
+                not category.name.startswith("dev-")
+                and category.id not in categories_stored
+            ):
+                await category.delete()
+
+        print("Deleting roles that aren't in the database...")
+        roles_stored = await sync_to_async(list)(Role.objects.all())
+        for role in guild.roles:
+            if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
+                await role.delete()
 
     background_task.start()
 
@@ -271,9 +299,11 @@ def run_tasks_sync(client, view: discord.ui.View):
             # Create a role for the team
             role_object = async_to_sync(
                 client.get_guild(team.guild.discord_id).create_role
-            )(name=team.name, hoist=True, mentionable=True, colour=discord.Colour.red())
+            )(name=team.name, hoist=True, mentionable=True, colour=TEAM_ROLE_COLOUR)
 
-            new_role, _ = Role.objects.get_or_create(discord_id=role_object.id)
+            new_role, _ = Role.objects.get_or_create(
+                discord_id=role_object.id, name=team.name
+            )
 
             team.role = new_role
             team.save()

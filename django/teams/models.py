@@ -56,36 +56,36 @@ def default_wallet(sender, instance, created, **kwargs):
 
         instance.save()
 
-        # # Create the role for the team
-        # QueueTask.execute(
-        #     {
-        #         "task_type": TaskType.CREATE_ROLE,
-        #         "payload": {
-        #             "team_id": instance.id,
-        #         },
-        #     }
-        # )
+        # Create the role for the team
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_ROLE,
+                "payload": {
+                    "team_id": instance.id,
+                },
+            }
+        )
 
-        # # Create a category for the team
-        # QueueTask.execute(
-        #     {
-        #         "task_type": TaskType.CREATE_CATEGORY,
-        #         "payload": {
-        #             "team_id": instance.id,
-        #         },
-        #     }
-        # )
+        # Create a category for the team
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CATEGORY,
+                "payload": {
+                    "team_id": instance.id,
+                },
+            }
+        )
 
-        # # Create a channel for the team
-        # QueueTask.execute(
-        #     {
-        #         "task_type": TaskType.CREATE_CHANNEL,
-        #         "payload": {
-        #             "team_id": instance.id,
-        #             "channel_name": "general",
-        #         },
-        #     }
-        # )
+        # Create a channel for the team
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CHANNEL,
+                "payload": {
+                    "team_id": instance.id,
+                    "channel_name": "general",
+                },
+            }
+        )
 
 
 post_save.connect(default_wallet, sender=Team)
