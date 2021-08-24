@@ -80,17 +80,15 @@ class CreateCurrency(Service):
 
 
 class CreateTrade(Service):
-    message_sender_id = forms.CharField()
+    initiating_team = ModelField(Team)
     team_lookup = DictField()
 
     def process(self):
-        message_sender_id = self.cleaned_data["message_sender_id"]
+        initiating_team = self.cleaned_data["initiating_team"]
         team_lookup = self.cleaned_data["team_lookup"]
 
-        player_team = Member.objects.get(discord_id=message_sender_id).player.team
-
         trade = Trade.objects.create(
-            initiating_party=player_team,
+            initiating_party=initiating_team,
             team_lookup=team_lookup,
         )
 

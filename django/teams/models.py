@@ -45,7 +45,8 @@ class Team(models.Model):
         return f"{self.name} ({self.id})"
 
 
-def on_team_creation(sender, instance, created, **kwargs):
+def on_team_creation(sender, instance: Team, created, **kwargs):
+    from currencies.services import CreateTrade
 
     if created:
         # If a guild is not set, choose the first one
@@ -92,6 +93,37 @@ def on_team_creation(sender, instance, created, **kwargs):
             }
         )
 
+        options = []
+        team_lookup = {}
+
+        for team in Team.objects.all():
+            if not team.emoji:
+                continue
+
+            options.append(
+                {
+                    "label": team.name,
+                    "description": "",
+                    "emoji": emojis.encode(team.emoji),
+                }
+            )
+
+            team_lookup[team.name] = team.id
+
+        trade = CreateTrade.execute(
+            {
+                "initiating_team": instance,
+                "team_lookup": team_lookup,
+            }
+        )
+
+        guild = instance.guild
+
+        trade.discord_channel = instance.general_channel
+        trade.discord_guild = instance.guild
+
+        trade.save()
+
         button_rows = [
             [
                 {
@@ -102,6 +134,24 @@ def on_team_creation(sender, instance, created, **kwargs):
                     "label": "Start trade",
                     "custom_id": f"{instance.id}",
                     "emoji": "💱",
+                    "do_next": {
+                        "task_type": TaskType.CREATE_DROPDOWN,
+                        "payload": {
+                            "channel_id": instance.general_channel.id,
+                            # "do_next": {
+                            #     "type": TaskType.TRADE_SELECT_RECEIVER,
+                            #     "payload": {
+                            #         "trade_id": trade.id,
+                            #     },
+                            # },
+                            "dropdown": {
+                                "placeholder": "Which country do you want to trade with?",
+                                "min_values": 1,
+                                "max_values": 1,
+                                "options": options,
+                            },
+                        },
+                    },
                 }
             ]
         ]

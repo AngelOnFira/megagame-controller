@@ -60,8 +60,10 @@ class Plugin(BasePlugin):
                 }
             )
 
+            guild = await sync_to_async(Guild.objects.get)(discord_id=message.guild.id)
+
             discord_channel, _ = await sync_to_async(Channel.objects.get_or_create)(
-                discord_id=message.channel.id
+                discord_id=message.channel.id, guild=guild
             )
             discord_guild, _ = await sync_to_async(Guild.objects.get_or_create)(
                 message.guild.id

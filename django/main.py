@@ -105,12 +105,14 @@ class Button(discord.ui.Button):
     # async def callback(self, interaction: discord.Interaction):
     #     await self.callback_function(self, interaction)
 
-    def __init__(self, x: int, y: int, options: dict, callback=False, do_next=False):
+    def __init__(
+        self, x: int, y: int, options: dict, callback=False, do_next: dict = {}
+    ):
         super().__init__(**options)
         self.x = x
         self.y = y
         # self.callback_function = callback
-        # self.do_next = do_next
+        self.do_next = do_next
 
     async def callback(self, interaction: discord.Interaction):
         from currencies.models import Currency, Trade, Transaction
@@ -120,53 +122,59 @@ class Button(discord.ui.Button):
 
         content = "test"
 
-        # Get the id
-        # Get a transaction model and add or remove from the currency
+        async def adjust_currency_trade(inteaction: discord.Interaction):
 
-        currency_id, trade_id, adjustment = self.custom_id.split("|")
+            # Get the id
+            # Get a transaction model and add or remove from the currency
 
-        currency = await sync_to_async(Currency.objects.get)(id=currency_id)
+            currency_id, trade_id, adjustment = self.custom_id.split("|")
 
-        # Have to wrap it since it needs a prefetch
-        @sync_to_async
-        def get_trade(trade_id):
-            trade = Trade.objects.prefetch_related(
-                "initiating_party", "receiving_party"
-            ).get(id=trade_id)
+            currency = await sync_to_async(Currency.objects.get)(id=currency_id)
 
-            from_wallet = trade.initiating_party.wallet
-            to_wallet = trade.receiving_party.wallet
+            # Have to wrap it since it needs a prefetch
+            @sync_to_async
+            def get_trade(trade_id):
+                trade = Trade.objects.prefetch_related(
+                    "initiating_party", "receiving_party"
+                ).get(id=trade_id)
 
-            return trade, from_wallet, to_wallet
+                from_wallet = trade.initiating_party.wallet
+                to_wallet = trade.receiving_party.wallet
 
-        trade, from_wallet, to_wallet = await get_trade(trade_id)
+                return trade, from_wallet, to_wallet
 
-        transaction, _ = await sync_to_async(Transaction.objects.get_or_create)(
-            trade=trade,
-            currency=currency,
-            defaults={
-                "amount": 0,
-                # TODO: Once team for button is tracked, swap this out
-                "from_wallet": from_wallet,
-                "to_wallet": to_wallet,
-            },
-        )
+            trade, from_wallet, to_wallet = await get_trade(trade_id)
 
-        adjustment_int = int(adjustment)
+            transaction, _ = await sync_to_async(Transaction.objects.get_or_create)(
+                trade=trade,
+                currency=currency,
+                defaults={
+                    "amount": 0,
+                    # TODO: Once team for button is tracked, swap this out
+                    "from_wallet": from_wallet,
+                    "to_wallet": to_wallet,
+                },
+            )
 
-        transaction.amount += adjustment_int
-        transaction.amount = max(transaction.amount, 0)
+            transaction.amount += int(adjustment)
+            transaction.amount = max(transaction.amount, 0)
 
-        if transaction.amount == 0:
-            await sync_to_async(transaction.delete)()
-        else:
-            await sync_to_async(transaction.save)()
+            if transaction.amount == 0:
+                await sync_to_async(transaction.delete)()
+            else:
+                await sync_to_async(transaction.save)()
 
-        # TODO: Make sure they have enough money
+            # TODO: Make sure they have enough money
 
-        embed = await sync_to_async(CreateTradeEmbed.execute)({"trade": trade})
+            embed = await sync_to_async(CreateTradeEmbed.execute)({"trade": trade})
 
-        await interaction.response.edit_message(embed=embed, view=self.view)
+            await interaction.response.edit_message(embed=embed, view=self.view)
+
+        function_lookup = {
+            "adjust_currency_trade": adjust_currency_trade,
+        }
+
+        await function_lookup[self.custom_id](interaction, do_next)
 
 
 @sync_to_async
@@ -306,7 +314,7 @@ def run_tasks_sync(client, view: discord.ui.View):
             )(name=team.name, hoist=True, mentionable=True, colour=TEAM_ROLE_COLOUR)
 
             new_role, _ = Role.objects.get_or_create(
-                discord_id=role_object.id, name=team.name
+                discord_id=role_object.id, name=team.name, guild=team.guild
             )
 
             team.role = new_role
@@ -336,7 +344,7 @@ def run_tasks_sync(client, view: discord.ui.View):
             )
 
             team.category, _ = Category.objects.get_or_create(
-                discord_id=category_channel.id
+                discord_id=category_channel.id, guild=team.guild
             )
 
             team.save()
@@ -357,7 +365,9 @@ def run_tasks_sync(client, view: discord.ui.View):
                 category=category,
             )
 
-            new_channel, _ = Channel.objects.get_or_create(discord_id=text_channel.id)
+            new_channel, _ = Channel.objects.get_or_create(
+                discord_id=text_channel.id, guild=team.guild
+            )
 
             team.general_channel = new_channel
             team.save()
@@ -439,6 +449,12 @@ def run_tasks_sync(client, view: discord.ui.View):
                         button["x"],
                         button["y"],
                         options_dict,
+                        (
+                            # dict to control what button does next
+                            button["do_next"]
+                            if "do_next" in button
+                            else {}
+                        ),
                     )
 
                     view.add_item(button)
