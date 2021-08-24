@@ -1,3 +1,4 @@
+import discord
 import emojis
 
 from bot.discord_models.models import Guild, Role
@@ -33,6 +34,10 @@ class Team(models.Model):
         "discord_models.Category", on_delete=models.CASCADE, null=True, blank=True
     )
 
+    general_channel = models.OneToOneField(
+        "discord_models.Channel", on_delete=models.CASCADE, null=True, blank=True
+    )
+
     def __str__(self):
         if self.emoji:
             return f"{self.name} {emojis.decode(self.emoji)} ({self.id})"
@@ -40,7 +45,7 @@ class Team(models.Model):
         return f"{self.name} ({self.id})"
 
 
-def default_wallet(sender, instance, created, **kwargs):
+def on_team_creation(sender, instance, created, **kwargs):
 
     if created:
         # If a guild is not set, choose the first one
@@ -87,5 +92,31 @@ def default_wallet(sender, instance, created, **kwargs):
             }
         )
 
+        button_rows = [
+            [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "style": discord.ButtonStyle.primary,
+                    "disabled": False,
+                    "label": "Start trade",
+                    "custom_id": f"{instance.id}",
+                    "emoji": "💱",
+                }
+            ]
+        ]
 
-post_save.connect(default_wallet, sender=Team)
+        # Add a buttons message as a menu
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_BUTTONS,
+                "payload": {
+                    "team_id": instance.id,
+                    "guild_id": guild.discord_id,
+                    "button_rows": button_rows,
+                },
+            }
+        )
+
+
+post_save.connect(on_team_creation, sender=Team)

@@ -224,7 +224,7 @@ def build_trade_buttons(channel_id, guild_id, trade_id):
 
 @sync_to_async
 def run_tasks_sync(client, view: discord.ui.View):
-    from bot.discord_models.models import Category, Role
+    from bot.discord_models.models import Category, Channel, Role
     from bot.users.models import Member
     from currencies.models import Trade
     from currencies.services import CreateTrade, CreateTradeEmbed, SelectTradeReceiver
@@ -236,6 +236,10 @@ def run_tasks_sync(client, view: discord.ui.View):
     # Currently set up to run just message tasks
     task_list = Task.objects.filter(completed=False)
     for task in task_list:
+        # Reset the view
+        for child in view.children:
+            view.remove_item(child)
+
         if task.task_type == TaskType.MESSAGE:
             player_id = task.payload["player_id"]
             message = task.payload["message"]
@@ -353,6 +357,11 @@ def run_tasks_sync(client, view: discord.ui.View):
                 category=category,
             )
 
+            new_channel, _ = Channel.objects.get_or_create(discord_id=text_channel.id)
+
+            team.general_channel = new_channel
+            team.save()
+
         elif task.task_type == TaskType.CREATE_DROPDOWN:
             guild_id = task.payload["guild_id"]
             channel_id = task.payload["channel_id"]
@@ -397,9 +406,15 @@ def run_tasks_sync(client, view: discord.ui.View):
 
         elif task.task_type == TaskType.CREATE_BUTTONS:
             guild_id = task.payload["guild_id"]
-            channel_id = task.payload["channel_id"]
             button_rows = task.payload["button_rows"]
-            trade_id = task.payload["trade_id"]
+
+            if "channel_id" in task.payload:
+                channel_id = task.payload["channel_id"]
+            elif "team_id" in task.payload:
+                team_id = task.payload["team_id"]
+                channel_id = Team.objects.get(id=team_id).general_channel.discord_id
+            else:
+                raise Exception("No channel or team id found; don't know how to handle")
 
             channel = client.get_guild(guild_id).get_channel(channel_id)
 
@@ -432,7 +447,17 @@ def run_tasks_sync(client, view: discord.ui.View):
                 # for child in children:
                 #     view.remove_item(child)
 
-            embed = CreateTradeEmbed.execute({"trade": Trade.objects.get(id=trade_id)})
+            if "trade_id" in task.payload:
+                trade_id = task.payload["trade_id"]
+                embed = CreateTradeEmbed.execute(
+                    {"trade": Trade.objects.get(id=trade_id)}
+                )
+            else:
+                embed = discord.Embed(
+                    title="Team menu",
+                    description="Choose what you would like to do",
+                    color=0x00FF00,
+                )
 
             # embedVar = discord.Embed(title="Title", description="Desc", color=0x00ff00)
             # embedVar.add_field(name="Field1", value="hi", inline=False)
