@@ -4,15 +4,15 @@ import discord
 import emojis
 from aiohttp import payload
 from asgiref.sync import async_to_sync, sync_to_async
-from currencies.services import CreateTrade, CreateTradeEmbed, SelectTradeReceiver
-from django import forms
 from service_objects.fields import DictField, ListField, ModelField
 from service_objects.services import Service
+
+from bot.users.models import Member
+from currencies.services import CreateTrade, CreateTradeEmbed, SelectTradeReceiver
+from django import forms
 from tasks.models import TaskType
 from tasks.services import QueueTask
 from teams.models import Team
-
-from bot.users.models import Member
 
 
 @sync_to_async
@@ -73,9 +73,34 @@ class Dropdown(discord.ui.Select):
         await self.callback_function(self, interaction)
 
     def __init__(self, options, callback, do_next=""):
+        from pprint import pprint
+
+        pprint(options)
         super().__init__(**options)
         self.callback_function = callback
-        self.do_next = do_next
+        # self.do_next = do_next
+
+        # options = [
+        #     discord.SelectOption(
+        #         label="Red", description="Your favourite colour is red", emoji="🟥"
+        #     ),
+        #     discord.SelectOption(
+        #         label="Green", description="Your favourite colour is green", emoji="🟩"
+        #     ),
+        #     discord.SelectOption(
+        #         label="Blue", description="Your favourite colour is blue", emoji="🟦"
+        #     ),
+        # ]
+
+        # # The placeholder is what will be shown when no option is chosen
+        # # The min and max values indicate we can only pick one of the three options
+        # # The options parameter defines the dropdown options. We defined this above
+        # super().__init__(
+        #     placeholder="Choose your favourite colour...",
+        #     min_values=1,
+        #     max_values=1,
+        #     options=options,
+        # )
 
 
 class Button(discord.ui.Button):
@@ -99,17 +124,14 @@ class Button(discord.ui.Button):
         self.view_base = view
 
     async def callback(self, interaction: discord.Interaction):
+        from bot.users.models import Member
         from currencies.models import Currency, Trade, Transaction
         from currencies.services import CreateTrade, CreateTradeEmbed
         from tasks.models import TaskType
         from tasks.services import QueueTask
         from teams.models import Team
 
-        from bot.users.models import Member
-
         assert self.view is not None
-
-        content = "test"
 
         async def adjust_currency_trade(inteaction: discord.Interaction):
 
@@ -160,7 +182,7 @@ class Button(discord.ui.Button):
             await interaction.response.edit_message(embed=embed, view=self.view)
 
         async def start_trading(inteaction: discord.Interaction):
-            options = []
+            options: list[discord.SelectOption] = []
             team_lookup = {}
 
             @sync_to_async
@@ -182,11 +204,11 @@ class Button(discord.ui.Button):
                     continue
 
                 options.append(
-                    {
-                        "label": team.name,
-                        "description": "",
-                        "emoji": emojis.encode(team.emoji),
-                    }
+                    discord.SelectOption(
+                        label=team.name,
+                        description="",
+                        emoji=emojis.encode(team.emoji),
+                    )
                 )
 
                 team_lookup[team.name] = team.id
@@ -203,17 +225,9 @@ class Button(discord.ui.Button):
 
             await sync_to_async(trade.save)()
 
-            handler = TaskHandler(view=self.view_base)
+            handler = TaskHandler(view=discord.ui.View())
 
-            handler.create_dropdown_response(
-                interaction,
-                {
-                    "placeholder": "Which country do you want to trade with?",
-                    "min_values": 1,
-                    "max_values": 1,
-                    "options": options,
-                },
-            )
+            await handler.create_dropdown_response(interaction, options)
 
             # await sync_to_async(QueueTask.execute)(
             #     {
@@ -239,12 +253,13 @@ class Button(discord.ui.Button):
 
         await function_lookup[self.do_next](interaction)
 
-class ButtonView(discord.ui.View):
-    def __init__(self):
-        super().__init__()
 
-        # Adds the dropdown to our view object.
-        self.add_item(Button())
+# class ButtonView(discord.ui.View):
+#     def __init__(self):
+#         super().__init__()
+
+#         # Adds the dropdown to our view object.
+#         self.add_item(Button())
 
 
 class TaskHandler:
@@ -252,8 +267,11 @@ class TaskHandler:
         self.view = view
         self.client = client
 
-    def create_dropdown_response(
-        self, interaction: discord.Interaction, options: dict, callback=None
+    async def create_dropdown_response(
+        self,
+        interaction: discord.Interaction,
+        options: list[discord.SelectOption],
+        callback=lambda x: x,
     ):
         self.view.add_item(
             Dropdown(
@@ -266,11 +284,12 @@ class TaskHandler:
                 callback,
             )
         )
-        async_to_sync(interaction.response.send_message)(
+
+        await interaction.response.send_message(
             content="test", view=self.view, ephemeral=True
         )
 
-    def create_dropdown(self, payload: dict):
+    async def create_dropdown(self, payload: dict):
         guild_id = payload["guild_id"]
         channel_id = payload["channel_id"]
         dropdown = payload["dropdown"]
