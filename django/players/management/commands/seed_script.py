@@ -70,7 +70,7 @@ class Command(BaseCommand):
         credits_currency = Currency.objects.get(name="Credits")
         bank_wallet = Wallet.objects.get_or_create(name="Bank")[0]
 
-        for i in range(len(emoji_list)):
+        for i in range(len(emoji_list) - 4):
             seeder.add_entity(Wallet, 1, {"name": f"{country_names[i]}'s wallet"})
 
             results = seeder.execute()

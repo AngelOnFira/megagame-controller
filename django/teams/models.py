@@ -63,6 +63,9 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
 
         instance.save()
 
+        if instance.name == "null":
+            return
+
         # Create the role for the team
         QueueTask.execute(
             {

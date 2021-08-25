@@ -35,6 +35,12 @@ def default_team(sender, instance, created, **kwargs):
 
         # TODO: Properly set guild
         guild = Guild.objects.all().first()
+
+        if not guild:
+            guild = Guild.objects.create(discord_id=0)
+
+        print(guild)
+
         instance.guild = guild
 
         team.guild = guild

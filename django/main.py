@@ -91,214 +91,15 @@ async def on_ready():
     background_task.start()
 
 
-class Dropdown(discord.ui.Select):
-    async def callback(self, interaction: discord.Interaction):
-        await self.callback_function(self, interaction)
 
-    def __init__(self, options, callback, do_next):
-        super().__init__(**options)
-        self.callback_function = callback
-        self.do_next = do_next
-
-
-class Button(discord.ui.Button):
-    # async def callback(self, interaction: discord.Interaction):
-    #     await self.callback_function(self, interaction)
-
-    def __init__(
-        self, x: int, y: int, options: dict, callback=False, do_next: str = ""
-    ):
-        super().__init__(**options)
-        self.x = x
-        self.y = y
-        # self.callback_function = callback
-        self.do_next = do_next
-
-    async def callback(self, interaction: discord.Interaction):
-        from bot.users.models import Member
-        from currencies.models import Currency, Trade, Transaction
-        from currencies.services import CreateTrade, CreateTradeEmbed
-        from tasks.models import TaskType
-        from tasks.services import QueueTask
-        from teams.models import Team
-
-        assert self.view is not None
-
-        content = "test"
-
-        async def adjust_currency_trade(inteaction: discord.Interaction):
-
-            # Get the id
-            # Get a transaction model and add or remove from the currency
-
-            currency_id, trade_id, adjustment = self.custom_id.split("|")
-
-            currency = await sync_to_async(Currency.objects.get)(id=currency_id)
-
-            # Have to wrap it since it needs a prefetch
-            @sync_to_async
-            def get_trade(trade_id):
-                trade = Trade.objects.prefetch_related(
-                    "initiating_party", "receiving_party"
-                ).get(id=trade_id)
-
-                from_wallet = trade.initiating_party.wallet
-                to_wallet = trade.receiving_party.wallet
-
-                return trade, from_wallet, to_wallet
-
-            trade, from_wallet, to_wallet = await get_trade(trade_id)
-
-            transaction, _ = await sync_to_async(Transaction.objects.get_or_create)(
-                trade=trade,
-                currency=currency,
-                defaults={
-                    "amount": 0,
-                    # TODO: Once team for button is tracked, swap this out
-                    "from_wallet": from_wallet,
-                    "to_wallet": to_wallet,
-                },
-            )
-
-            transaction.amount += int(adjustment)
-            transaction.amount = max(transaction.amount, 0)
-
-            if transaction.amount == 0:
-                await sync_to_async(transaction.delete)()
-            else:
-                await sync_to_async(transaction.save)()
-
-            # TODO: Make sure they have enough money
-
-            embed = await sync_to_async(CreateTradeEmbed.execute)({"trade": trade})
-
-            await interaction.response.edit_message(embed=embed, view=self.view)
-
-        async def start_trading(inteaction: discord.Interaction):
-            options = []
-            team_lookup = {}
-
-            @sync_to_async
-            def get_sender_team(author_id):
-                from bot.users.models import Member
-
-                team = Member.objects.get(discord_id=author_id).player.team
-
-                return team, team.general_channel, team.guild
-
-            sender_team, sender_team_channel, sender_team_guild = await get_sender_team(
-                interaction.message.author.id
-            )
-
-            teams = await sync_to_async(list)(Team.objects.all())
-
-            for team in teams:
-                if not team.emoji or team.id == sender_team.id:
-                    continue
-
-                options.append(
-                    {
-                        "label": team.name,
-                        "description": "",
-                        "emoji": emojis.encode(team.emoji),
-                    }
-                )
-
-                team_lookup[team.name] = team.id
-
-            trade = await sync_to_async(CreateTrade.execute)(
-                {
-                    "initiating_team": sender_team,
-                    "team_lookup": team_lookup,
-                }
-            )
-
-            trade.discord_channel = sender_team_channel
-            trade.discord_guild = sender_team_guild
-
-            await sync_to_async(trade.save)()
-
-            await sync_to_async(QueueTask.execute)(
-                {
-                    "task_type": TaskType.CREATE_DROPDOWN,
-                    "payload": {
-                        "channel_id": interaction.channel.id,
-                        "guild_id": interaction.guild.id,
-                        "do_next": "",
-                        "dropdown": {
-                            "placeholder": "Which country do you want to trade with?",
-                            "min_values": 1,
-                            "max_values": 1,
-                            "options": options,
-                        },
-                    },
-                }
-            )
-
-        function_lookup = {
-            "adjust_currency_trade": adjust_currency_trade,
-            "start_trading": start_trading,
-        }
-
-        await function_lookup[self.do_next](interaction)
-
-
-@sync_to_async
-def build_trade_buttons(channel_id, guild_id, trade_id):
-    from currencies.models import Currency
-    from tasks.models import TaskType
-    from tasks.services import QueueTask
-
-    button_rows = []
-
-    currency: Currency
-    for i, currency in enumerate(Currency.objects.all()):
-        row = []
-
-        for j, label in enumerate(["-5", "-1", "+1", "+5"]):
-            style = discord.ButtonStyle.danger if j < 2 else discord.ButtonStyle.success
-
-            # TODO: Track which team this button is associated with
-
-            value_button = {
-                "x": j,
-                "y": i,
-                "style": style,
-                "disabled": False,
-                "label": label,
-                "custom_id": f"{currency.id}|{trade_id}|{label}",
-            }
-
-            row.append(value_button)
-
-        currency_button = {
-            "x": 4,
-            "y": i,
-            "style": discord.ButtonStyle.primary,
-            "emoji": emojis.encode(currency.emoji),
-            "disabled": True,
-            "label": currency.name,
-        }
-        row.append(currency_button)
-
-        button_rows.append(row)
-
-    QueueTask.execute(
-        {
-            "task_type": TaskType.CREATE_BUTTONS,
-            "payload": {
-                "channel_id": channel_id,
-                "guild_id": guild_id,
-                "button_rows": button_rows,
-                "trade_id": trade_id,
-            },
-        }
-    )
-
-
-@sync_to_async
-def run_tasks_sync(client, view: discord.ui.View):
+async def run_tasks_sync(client):
     from bot.discord_models.models import Category, Channel, Role
+    from bot.services import (
+        Button,
+        Dropdown,
+        TaskHandler,
+        build_trade_buttons,
+    )
     from bot.users.models import Member
     from currencies.models import Trade
     from currencies.services import CreateTrade, CreateTradeEmbed, SelectTradeReceiver
@@ -314,9 +115,12 @@ def run_tasks_sync(client, view: discord.ui.View):
         for child in view.children:
             view.remove_item(child)
 
+        handler = TaskHandler(view=view, client=client)
+        payload: dict = task.payload
+
         if task.task_type == TaskType.MESSAGE:
-            player_id = task.payload["player_id"]
-            message = task.payload["message"]
+            player_id = payload["player_id"]
+            message = payload["message"]
 
             player = Player.objects.get(id=player_id)
 
@@ -330,8 +134,8 @@ def run_tasks_sync(client, view: discord.ui.View):
             player.save()
 
         elif task.task_type == TaskType.CHANGE_TEAM:
-            player_id = task.payload["player_id"]
-            new_team_id = task.payload["new_team_id"]
+            player_id = payload["player_id"]
+            new_team_id = payload["new_team_id"]
 
             player = Player.objects.get(id=player_id)
             team = Team.objects.get(id=new_team_id)
@@ -359,7 +163,7 @@ def run_tasks_sync(client, view: discord.ui.View):
             )
 
         elif task.task_type == TaskType.CREATE_ROLE:
-            team_id = task.payload["team_id"]
+            team_id = payload["team_id"]
 
             team = Team.objects.get(id=team_id)
 
@@ -389,7 +193,7 @@ def run_tasks_sync(client, view: discord.ui.View):
             team.save()
 
         elif task.task_type == TaskType.CREATE_CATEGORY:
-            team_id = task.payload["team_id"]
+            team_id = payload["team_id"]
 
             team = Team.objects.get(id=team_id)
 
@@ -418,8 +222,8 @@ def run_tasks_sync(client, view: discord.ui.View):
             team.save()
 
         elif task.task_type == TaskType.CREATE_CHANNEL:
-            team_id = task.payload["team_id"]
-            channel_name = task.payload["channel_name"]
+            team_id = payload["team_id"]
+            channel_name = payload["channel_name"]
 
             team = Team.objects.get(id=team_id)
 
@@ -441,55 +245,16 @@ def run_tasks_sync(client, view: discord.ui.View):
             team.save()
 
         elif task.task_type == TaskType.CREATE_DROPDOWN:
-            guild_id = task.payload["guild_id"]
-            channel_id = task.payload["channel_id"]
-            dropdown = task.payload["dropdown"]
-            do_next = task.payload["do_next"]
-
-            async def callback(self: Dropdown, interaction: discord.Interaction):
-                if self.do_next["type"] == TaskType.TRADE_SELECT_RECEIVER:
-                    await sync_to_async(SelectTradeReceiver.execute)(
-                        {
-                            "payload": self.do_next["payload"],
-                            "values": self.values,
-                        }
-                    )
-
-                    await build_trade_buttons(
-                        channel_id, guild_id, self.do_next["payload"]["trade_id"]
-                    )
-
-            options = []
-
-            for option in dropdown["options"]:
-                options.append(discord.SelectOption(**option))
-
-            view.add_item(
-                Dropdown(
-                    {
-                        "placeholder": "Which country do you want to trade with?",
-                        "min_values": 1,
-                        "max_values": 1,
-                        "options": options,
-                    },
-                    callback,
-                    do_next=do_next,
-                )
-            )
-            channel = client.get_guild(guild_id).get_channel(channel_id)
-
-            embedVar = discord.Embed(title=" ads", description=" d", color=0x00FF00)
-
-            async_to_sync(channel.send)(embed=embedVar, view=view)
+            handler.create_dropdown(payload)
 
         elif task.task_type == TaskType.CREATE_BUTTONS:
-            guild_id = task.payload["guild_id"]
-            button_rows = task.payload["button_rows"]
+            guild_id = payload["guild_id"]
+            button_rows = payload["button_rows"]
 
-            if "channel_id" in task.payload:
-                channel_id = task.payload["channel_id"]
-            elif "team_id" in task.payload:
-                team_id = task.payload["team_id"]
+            if "channel_id" in payload:
+                channel_id = payload["channel_id"]
+            elif "team_id" in payload:
+                team_id = payload["team_id"]
                 channel_id = Team.objects.get(id=team_id).general_channel.discord_id
             else:
                 raise Exception("No channel or team id found; don't know how to handle")
@@ -520,6 +285,7 @@ def run_tasks_sync(client, view: discord.ui.View):
                         button["y"],
                         options_dict,
                         do_next=button["do_next"],
+                        view=view
                     )
 
                     view.add_item(button)
@@ -528,8 +294,8 @@ def run_tasks_sync(client, view: discord.ui.View):
                 # for child in children:
                 #     view.remove_item(child)
 
-            if "trade_id" in task.payload:
-                trade_id = task.payload["trade_id"]
+            if "trade_id" in payload:
+                trade_id = payload["trade_id"]
                 embed = CreateTradeEmbed.execute(
                     {"trade": Trade.objects.get(id=trade_id)}
                 )
