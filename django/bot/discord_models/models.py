@@ -11,7 +11,9 @@ class Guild(models.Model):
 class ChannelQuerySet(models.QuerySet):
     async def from_message(self, message):
         discord_id = message.channel.id
-        guild, created = await sync_to_async(self.get_or_create)(discord_id=guild.id)
+        guild, created = await sync_to_async(self.get_or_create)(
+            discord_id=message.guild.id
+        )
         channel, created = await sync_to_async(self.get_or_create)(
             discord_id=discord_id,
             defaults={"name": message.channel.name, "guild": guild},

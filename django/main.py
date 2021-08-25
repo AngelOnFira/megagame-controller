@@ -180,13 +180,17 @@ class Button(discord.ui.Button):
 
             @sync_to_async
             def get_sender_team(author_id):
-                return Member.objects.get(id=author_id).player.team
+                from bot.users.models import Member
 
-            sender_team = await sync_to_async(get_sender_team)(
+                team = Member.objects.get(discord_id=author_id).player.team
+
+                return team, team.general_channel, team.guild
+
+            sender_team, sender_team_channel, sender_team_guild = await get_sender_team(
                 interaction.message.author.id
             )
 
-            teams = await sync_to_async(list)(Team.objects.all)
+            teams = await sync_to_async(list)(Team.objects.all())
 
             for team in teams:
                 if not team.emoji or team.id == sender_team.id:
@@ -209,52 +213,31 @@ class Button(discord.ui.Button):
                 }
             )
 
-            trade.discord_channel = team.general_channel
-            trade.discord_guild = team.guild
+            trade.discord_channel = sender_team_channel
+            trade.discord_guild = sender_team_guild
 
-            trade.save()
+            await sync_to_async(trade.save)()
 
-            button_rows = [
-                [
-                    {
-                        "x": 0,
-                        "y": 0,
-                        "style": discord.ButtonStyle.primary,
-                        "disabled": False,
-                        "label": "Start trade",
-                        "custom_id": f"{team.id}",
-                        "emoji": "💱",
-                        "do_next": {
-                            "task_type": TaskType.CREATE_DROPDOWN,
-                            "payload": {
-                                "channel_id": interaction.general_channel.id,
-                                "do_next": "",
-                                "dropdown": {
-                                    "placeholder": "Which country do you want to trade with?",
-                                    "min_values": 1,
-                                    "max_values": 1,
-                                    "options": options,
-                                },
-                            },
-                        },
-                    }
-                ]
-            ]
-
-            # Add a buttons message as a menu
             await sync_to_async(QueueTask.execute)(
                 {
-                    "task_type": TaskType.CREATE_BUTTONS,
+                    "task_type": TaskType.CREATE_DROPDOWN,
                     "payload": {
-                        "team_id": team.id,
-                        "guild_id": team.guild.discord_id,
-                        "button_rows": button_rows,
+                        "channel_id": interaction.channel.id,
+                        "guild_id": interaction.guild.id,
+                        "do_next": "",
+                        "dropdown": {
+                            "placeholder": "Which country do you want to trade with?",
+                            "min_values": 1,
+                            "max_values": 1,
+                            "options": options,
+                        },
                     },
                 }
             )
 
         function_lookup = {
             "adjust_currency_trade": adjust_currency_trade,
+            "start_trading": start_trading,
         }
 
         await function_lookup[self.do_next](interaction)
@@ -379,8 +362,6 @@ def run_tasks_sync(client, view: discord.ui.View):
             team_id = task.payload["team_id"]
 
             team = Team.objects.get(id=team_id)
-
-            print(team)
 
             # TODO: Problem with resetting db and running this
 
@@ -532,16 +513,13 @@ def run_tasks_sync(client, view: discord.ui.View):
                     if "custom_id" in button:
                         options_dict["custom_id"] = button["custom_id"]
 
+                    assert button["do_next"] != ""
+
                     button = Button(
                         button["x"],
                         button["y"],
                         options_dict,
-                        (
-                            # dict to control what button does next
-                            button["do_next"]
-                            if "do_next" in button
-                            else {}
-                        ),
+                        do_next=button["do_next"],
                     )
 
                     view.add_item(button)

@@ -1,5 +1,6 @@
 import discord
 import emojis
+from asgiref.sync import sync_to_async
 
 from bot.discord_models.models import Guild, Role
 from currencies.models import Wallet
@@ -89,6 +90,33 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                 "payload": {
                     "team_id": instance.id,
                     "channel_name": "general",
+                },
+            }
+        )
+
+        button_rows = [
+            [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "style": discord.ButtonStyle.primary,
+                    "disabled": False,
+                    "label": "Start trade",
+                    "custom_id": f"{instance.id}",
+                    "emoji": "💱",
+                    "do_next": "start_trading",
+                }
+            ]
+        ]
+
+        # Add a buttons message as a menu
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_BUTTONS,
+                "payload": {
+                    "team_id": instance.id,
+                    "guild_id": instance.guild.discord_id,
+                    "button_rows": button_rows,
                 },
             }
         )
