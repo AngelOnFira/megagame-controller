@@ -106,7 +106,7 @@ class Button(discord.ui.Button):
     #     await self.callback_function(self, interaction)
 
     def __init__(
-        self, x: int, y: int, options: dict, callback=False, do_next: dict = {}
+        self, x: int, y: int, options: dict, callback=False, do_next: str = ""
     ):
         super().__init__(**options)
         self.x = x
@@ -115,8 +115,12 @@ class Button(discord.ui.Button):
         self.do_next = do_next
 
     async def callback(self, interaction: discord.Interaction):
+        from bot.users.models import Member
         from currencies.models import Currency, Trade, Transaction
-        from currencies.services import CreateTradeEmbed
+        from currencies.services import CreateTrade, CreateTradeEmbed
+        from tasks.models import TaskType
+        from tasks.services import QueueTask
+        from teams.models import Team
 
         assert self.view is not None
 
@@ -170,11 +174,90 @@ class Button(discord.ui.Button):
 
             await interaction.response.edit_message(embed=embed, view=self.view)
 
+        async def start_trading(inteaction: discord.Interaction):
+            options = []
+            team_lookup = {}
+
+            @sync_to_async
+            def get_sender_team(author_id):
+                return Member.objects.get(id=author_id).player.team
+
+            sender_team = await sync_to_async(get_sender_team)(
+                interaction.message.author.id
+            )
+
+            teams = await sync_to_async(list)(Team.objects.all)
+
+            for team in teams:
+                if not team.emoji or team.id == sender_team.id:
+                    continue
+
+                options.append(
+                    {
+                        "label": team.name,
+                        "description": "",
+                        "emoji": emojis.encode(team.emoji),
+                    }
+                )
+
+                team_lookup[team.name] = team.id
+
+            trade = await sync_to_async(CreateTrade.execute)(
+                {
+                    "initiating_team": sender_team,
+                    "team_lookup": team_lookup,
+                }
+            )
+
+            trade.discord_channel = team.general_channel
+            trade.discord_guild = team.guild
+
+            trade.save()
+
+            button_rows = [
+                [
+                    {
+                        "x": 0,
+                        "y": 0,
+                        "style": discord.ButtonStyle.primary,
+                        "disabled": False,
+                        "label": "Start trade",
+                        "custom_id": f"{team.id}",
+                        "emoji": "💱",
+                        "do_next": {
+                            "task_type": TaskType.CREATE_DROPDOWN,
+                            "payload": {
+                                "channel_id": interaction.general_channel.id,
+                                "do_next": "",
+                                "dropdown": {
+                                    "placeholder": "Which country do you want to trade with?",
+                                    "min_values": 1,
+                                    "max_values": 1,
+                                    "options": options,
+                                },
+                            },
+                        },
+                    }
+                ]
+            ]
+
+            # Add a buttons message as a menu
+            await sync_to_async(QueueTask.execute)(
+                {
+                    "task_type": TaskType.CREATE_BUTTONS,
+                    "payload": {
+                        "team_id": team.id,
+                        "guild_id": team.guild.discord_id,
+                        "button_rows": button_rows,
+                    },
+                }
+            )
+
         function_lookup = {
             "adjust_currency_trade": adjust_currency_trade,
         }
 
-        await function_lookup[self.custom_id](interaction, do_next)
+        await function_lookup[self.do_next](interaction)
 
 
 @sync_to_async
@@ -296,6 +379,10 @@ def run_tasks_sync(client, view: discord.ui.View):
             team_id = task.payload["team_id"]
 
             team = Team.objects.get(id=team_id)
+
+            print(team)
+
+            # TODO: Problem with resetting db and running this
 
             roles = client.get_guild(team.guild.discord_id).roles
             role_dict = {}
