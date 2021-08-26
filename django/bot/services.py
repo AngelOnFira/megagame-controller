@@ -1,4 +1,5 @@
 import json
+from code import interact
 
 import discord
 import emojis
@@ -7,8 +8,9 @@ from asgiref.sync import async_to_sync, sync_to_async
 from service_objects.fields import DictField, ListField, ModelField
 from service_objects.services import Service
 
-from bot.discord_models.models import Category
+from bot.discord_models.models import Category, Channel, Guild
 from bot.users.models import Member
+from currencies.models import Trade
 from currencies.services import CreateTrade, CreateTradeEmbed, SelectTradeReceiver
 from django import forms
 from tasks.models import TaskType
@@ -71,9 +73,67 @@ def build_trade_buttons(channel_id, guild_id, trade_id):
 
 class Dropdown(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
-        def trade_country_chosen(interaction: discord.Interaction):
+        async def trade_country_chosen(interaction: discord.Interaction):
             # create channel for trade
+            # need interaction author team, interaction trade?
             pass
+
+            # get the trade category
+
+            trade_category = list(
+                filter(
+                    lambda x: x.name.lower() == "trades", interaction.guild.categories
+                )
+            )
+
+            assert len(trade_category) == 1
+
+            trade_id = self.callback_payload["trade_id"]
+
+            trade: Trade = await sync_to_async(Trade.objects.get)(id=trade_id)
+
+            receiving_team_id = trade.team_lookup[self.values[0]]
+
+            trade.receiving_party = await sync_to_async(Team.objects.get)(
+                id=trade.team_lookup[self.values[0]]
+            )
+
+            @sync_to_async
+            def get_involved_teams(trade: Trade):
+                assert trade.initiating_party is not None
+                assert trade.receiving_party is not None
+                return (
+                    trade.initiating_party,
+                    trade.receiving_party,
+                    trade.discord_guild,
+                )
+
+            initiating_party, receiving_party, discord_guild = await get_involved_teams(
+                trade
+            )
+
+            text_channel = await interaction.guild.create_text_channel(
+                f"Trade for {initiating_party.name} and {receiving_party.name}",
+                category=trade_category[0],
+            )
+
+            # # get guild
+            # guild, _ = await sync_to_async(Guild.objects.get)(id=interaction.guild.id)
+
+            # create channel for trade
+            new_channel, _ = await sync_to_async(Channel.objects.get_or_create)(
+                discord_id=text_channel.id, guild=discord_guild
+            )
+
+            trade.discord_channel = new_channel
+
+            await sync_to_async(trade.save)()
+
+            # Reply in old channel with link to the trade
+            await interaction.response.send_message(
+                content=f"Trade channel created! You can access it here: {text_channel.mention}",
+                ephemeral=True,
+            )
 
         function_lookup = {
             "trade_country_chosen": trade_country_chosen,
@@ -81,9 +141,10 @@ class Dropdown(discord.ui.Select):
 
         await function_lookup[self.do_next](interaction)
 
-    def __init__(self, options, do_next):
+    def __init__(self, options, do_next, callback_payload: dict):
         super().__init__(**options)
         self.do_next = do_next
+        self.callback_payload = callback_payload
 
 
 class Button(discord.ui.Button):
@@ -209,7 +270,7 @@ class Button(discord.ui.Button):
             handler = TaskHandler(view=discord.ui.View())
 
             await handler.create_dropdown_response(
-                interaction, options, "trade_country_chosen"
+                interaction, options, "trade_country_chosen", {"trade_id": trade.id}
             )
 
         function_lookup = {
@@ -237,7 +298,8 @@ class TaskHandler:
         self,
         interaction: discord.Interaction,
         options: list[discord.SelectOption],
-        callback,
+        do_next: str,
+        callback_payload: dict,
     ):
         self.view.add_item(
             Dropdown(
@@ -247,7 +309,8 @@ class TaskHandler:
                     "max_values": 1,
                     "options": options,
                 },
-                callback,
+                do_next,
+                callback_payload,
             )
         )
 
