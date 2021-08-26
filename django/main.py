@@ -43,7 +43,7 @@ async def on_ready():
 
 async def run_tasks_sync(client: discord.Client):
     from bot.discord_models.models import Category, Channel, Role
-    from bot.services import Button, Dropdown, TaskHandler, build_trade_buttons
+    from bot.services import Button, Dropdown, TaskHandler
     from bot.users.models import Member
     from currencies.models import Trade
     from currencies.services import CreateTrade, CreateTradeEmbed, SelectTradeReceiver
@@ -79,35 +79,50 @@ async def run_tasks_sync(client: discord.Client):
 
             await update_player(discord_message)
 
-        # Need to convert to async
-        # elif task.task_type == TaskType.CHANGE_TEAM:
-        #     player_id = payload["player_id"]
-        #     new_team_id = payload["new_team_id"]
+        elif task.task_type == TaskType.CHANGE_TEAM:
+            player_id = payload["player_id"]
+            new_team_id = payload["new_team_id"]
 
-        #     player = Player.objects.get(id=player_id)
-        #     team = Team.objects.get(id=new_team_id)
+            @sync_to_async
+            def get_models(player_id, new_team_id):
+                player = Player.objects.get(id=player_id)
+                team = Team.objects.get(id=new_team_id)
+                teams = [team for team in Team.objects.all()]
 
-        #     guild = client.get_guild(player.guild.discord_id)
+                player_guild = player.guild
+                discord_member = player.discord_member
+                team_role = team.role
 
-        #     # TODO: Try to change this to get_member
-        #     discord_member = async_to_sync(guild.fetch_member)(
-        #         player.discord_member.discord_id
-        #     )
+                return (
+                    player,
+                    team,
+                    teams,
+                    player_guild,
+                    discord_member,
+                    team_role,
+                )
 
-        #     teams = [team for team in Team.objects.all()]
-        #     team_names = [team.name for team in teams]
+            (
+                player,
+                team,
+                teams,
+                player_guild,
+                discord_member,
+                team_role,
+            ) = await get_models(player_id, new_team_id)
 
-        #     # raise Exception([guild.get_role(team.role.discord_id) for team in teams])
+            guild = client.get_guild(player_guild.discord_id)
 
-        #     # Will remove all roles from the player
-        #     async_to_sync(discord_member.remove_roles)(
-        #         *[guild.get_role(team.role.discord_id) for team in teams]
-        #     )
+            # TODO: Try to change this to get_member
+            discord_member = await guild.fetch_member(discord_member.discord_id)
 
-        #     # Add the new team role
-        #     async_to_sync(discord_member.add_roles)(
-        #         guild.get_role(team.role.discord_id)
-        #     )
+            # Will remove all roles from the player
+            await discord_member.remove_roles(
+                *[guild.get_role(team_role.discord_id) for team in teams]
+            )
+
+            # Add the new team role
+            await discord_member.add_roles(guild.get_role(team_role.discord_id))
 
         elif task.task_type == TaskType.CREATE_ROLE:
             team_id = payload["team_id"]
@@ -181,8 +196,8 @@ async def run_tasks_sync(client: discord.Client):
             team.general_channel = new_channel
             await sync_to_async(team.save)()
 
-        elif task.task_type == TaskType.CREATE_DROPDOWN:
-            await handler.create_dropdown(payload)
+        # elif task.task_type == TaskType.CREATE_DROPDOWN:
+        #     await handler.create_dropdown(payload)
 
         elif task.task_type == TaskType.CREATE_BUTTONS:
             await handler.create_button(payload)

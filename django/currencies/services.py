@@ -15,10 +15,12 @@ from .models import Currency, Trade, Transaction, Wallet
 
 
 class CreateTradeEmbed(Service):
-    trade = ModelField(Trade)
+    trade_id = forms.IntegerField()
 
     def process(self):
-        trade: Trade = self.cleaned_data["trade"]
+        trade_id = self.cleaned_data["trade_id"]
+
+        trade = Trade.objects.get(id=trade_id)
 
         embed = discord.Embed(
             title=f"Trade for {trade.initiating_party.name} & {trade.receiving_party.name}"

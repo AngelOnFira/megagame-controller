@@ -109,6 +109,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "custom_id": f"{instance.id}",
                     "emoji": "💱",
                     "do_next": "start_trading",
+                    "callback_payload": {},
                 }
             ]
         ]

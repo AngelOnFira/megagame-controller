@@ -18,60 +18,16 @@ from tasks.services import QueueTask
 from teams.models import Team
 
 
-@sync_to_async
-def build_trade_buttons(channel_id, guild_id, trade_id):
-    from currencies.models import Currency
-    from tasks.models import TaskType
-    from tasks.services import QueueTask
-
-    button_rows = []
-
-    currency: Currency
-    for i, currency in enumerate(Currency.objects.all()):
-        row = []
-
-        for j, label in enumerate(["-5", "-1", "+1", "+5"]):
-            style = discord.ButtonStyle.danger if j < 2 else discord.ButtonStyle.success
-
-            # TODO: Track which team this button is associated with
-
-            value_button = {
-                "x": j,
-                "y": i,
-                "style": style,
-                "disabled": False,
-                "label": label,
-                "custom_id": f"{currency.id}|{trade_id}|{label}",
-            }
-
-            row.append(value_button)
-
-        currency_button = {
-            "x": 4,
-            "y": i,
-            "style": discord.ButtonStyle.primary,
-            "emoji": emojis.encode(currency.emoji),
-            "disabled": True,
-            "label": currency.name,
-        }
-        row.append(currency_button)
-
-        button_rows.append(row)
-
-    QueueTask.execute(
-        {
-            "task_type": TaskType.CREATE_BUTTONS,
-            "payload": {
-                "channel_id": channel_id,
-                "guild_id": guild_id,
-                "button_rows": button_rows,
-                "trade_id": trade_id,
-            },
-        }
-    )
-
-
 class Dropdown(discord.ui.Select):
+    def __init__(self, client, options, do_next, callback_payload: dict):
+        super().__init__(**options)
+
+        assert client is not None
+        self.client: discord.Client = client
+
+        self.do_next = do_next
+        self.callback_payload = callback_payload
+
     async def callback(self, interaction: discord.Interaction):
         async def trade_country_chosen(interaction: discord.Interaction):
             # create channel for trade
@@ -135,54 +91,30 @@ class Dropdown(discord.ui.Select):
                 ephemeral=True,
             )
 
-            currencies: Currency = await sync_to_async(list)(Currency.objects.all())
-
-            button_rows = []
-
-            currency: Currency
-            for i, currency in enumerate(currencies):
-                row = []
-
-                for j, label in enumerate(["-5", "-1", "+1", "+5"]):
-                    style = (
-                        discord.ButtonStyle.danger
-                        if j < 2
-                        else discord.ButtonStyle.success
-                    )
-
-                    value_button = {
-                        "x": j,
-                        "y": i,
-                        "style": style,
-                        "disabled": False,
-                        "label": label,
-                        "custom_id": f"{currency.id}|{trade_id}|{label}",
-                        "do_next": "adjust_currency_trade",
-                    }
-
-                    row.append(value_button)
-
-                currency_button = {
-                    "x": 4,
-                    "y": i,
-                    "style": discord.ButtonStyle.primary,
-                    "emoji": emojis.encode(currency.emoji),
-                    "disabled": True,
-                    "label": currency.name,
-                    "do_next": "unreachable",
-                }
-                row.append(currency_button)
-
-                button_rows.append(row)
-
             handler = TaskHandler(discord.ui.View, self.client)
 
             await handler.create_button(
                 {
                     "guild_id": interaction.guild.id,
-                    "button_rows": button_rows,
+                    "trade_id": trade_id,
                     "channel_id": text_channel.id,
-                }
+                    "callback_payload": {},
+                    "button_rows": [
+                        [
+                            {
+                                "x": 0,
+                                "y": 0,
+                                "style": discord.ButtonStyle.primary,
+                                "disabled": False,
+                                "label": "Adjust trade amounts",
+                                "custom_id": f"{trade.id}",
+                                "emoji": "✏️",
+                                "do_next": "currency_trade_ephemeral_menu",
+                                "callback_payload": {"trade_id": trade.id},
+                            }
+                        ]
+                    ],
+                },
             )
 
         function_lookup = {
@@ -190,15 +122,6 @@ class Dropdown(discord.ui.Select):
         }
 
         await function_lookup[self.do_next](interaction)
-
-    def __init__(self, client, options, do_next, callback_payload: dict):
-        super().__init__(**options)
-
-        assert client is not None
-        self.client: discord.Client = client
-
-        self.do_next = do_next
-        self.callback_payload = callback_payload
 
 
 class Button(discord.ui.Button):
@@ -208,22 +131,20 @@ class Button(discord.ui.Button):
         x: int,
         y: int,
         options: dict,
-        view: discord.ui.View,
         do_next: str,
+        callback_payload: dict,
     ):
         super().__init__(**options)
         self.client = client
         self.x = x
         self.y = y
-        self.view_base = view
         self.do_next = do_next
+        self.callback_payload = callback_payload
 
     async def callback(self, interaction: discord.Interaction):
         from currencies.models import Currency, Trade, Transaction
         from currencies.services import CreateTrade, CreateTradeEmbed
         from teams.models import Team
-
-        assert self.view is not None
 
         async def adjust_currency_trade(inteaction: discord.Interaction):
             currency_id, trade_id, adjustment = self.custom_id.split("|")
@@ -262,9 +183,64 @@ class Button(discord.ui.Button):
 
             # TODO: Make sure they have enough money
 
-            embed = await sync_to_async(CreateTradeEmbed.execute)({"trade": trade})
+            embed = await sync_to_async(CreateTradeEmbed.execute)(
+                {"trade_id": trade_id}
+            )
 
             await interaction.response.edit_message(embed=embed, view=self.view)
+
+        async def currency_trade_ephemeral_menu(interaction: discord.Interaction):
+            currencies: Currency = await sync_to_async(list)(Currency.objects.all())
+
+            button_rows = []
+
+            currency: Currency
+            for i, currency in enumerate(currencies):
+                row = []
+
+                for j, label in enumerate(["-5", "-1", "+1", "+5"]):
+                    style = (
+                        discord.ButtonStyle.danger
+                        if j < 2
+                        else discord.ButtonStyle.success
+                    )
+
+                    value_button = {
+                        "x": j,
+                        "y": i,
+                        "style": style,
+                        "disabled": False,
+                        "label": label,
+                        "custom_id": f"{currency.id}|{self.callback_payload['trade_id']}|{label}",
+                        "do_next": "adjust_currency_trade",
+                        "callback_payload": {},
+                    }
+
+                    row.append(value_button)
+
+                currency_button = {
+                    "x": 4,
+                    "y": i,
+                    "style": discord.ButtonStyle.primary,
+                    "emoji": emojis.encode(currency.emoji),
+                    "disabled": True,
+                    "label": currency.name,
+                    "do_next": "unreachable",
+                    "callback_payload": {},
+                }
+                row.append(currency_button)
+
+                button_rows.append(row)
+
+            handler = TaskHandler(discord.ui.View, self.client)
+
+            await handler.create_button(
+                {
+                    "guild_id": interaction.guild.id,
+                    "button_rows": button_rows,
+                },
+                interaction=interaction,
+            )
 
         async def start_trading(inteaction: discord.Interaction):
             options: list[discord.SelectOption] = []
@@ -319,6 +295,7 @@ class Button(discord.ui.Button):
         function_lookup = {
             "adjust_currency_trade": adjust_currency_trade,
             "start_trading": start_trading,
+            "currency_trade_ephemeral_menu": currency_trade_ephemeral_menu,
         }
 
         await function_lookup[self.do_next](interaction)
@@ -356,48 +333,35 @@ class TaskHandler:
             content="test", view=self.view, ephemeral=True
         )
 
-    async def create_dropdown(self, payload: dict):
-        guild_id = payload["guild_id"]
-        channel_id = payload["channel_id"]
-        dropdown = payload["dropdown"]
-        do_next = payload["do_next"]
+    # async def create_dropdown(self, payload: dict):
+    #     guild_id = payload["guild_id"]
+    #     channel_id = payload["channel_id"]
+    #     dropdown = payload["dropdown"]
+    #     do_next = payload["do_next"]
 
-        async def callback(self: Dropdown, interaction: discord.Interaction):
-            if self.do_next["type"] == TaskType.TRADE_SELECT_RECEIVER:
-                await sync_to_async(SelectTradeReceiver.execute)(
-                    {
-                        "payload": self.do_next["payload"],
-                        "values": self.values,
-                    }
-                )
+    #     options = []
 
-                await build_trade_buttons(
-                    channel_id, guild_id, self.do_next["payload"]["trade_id"]
-                )
+    #     for option in dropdown["options"]:
+    #         options.append(discord.SelectOption(**option))
 
-        options = []
+    #     self.view.add_item(
+    #         Dropdown(
+    #             self.client,
+    #             {
+    #                 "placeholder": "Which country do you want to trade with?",
+    #                 "min_values": 1,
+    #                 "max_values": 1,
+    #                 "options": options,
+    #             },
+    #             callback,
+    #             do_next=do_next,
+    #         )
+    #     )
+    #     channel = self.client.get_guild(guild_id).get_channel(channel_id)
 
-        for option in dropdown["options"]:
-            options.append(discord.SelectOption(**option))
+    #     embedVar = discord.Embed(title=" ads", description=" d", color=0x00FF00)
 
-        self.view.add_item(
-            Dropdown(
-                self.client,
-                {
-                    "placeholder": "Which country do you want to trade with?",
-                    "min_values": 1,
-                    "max_values": 1,
-                    "options": options,
-                },
-                callback,
-                do_next=do_next,
-            )
-        )
-        channel = self.client.get_guild(guild_id).get_channel(channel_id)
-
-        embedVar = discord.Embed(title=" ads", description=" d", color=0x00FF00)
-
-        async_to_sync(channel.send)(embed=embedVar, view=self.view)
+    #     async_to_sync(channel.send)(embed=embedVar, view=self.view)
 
     async def create_category(self, payload: dict):
         guild_id = payload["guild_id"]
@@ -451,24 +415,10 @@ class TaskHandler:
 
             await sync_to_async(team.save)()
 
-    async def create_button(self, payload: dict):
-        guild_id = payload["guild_id"]
+    async def create_button(
+        self, payload: dict, interaction: discord.Interaction = None
+    ):
         button_rows = payload["button_rows"]
-
-        if "channel_id" in payload:
-            channel_id = payload["channel_id"]
-        elif "team_id" in payload:
-            team_id = payload["team_id"]
-
-            @sync_to_async
-            def get_channel_id(team_id):
-                return Team.objects.get(id=team_id).general_channel.discord_id
-
-            channel_id = await get_channel_id(team_id)
-        else:
-            raise Exception("No channel or team id found; don't know how to handle")
-
-        channel = self.client.get_guild(guild_id).get_channel(channel_id)
 
         view = discord.ui.View()
 
@@ -497,14 +447,16 @@ class TaskHandler:
                     button["y"],
                     options_dict,
                     do_next=button["do_next"],
-                    view=discord.ui.View(),
+                    callback_payload=button["callback_payload"],
                 )
 
                 view.add_item(button)
 
         if "trade_id" in payload:
             trade_id = payload["trade_id"]
-            embed = CreateTradeEmbed.execute({"trade": Trade.objects.get(id=trade_id)})
+            embed = await sync_to_async(CreateTradeEmbed.execute)(
+                {"trade_id": trade_id}
+            )
         else:
             embed = discord.Embed(
                 title="Team menu",
@@ -512,8 +464,26 @@ class TaskHandler:
                 color=0x00FF00,
             )
 
-        # embedVar = discord.Embed(title="Title", description="Desc", color=0x00ff00)
-        # embedVar.add_field(name="Field1", value="hi", inline=False)
-        # embedVar.add_field(name="Field2", value="hi2", inline=False)
+        if interaction is None:
+            guild_id = payload["guild_id"]
+            if "channel_id" in payload:
+                channel_id = payload["channel_id"]
+            elif "team_id" in payload:
+                team_id = payload["team_id"]
 
-        await channel.send(embed=embed, view=view)
+                @sync_to_async
+                def get_channel_id(team_id):
+                    return Team.objects.get(id=team_id).general_channel.discord_id
+
+                channel_id = await get_channel_id(team_id)
+            else:
+                raise Exception("No channel or team id found; don't know how to handle")
+
+            channel = self.client.get_guild(guild_id).get_channel(channel_id)
+
+            await channel.send(embed=embed, view=view)
+
+        else:
+            await interaction.response.send_message(
+                embed=embed, view=view, ephemeral=True
+            )
