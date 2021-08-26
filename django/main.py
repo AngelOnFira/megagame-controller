@@ -185,76 +185,7 @@ async def run_tasks_sync(client: discord.Client):
             await handler.create_dropdown(payload)
 
         elif task.task_type == TaskType.CREATE_BUTTONS:
-            guild_id = payload["guild_id"]
-            button_rows = payload["button_rows"]
-
-            if "channel_id" in payload:
-                channel_id = payload["channel_id"]
-            elif "team_id" in payload:
-                team_id = payload["team_id"]
-
-                @sync_to_async
-                def get_channel_id(team_id):
-                    return Team.objects.get(id=team_id).general_channel.discord_id
-
-                channel_id = await get_channel_id(team_id)
-            else:
-                raise Exception("No channel or team id found; don't know how to handle")
-
-            channel = client.get_guild(guild_id).get_channel(channel_id)
-
-            view = discord.ui.View()
-
-            for row in button_rows:
-                for button in row:
-                    options_dict = {
-                        "style": button["style"][1],
-                        "label": button["label"],
-                        "row": button["y"],
-                    }
-
-                    if "emoji" in button:
-                        options_dict["emoji"] = button["emoji"]
-
-                    if "disabled" in button:
-                        options_dict["disabled"] = button["disabled"]
-
-                    if "custom_id" in button:
-                        options_dict["custom_id"] = button["custom_id"]
-
-                    assert button["do_next"] != ""
-
-                    button = Button(
-                        button["x"],
-                        button["y"],
-                        options_dict,
-                        do_next=button["do_next"],
-                        view=discord.ui.View(),
-                    )
-
-                    view.add_item(button)
-
-                # children = view.children
-                # for child in children:
-                #     view.remove_item(child)
-
-            if "trade_id" in payload:
-                trade_id = payload["trade_id"]
-                embed = CreateTradeEmbed.execute(
-                    {"trade": Trade.objects.get(id=trade_id)}
-                )
-            else:
-                embed = discord.Embed(
-                    title="Team menu",
-                    description="Choose what you would like to do",
-                    color=0x00FF00,
-                )
-
-            # embedVar = discord.Embed(title="Title", description="Desc", color=0x00ff00)
-            # embedVar.add_field(name="Field1", value="hi", inline=False)
-            # embedVar.add_field(name="Field2", value="hi2", inline=False)
-
-            await channel.send(embed=embed, view=view)
+            await handler.create_button(payload)
 
         else:
             # TASK ERROR
