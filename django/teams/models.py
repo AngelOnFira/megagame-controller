@@ -82,6 +82,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                 "task_type": TaskType.CREATE_CATEGORY,
                 "payload": {
                     "team_id": instance.id,
+                    "guild_id": guild.discord_id,
                 },
             }
         )

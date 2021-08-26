@@ -36,57 +36,7 @@ TEAM_ROLE_COLOUR = discord.Colour.red()
 
 @client.event
 async def on_ready():
-    from bot.discord_models.models import Category, Channel, Guild, Role
-    from bot.discord_models.services import CreateGuild
-    from bot.users.services import CreateMember
-    from teams.models import Team
-
     logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
-
-    # Get all users on the server
-    async for guild in client.fetch_guilds():
-        guild = client.get_guild(guild.id)
-        for user in guild.members:
-            # Create an object for each member
-            member = guild.get_member(user.id)
-            # Todo: make sure username wasn't changed
-            await sync_to_async(CreateMember.execute)(
-                {
-                    "discord_id": member.id,
-                    "discord_name": member.name,
-                }
-            )
-
-        await sync_to_async(CreateGuild.execute)(
-            {
-                "discord_id": guild.id,
-            }
-        )
-
-        print("Deleting channels that aren't in the database...")
-        channels_stored = await sync_to_async(list)(Channel.objects.all())
-        for channel in guild.channels:
-            if (
-                not channel.name.startswith("test-")
-                and isinstance(channel, discord.TextChannel)
-                and channel.id not in channels_stored
-            ):
-                await channel.delete()
-
-        print("Deleting categories that aren't in the database...")
-        categories_stored = await sync_to_async(list)(Category.objects.all())
-        for category in guild.categories:
-            if (
-                not category.name.startswith("dev-")
-                and category.id not in categories_stored
-            ):
-                await category.delete()
-
-        print("Deleting roles that aren't in the database...")
-        roles_stored = await sync_to_async(list)(Role.objects.all())
-        for role in guild.roles:
-            if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
-                await role.delete()
 
     background_task.start()
 
@@ -106,6 +56,7 @@ async def run_tasks_sync(client: discord.Client):
     task_list = await sync_to_async(list)(Task.objects.filter(completed=False))
 
     for task in task_list:
+        print(task.task_type)
         handler = TaskHandler(view=discord.ui.View(), client=client)
         payload: dict = task.payload
 
@@ -196,41 +147,7 @@ async def run_tasks_sync(client: discord.Client):
             await sync_to_async(team.save)()
 
         elif task.task_type == TaskType.CREATE_CATEGORY:
-            team_id = payload["team_id"]
-
-            @sync_to_async
-            def get_team(team_id):
-                team = Team.objects.get(id=team_id)
-                team_guild = team.guild
-                team_role = team.role
-
-                return team, team_guild, team_role
-
-            team, team_guild, team_role = await get_team(team_id)
-
-            guild = client.get_guild(team_guild.discord_id)
-
-            if guild is None:
-                raise Exception("Guild not found")
-
-            everyone_role = guild.default_role
-
-            team_role_id = team_role.discord_id
-            team_role = guild.get_role(team_role_id)
-
-            category_channel = await guild.create_category(
-                team.name,
-                overwrites={
-                    everyone_role: discord.PermissionOverwrite(view_channel=False),
-                    team_role: discord.PermissionOverwrite(view_channel=True),
-                },
-            )
-
-            team.category, _ = await sync_to_async(Category.objects.get_or_create)(
-                discord_id=category_channel.id, guild=team_guild
-            )
-
-            await sync_to_async(team.save)()
+            await handler.create_category(payload)
 
         elif task.task_type == TaskType.CREATE_CHANNEL:
             team_id = payload["team_id"]
@@ -245,7 +162,7 @@ async def run_tasks_sync(client: discord.Client):
 
                 return team, team_guild, team_role, team_category
 
-            team, team_guild, team_role, team_category = await get_team(team_id)
+            team, team_guild, _, team_category = await get_team(team_id)
 
             guild = client.get_guild(team.guild.discord_id)
 
@@ -348,14 +265,64 @@ async def run_tasks_sync(client: discord.Client):
 
 
 # Check for new tasks once a second
-@tasks.loop(seconds=1)
+@tasks.loop(seconds=1.0)
 async def background_task():
-
-    # Have to create view out here as the tasks are run in sync and don't have
-    # access to the event loop
-    view = discord.ui.View()
-
     await run_tasks_sync(client)
+
+
+@background_task.before_loop
+async def before_my_task():
+    await client.wait_until_ready()  # wait until the bot logs in
+
+    from bot.discord_models.models import Category, Channel, Guild, Role
+    from bot.discord_models.services import CreateGuild
+    from bot.users.services import CreateMember
+    from teams.models import Team
+
+    # Get all users on the server
+    async for guild in client.fetch_guilds():
+        guild = client.get_guild(guild.id)
+        await sync_to_async(CreateGuild.execute)(
+            {
+                "discord_id": guild.id,
+            }
+        )
+
+        for user in guild.members:
+            # Create an object for each member
+            member = guild.get_member(user.id)
+            # Todo: make sure username wasn't changed
+            await sync_to_async(CreateMember.execute)(
+                {
+                    "discord_id": member.id,
+                    "discord_name": member.name,
+                }
+            )
+
+        print("Deleting channels that aren't in the database...")
+        channels_stored = await sync_to_async(list)(Channel.objects.all())
+        for channel in guild.channels:
+            if (
+                not channel.name.startswith("test-")
+                and isinstance(channel, discord.TextChannel)
+                and channel.id not in channels_stored
+            ):
+                await channel.delete()
+
+        print("Deleting categories that aren't in the database...")
+        categories_stored = await sync_to_async(list)(Category.objects.all())
+        for category in guild.categories:
+            if (
+                not category.name.startswith("dev-")
+                and category.id not in categories_stored
+            ):
+                await category.delete()
+
+        print("Deleting roles that aren't in the database...")
+        roles_stored = await sync_to_async(list)(Role.objects.all())
+        for role in guild.roles:
+            if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
+                await role.delete()
 
 
 if __name__ == "__main__":

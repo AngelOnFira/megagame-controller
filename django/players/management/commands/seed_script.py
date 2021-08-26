@@ -11,7 +11,8 @@ from currencies.models import Currency, Trade, Transaction, Wallet
 from django.conf import settings
 from django.core.management.base import BaseCommand
 from players.models import Player
-from tasks.models import Task
+from tasks.models import Task, TaskType
+from tasks.services import QueueTask
 from teams.models import Team
 
 
@@ -34,10 +35,21 @@ class Command(BaseCommand):
         Currency.objects.all().delete()
         Wallet.objects.all().delete()
 
+        guild = Guild.objects.all().first()
+
         if len(User.objects.filter(username="f")) == 0:
             User.objects.create_superuser("f", "f@f.com", "password")
 
-        # Wallet.objects.all().delete()
+        # Create a category for the team
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CATEGORY,
+                "payload": {
+                    "category_name": "trades",
+                    "guild_id": guild.discord_id,
+                },
+            }
+        )
 
         seeder = Seed.seeder(locale="en_CA")
 

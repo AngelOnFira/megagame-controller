@@ -7,6 +7,7 @@ from asgiref.sync import async_to_sync, sync_to_async
 from service_objects.fields import DictField, ListField, ModelField
 from service_objects.services import Service
 
+from bot.discord_models.models import Category
 from bot.users.models import Member
 from currencies.services import CreateTrade, CreateTradeEmbed, SelectTradeReceiver
 from django import forms
@@ -70,37 +71,19 @@ def build_trade_buttons(channel_id, guild_id, trade_id):
 
 class Dropdown(discord.ui.Select):
     async def callback(self, interaction: discord.Interaction):
-        await self.callback_function(self, interaction)
+        def trade_country_chosen(interaction: discord.Interaction):
+            # create channel for trade
+            pass
 
-    def __init__(self, options, callback, do_next=""):
-        from pprint import pprint
+        function_lookup = {
+            "trade_country_chosen": trade_country_chosen,
+        }
 
-        pprint(options)
+        await function_lookup[self.do_next](interaction)
+
+    def __init__(self, options, do_next):
         super().__init__(**options)
-        self.callback_function = callback
-        # self.do_next = do_next
-
-        # options = [
-        #     discord.SelectOption(
-        #         label="Red", description="Your favourite colour is red", emoji="🟥"
-        #     ),
-        #     discord.SelectOption(
-        #         label="Green", description="Your favourite colour is green", emoji="🟩"
-        #     ),
-        #     discord.SelectOption(
-        #         label="Blue", description="Your favourite colour is blue", emoji="🟦"
-        #     ),
-        # ]
-
-        # # The placeholder is what will be shown when no option is chosen
-        # # The min and max values indicate we can only pick one of the three options
-        # # The options parameter defines the dropdown options. We defined this above
-        # super().__init__(
-        #     placeholder="Choose your favourite colour...",
-        #     min_values=1,
-        #     max_values=1,
-        #     options=options,
-        # )
+        self.do_next = do_next
 
 
 class Button(discord.ui.Button):
@@ -113,13 +96,11 @@ class Button(discord.ui.Button):
         y: int,
         options: dict,
         view: discord.ui.View,
-        callback=False,
         do_next: str = "",
     ):
         super().__init__(**options)
         self.x = x
         self.y = y
-        # self.callback_function = callback
         self.do_next = do_next
         self.view_base = view
 
@@ -227,24 +208,9 @@ class Button(discord.ui.Button):
 
             handler = TaskHandler(view=discord.ui.View())
 
-            await handler.create_dropdown_response(interaction, options)
-
-            # await sync_to_async(QueueTask.execute)(
-            #     {
-            #         "task_type": TaskType.CREATE_DROPDOWN,
-            #         "payload": {
-            #             "channel_id": interaction.channel.id,
-            #             "guild_id": interaction.guild.id,
-            #             "do_next": "",
-            #             "dropdown": {
-            #                 "placeholder": "Which country do you want to trade with?",
-            #                 "min_values": 1,
-            #                 "max_values": 1,
-            #                 "options": options,
-            #             },
-            #         },
-            #     }
-            # )
+            await handler.create_dropdown_response(
+                interaction, options, "trade_country_chosen"
+            )
 
         function_lookup = {
             "adjust_currency_trade": adjust_currency_trade,
@@ -271,7 +237,7 @@ class TaskHandler:
         self,
         interaction: discord.Interaction,
         options: list[discord.SelectOption],
-        callback=lambda x: x,
+        callback,
     ):
         self.view.add_item(
             Dropdown(
@@ -330,6 +296,58 @@ class TaskHandler:
         embedVar = discord.Embed(title=" ads", description=" d", color=0x00FF00)
 
         async_to_sync(channel.send)(embed=embedVar, view=self.view)
+
+    async def create_category(self, payload: dict):
+        guild_id = payload["guild_id"]
+        print(guild_id)
+
+        guild: discord.Guild = self.client.get_guild(guild_id)
+        if guild is None:
+            raise Exception("Guild not found")
+
+        everyone_role = guild.default_role
+
+        overwrites = {
+            everyone_role: discord.PermissionOverwrite(view_channel=True),
+        }
+
+        # Category can either be created for a team or everyone
+        if "team_id" in payload:
+            team_id = payload["team_id"]
+
+            @sync_to_async
+            def get_team(team_id):
+                team = Team.objects.get(id=team_id)
+                team_guild = team.guild
+                team_role = team.role
+
+                return team, team_guild, team_role
+
+            team, team_guild, team_role = await get_team(team_id)
+
+            team_role_id = team_role.discord_id
+            team_role = guild.get_role(team_role_id)
+
+            overwrites[everyone_role] = discord.PermissionOverwrite(view_channel=False)
+
+            overwrites[team_role] = discord.PermissionOverwrite(view_channel=True)
+
+            category_name = team.name
+
+        else:
+            category_name = payload["category_name"]
+
+        category_channel = await guild.create_category(
+            category_name,
+            overwrites=overwrites,
+        )
+
+        if "team_id" in payload:
+            team.category, _ = await sync_to_async(Category.objects.get_or_create)(
+                discord_id=category_channel.id, guild=team_guild
+            )
+
+            await sync_to_async(team.save)()
 
 
 discord.ui.View()
