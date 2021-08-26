@@ -31,8 +31,6 @@ intents.members = True
 
 client = discord.Client(intents=intents)
 
-TEAM_ROLE_COLOUR = discord.Colour.red()
-
 
 @client.event
 async def on_ready():
@@ -61,140 +59,19 @@ async def run_tasks_sync(client: discord.Client):
         payload: dict = task.payload
 
         if task.task_type == TaskType.MESSAGE:
-            player_id = payload["player_id"]
-            message = payload["message"]
-
-            player = await sync_to_async(Player.objects.get)(id=player_id)
-
-            discord_user: discord.User = await client.fetch_user(
-                player.discord_member.discord_id
-            )
-            discord_message: discord.Message = await discord_user.send(message)
-
-            @sync_to_async
-            def update_player(discord_message):
-                response = Response.objects.create(question_id=discord_message.id)
-                player.responses.add(response)
-                player.save()
-
-            await update_player(discord_message)
+            await handler.send_message(payload)
 
         elif task.task_type == TaskType.CHANGE_TEAM:
-            player_id = payload["player_id"]
-            new_team_id = payload["new_team_id"]
-
-            @sync_to_async
-            def get_models(player_id, new_team_id):
-                player = Player.objects.get(id=player_id)
-                team = Team.objects.get(id=new_team_id)
-                teams = [team for team in Team.objects.all()]
-
-                player_guild = player.guild
-                discord_member = player.discord_member
-                team_role = team.role
-
-                return (
-                    player,
-                    team,
-                    teams,
-                    player_guild,
-                    discord_member,
-                    team_role,
-                )
-
-            (
-                player,
-                team,
-                teams,
-                player_guild,
-                discord_member,
-                team_role,
-            ) = await get_models(player_id, new_team_id)
-
-            guild = client.get_guild(player_guild.discord_id)
-
-            # TODO: Try to change this to get_member
-            discord_member = await guild.fetch_member(discord_member.discord_id)
-
-            # Will remove all roles from the player
-            await discord_member.remove_roles(
-                *[guild.get_role(team_role.discord_id) for team in teams]
-            )
-
-            # Add the new team role
-            await discord_member.add_roles(guild.get_role(team_role.discord_id))
+            await handler.send_message(payload)
 
         elif task.task_type == TaskType.CREATE_ROLE:
-            team_id = payload["team_id"]
-
-            @sync_to_async
-            def get_team(team_id):
-                team = Team.objects.get(id=team_id)
-                team_guild = team.guild
-
-                return team, team_guild
-
-            team, team_guild = await get_team(team_id)
-
-            # TODO: Problem with resetting db and running this
-
-            roles = client.get_guild(team_guild.discord_id).roles
-            role_dict = {}
-            for role in roles:
-                role_dict[role.name] = role
-
-            role_names = [role.name for role in roles]
-
-            # Check if the team is already in the guild
-            if team.name in role_names:
-                await role_dict[team.name].delete()
-
-            # Create a role for the team
-            role_object = await client.get_guild(team_guild.discord_id).create_role(
-                name=team.name, hoist=True, mentionable=True, colour=TEAM_ROLE_COLOUR
-            )
-
-            new_role, _ = await sync_to_async(Role.objects.get_or_create)(
-                discord_id=role_object.id, name=team.name, guild=team_guild
-            )
-
-            team.role = new_role
-            await sync_to_async(team.save)()
+            await handler.create_role(payload)
 
         elif task.task_type == TaskType.CREATE_CATEGORY:
             await handler.create_category(payload)
 
         elif task.task_type == TaskType.CREATE_CHANNEL:
-            team_id = payload["team_id"]
-            channel_name = payload["channel_name"]
-
-            @sync_to_async
-            def get_team(team_id):
-                team = Team.objects.get(id=team_id)
-                team_guild = team.guild
-                team_role = team.role
-                team_category = team.category
-
-                return team, team_guild, team_role, team_category
-
-            team, team_guild, _, team_category = await get_team(team_id)
-
-            guild = client.get_guild(team.guild.discord_id)
-
-            # TODO: Remove fetch needed for cache busting
-            category = await guild.fetch_channel(team_category.discord_id)
-
-            text_channel = await guild.create_text_channel(
-                channel_name,
-                category=category,
-            )
-
-            new_channel, _ = await sync_to_async(Channel.objects.get_or_create)(
-                discord_id=text_channel.id, guild=team_guild
-            )
-
-            team.general_channel = new_channel
-            await sync_to_async(team.save)()
+            await handler.create_channel(payload)
 
         # elif task.task_type == TaskType.CREATE_DROPDOWN:
         #     await handler.create_dropdown(payload)
@@ -222,6 +99,7 @@ async def before_my_task():
 
     from bot.discord_models.models import Category, Channel, Guild, Role
     from bot.discord_models.services import CreateGuild
+    from bot.services import TEAM_ROLE_COLOUR
     from bot.users.services import CreateMember
     from teams.models import Team
 
