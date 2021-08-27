@@ -36,7 +36,6 @@ class WalletViewSet(viewsets.ModelViewSet):
             wallet_balance["id"] = wallet.id
 
             for credit in wallet.credits.filter(state="completed"):
-                print(credit)
                 wallet_balance["amounts"][credit.currency.name] -= credit.amount
 
             for debit in wallet.debits.filter(state="completed"):

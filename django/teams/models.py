@@ -4,7 +4,7 @@ import discord
 import emojis
 from asgiref.sync import sync_to_async
 
-from bot.discord_models.models import Guild, Role
+from bot.discord_models.models import Channel, Guild, Role
 from currencies.models import Wallet
 from django.db import models
 from django.db.models.signals import post_save
@@ -42,7 +42,15 @@ class Team(models.Model):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name="team",
+        related_name="team_general_channel",
+    )
+
+    menu_channel = models.OneToOneField(
+        "discord_models.Channel",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="team_menu_channel",
     )
 
     def __str__(self):
@@ -66,8 +74,6 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
         # TODO: Properly set guild
         guild = Guild.objects.all().first()
         instance.guild = guild
-
-        instance.save()
 
         if instance.name == "null":
             return
@@ -93,13 +99,28 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
-        # Create a channel for the team
+        # Create a menu for the team
+        menu_channel = Channel.objects.create(guild=instance.guild, name="menu")
+        instance.menu_channel = menu_channel
         QueueTask.execute(
             {
                 "task_type": TaskType.CREATE_CHANNEL,
                 "payload": {
                     "team_id": instance.id,
-                    "channel_name": "general",
+                    "channel_bind_model_id": menu_channel.id,
+                },
+            }
+        )
+
+        # Create a general for the team
+        general_channel = Channel.objects.create(guild=instance.guild, name="general")
+        instance.general_channel = general_channel
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CHANNEL,
+                "payload": {
+                    "team_id": instance.id,
+                    "channel_bind_model_id": general_channel.id,
                 },
             }
         )
@@ -136,6 +157,8 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                 },
             }
         )
+
+        instance.save()
 
 
 post_save.connect(on_team_creation, sender=Team)

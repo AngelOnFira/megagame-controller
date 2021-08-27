@@ -93,7 +93,7 @@ class Dropdown(discord.ui.Select):
 
             # create channel for trade
             new_channel, _ = await sync_to_async(Channel.objects.get_or_create)(
-                discord_id=text_channel.id, guild=discord_guild
+                discord_id=text_channel.id, guild=discord_guild, name=text_channel.name
             )
 
             trade.discord_channel = new_channel
@@ -212,8 +212,6 @@ class Button(discord.ui.Button):
                     ephemeral=True,
                 )
                 return
-
-            print(interacting_team)
 
             from_wallet = interacting_team_wallet
             to_wallet = (
@@ -368,7 +366,6 @@ class Button(discord.ui.Button):
                 }
             )
 
-            trade.discord_channel = interacting_team_channel
             trade.discord_guild = interacting_team_guild
 
             await sync_to_async(trade.save)()
@@ -574,35 +571,31 @@ class TaskHandler:
 
     async def create_channel(self, payload: dict):
         team_id = payload["team_id"]
-        channel_name = payload["channel_name"]
+        channel_bind_model_id = payload["channel_bind_model_id"]
 
         @sync_to_async
         def get_team(team_id):
             team = Team.objects.get(id=team_id)
-            team_guild = team.guild
-            team_role = team.role
-            team_category = team.category
 
-            return team, team_guild, team_role, team_category
+            channel = Channel.objects.get(id=channel_bind_model_id)
 
-        team, team_guild, _, team_category = await get_team(team_id)
+            return team.category, team.guild, channel
 
-        guild = self.client.get_guild(team.guild.discord_id)
+        team_category, team_guild, channel = await get_team(team_id)
+
+        guild = self.client.get_guild(team_guild.discord_id)
 
         # TODO: Remove fetch needed for cache busting
         category = await guild.fetch_channel(team_category.discord_id)
 
         text_channel = await guild.create_text_channel(
-            channel_name,
+            channel.name,
             category=category,
         )
 
-        new_channel, _ = await sync_to_async(Channel.objects.get_or_create)(
-            discord_id=text_channel.id, guild=team_guild
-        )
+        channel.discord_id = text_channel.id
 
-        team.general_channel = new_channel
-        await sync_to_async(team.save)()
+        await sync_to_async(channel.save)()
 
     async def create_role(self, payload: dict):
         team_id = payload["team_id"]

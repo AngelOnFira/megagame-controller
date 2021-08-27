@@ -99,8 +99,13 @@ async def before_my_task():
     from bot.discord_models.models import Category, Channel, Guild, Role
     from bot.discord_models.services import CreateGuild
     from bot.services import TEAM_ROLE_COLOUR
+    from bot.state import intial_state_check
     from bot.users.services import CreateMember
     from teams.models import Team
+
+    @sync_to_async
+    def get_categories():
+        return list(Category.objects.all())
 
     # Get all users on the server
     async for guild in client.fetch_guilds():
@@ -146,6 +151,8 @@ async def before_my_task():
         for role in guild.roles:
             if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
                 await role.delete()
+
+    await intial_state_check(client)
 
 
 if __name__ == "__main__":

@@ -4,7 +4,7 @@ import emojis
 from django_seed import Seed
 
 from bot.accounts.models import User
-from bot.discord_models.models import Guild, Role
+from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.plugins.stats.models import LoggedMessage
 from bot.users.models import Member
 from currencies.models import Currency, Trade, Transaction, Wallet
@@ -34,6 +34,10 @@ class Command(BaseCommand):
         Task.objects.all().delete()
         Currency.objects.all().delete()
         Wallet.objects.all().delete()
+
+        # Discord items
+        Category.objects.all().delete()
+        Channel.objects.all().delete()
 
         guild = Guild.objects.all().first()
 

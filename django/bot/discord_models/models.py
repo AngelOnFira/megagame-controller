@@ -23,7 +23,7 @@ class ChannelQuerySet(models.QuerySet):
 
 class Channel(models.Model):
     guild = models.ForeignKey(Guild, on_delete=models.CASCADE, blank=True, null=True)
-    discord_id = models.BigIntegerField(unique=True)
+    discord_id = models.BigIntegerField(unique=True, null=True, blank=True)
     name = models.CharField(_("name"), max_length=50)
 
     allow_nsfw = models.BooleanField(default=False)
