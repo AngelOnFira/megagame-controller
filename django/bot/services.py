@@ -125,7 +125,17 @@ class Dropdown(discord.ui.Select):
                                 "emoji": "✏️",
                                 "do_next": "currency_trade_ephemeral_menu",
                                 "callback_payload": {"trade_id": trade.id},
-                            }
+                            },
+                            {
+                                "x": 1,
+                                "y": 0,
+                                "style": discord.ButtonStyle.success,
+                                "disabled": False,
+                                "label": "Lock in trade",
+                                "emoji": "🔒",
+                                "do_next": "currency_trade_confirm",
+                                "callback_payload": {"trade_id": trade.id},
+                            },
                         ]
                     ],
                 },
@@ -197,8 +207,6 @@ class Button(discord.ui.Button):
 
             # TODO: Make sure they have enough money
 
-            # Need to get original embed
-
             embed = await sync_to_async(CreateTradeEmbed.execute)(
                 {"trade_id": trade_id}
             )
@@ -207,10 +215,7 @@ class Button(discord.ui.Button):
                 self.callback_payload["message_id"]
             )
 
-            await message.edit(embed=embed, view=self.view)
-            # embed = message.embeds[0]
-
-            # await interaction.response.edit_message(embed=embed, view=self.view)
+            await message.edit(embed=embed)
 
         async def currency_trade_ephemeral_menu(interaction: discord.Interaction):
             currencies: Currency = await sync_to_async(list)(Currency.objects.all())
@@ -363,7 +368,7 @@ class TaskHandler:
         )
 
         await interaction.response.send_message(
-            content="test", view=self.view, ephemeral=True
+            content="_🔽_", view=self.view, ephemeral=True
         )
 
     # async def create_dropdown(self, payload: dict):
