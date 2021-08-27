@@ -1,3 +1,5 @@
+import json
+
 import discord
 import emojis
 from asgiref.sync import sync_to_async
@@ -122,6 +124,11 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "team_id": instance.id,
                     "guild_id": instance.guild.discord_id,
                     "button_rows": button_rows,
+                    "embed": {
+                        "title": "Team menu",
+                        "description": "Choose what you would like to do",
+                        "color": 0x00FF00,
+                    },
                 },
             }
         )

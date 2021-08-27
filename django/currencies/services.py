@@ -22,7 +22,7 @@ class CreateTradeEmbed(Service):
 
         trade = Trade.objects.get(id=trade_id)
 
-        embed = discord.Embed(
+        embed: discord.Embed = discord.Embed(
             title=f"Trade for {trade.initiating_party.name} & {trade.receiving_party.name}"
         )
 
@@ -35,9 +35,12 @@ class CreateTradeEmbed(Service):
                 f"{transaction.amount} {transaction.currency.name}\n"
             )
 
+        if initiating_party_transactions == "":
+            initiating_party_transactions = "-"
+
         embed.add_field(
-            name="Initiating Party",
-            value=f"{trade.initiating_party.name}\n{initiating_party_transactions}",
+            name=trade.initiating_party.name,
+            value=initiating_party_transactions,
         )
 
         receiving_party_transactions = ""
@@ -49,9 +52,12 @@ class CreateTradeEmbed(Service):
                 f"{transaction.amount} {transaction.currency.name}\n"
             )
 
+        if receiving_party_transactions == "":
+            receiving_party_transactions = "-"
+
         embed.add_field(
-            name="Receiving Party",
-            value=f"{trade.receiving_party.name}\n{receiving_party_transactions}",
+            name=trade.receiving_party.name,
+            value=receiving_party_transactions,
         )
 
         return embed

@@ -1,3 +1,4 @@
+import json
 from code import interact
 
 import discord
@@ -196,11 +197,20 @@ class Button(discord.ui.Button):
 
             # TODO: Make sure they have enough money
 
+            # Need to get original embed
+
             embed = await sync_to_async(CreateTradeEmbed.execute)(
                 {"trade_id": trade_id}
             )
 
-            await interaction.response.edit_message(embed=embed, view=self.view)
+            message: discord.Message = await interaction.channel.fetch_message(
+                self.callback_payload["message_id"]
+            )
+
+            await message.edit(embed=embed, view=self.view)
+            # embed = message.embeds[0]
+
+            # await interaction.response.edit_message(embed=embed, view=self.view)
 
         async def currency_trade_ephemeral_menu(interaction: discord.Interaction):
             currencies: Currency = await sync_to_async(list)(Currency.objects.all())
@@ -226,7 +236,7 @@ class Button(discord.ui.Button):
                         "label": label,
                         "custom_id": f"{currency.id}|{self.callback_payload['trade_id']}|{label}",
                         "do_next": "adjust_currency_trade",
-                        "callback_payload": {},
+                        "callback_payload": {"message_id": interaction.message.id},
                     }
 
                     row.append(value_button)
@@ -251,6 +261,7 @@ class Button(discord.ui.Button):
                 {
                     "guild_id": interaction.guild.id,
                     "button_rows": button_rows,
+                    "content": "Adjust this trade",
                 },
                 interaction=interaction,
             )
@@ -473,17 +484,17 @@ class TaskHandler:
 
                 view.add_item(button)
 
+        params = {}
+
         if "trade_id" in payload:
             trade_id = payload["trade_id"]
-            embed = await sync_to_async(CreateTradeEmbed.execute)(
+            params["embed"] = await sync_to_async(CreateTradeEmbed.execute)(
                 {"trade_id": trade_id}
             )
-        else:
-            embed = discord.Embed(
-                title="Team menu",
-                description="Choose what you would like to do",
-                color=0x00FF00,
-            )
+        elif "embed" in payload:
+            params["embed"] = discord.Embed(**payload["embed"])
+        elif "content" in payload:
+            params["content"] = payload["content"]
 
         if interaction is None:
             guild_id = payload["guild_id"]
@@ -502,12 +513,10 @@ class TaskHandler:
 
             channel = self.client.get_guild(guild_id).get_channel(channel_id)
 
-            await channel.send(embed=embed, view=view)
+            await channel.send(**params, view=view)
 
         else:
-            await interaction.response.send_message(
-                embed=embed, view=view, ephemeral=True
-            )
+            await interaction.response.send_message(**params, view=view, ephemeral=True)
 
     async def create_channel(self, payload: dict):
         team_id = payload["team_id"]
