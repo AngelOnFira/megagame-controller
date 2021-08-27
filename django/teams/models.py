@@ -38,7 +38,11 @@ class Team(models.Model):
     )
 
     general_channel = models.OneToOneField(
-        "discord_models.Channel", on_delete=models.CASCADE, null=True, blank=True
+        "discord_models.Channel",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="team",
     )
 
     def __str__(self):

@@ -6,6 +6,7 @@ import emojis
 from asgiref.sync import sync_to_async
 
 from bot.discord_models.models import Category, Channel, Role
+from bot.users.models import Member
 from currencies.models import Trade
 from currencies.services import CreateTradeEmbed
 from players.models import Player
@@ -170,30 +171,64 @@ class Button(discord.ui.Button):
         from currencies.services import CreateTrade, CreateTradeEmbed
         from teams.models import Team
 
-        async def adjust_currency_trade(inteaction: discord.Interaction):
+        async def adjust_currency_trade(interaction: discord.Interaction):
+            # TODO: Change to payload
             currency_id, trade_id, adjustment = self.custom_id.split("|")
-
-            currency = await sync_to_async(Currency.objects.get)(id=currency_id)
 
             @sync_to_async
             def get_trade(trade_id):
                 trade = Trade.objects.get(id=trade_id)
 
-                from_wallet = trade.initiating_party.wallet
-                to_wallet = trade.receiving_party.wallet
+                initiating_party_wallet = trade.initiating_party.wallet
+                receiving_party_wallet = trade.receiving_party.wallet
 
-                return trade, from_wallet, to_wallet
+                return trade, initiating_party_wallet, receiving_party_wallet
 
-            trade, from_wallet, to_wallet = await get_trade(trade_id)
+            trade, initiating_party_wallet, receiving_party_wallet = await get_trade(
+                trade_id
+            )
+
+            currency = await sync_to_async(Currency.objects.get)(id=currency_id)
+
+            @sync_to_async
+            def get_player_team_interacting(interaction):
+                interacting_team = Member.objects.get(
+                    discord_id=interaction.user.id
+                ).player.team
+                interacting_team_wallet = interacting_team.wallet
+                return interacting_team, interacting_team_wallet
+
+            (
+                interacting_team,
+                interacting_team_wallet,
+            ) = await get_player_team_interacting(interaction)
+
+            if interacting_team_wallet.id not in (
+                initiating_party_wallet.id,
+                receiving_party_wallet.id,
+            ):
+                await interaction.response.send_message(
+                    content="You can't interact with this transaction as you're not on one of the teams!",
+                    ephemeral=True,
+                )
+                return
+
+            print(interacting_team)
+
+            from_wallet = interacting_team_wallet
+            to_wallet = (
+                initiating_party_wallet
+                if initiating_party_wallet.id != from_wallet.id
+                else receiving_party_wallet
+            )
 
             transaction, _ = await sync_to_async(Transaction.objects.get_or_create)(
                 trade=trade,
                 currency=currency,
+                from_wallet=from_wallet,
+                to_wallet=to_wallet,
                 defaults={
                     "amount": 0,
-                    # TODO: Once team for button is tracked, swap this out
-                    "from_wallet": from_wallet,
-                    "to_wallet": to_wallet,
                 },
             )
 
@@ -272,34 +307,48 @@ class Button(discord.ui.Button):
             )
 
         # From the team menu, "Start Trading" was pushed
-        async def start_trading(inteaction: discord.Interaction):
+        async def start_trading(interaction: discord.Interaction):
             options: list[discord.SelectOption] = []
             team_lookup = {}
 
             @sync_to_async
-            def get_sender_team(author_id):
+            def get_sender_team(interaction):
                 from bot.users.models import Member
 
-                team = Member.objects.get(discord_id=author_id).player.team
-                print(team.name)
+                channel_team = Channel.objects.get(
+                    discord_id=interaction.channel.id
+                ).team
 
-                return team, team.general_channel, team.guild
+                interacting_team = Member.objects.get(
+                    discord_id=interaction.user.id
+                ).player.team
 
-            sender_team, sender_team_channel, sender_team_guild = await get_sender_team(
-                interaction.user.id
-            )
+                teams = list(Team.objects.all())
 
-            # TODO: Change this to properly find the null team
-            if sender_team.name == "null":
+                return (
+                    channel_team,
+                    interacting_team,
+                    interacting_team.general_channel,
+                    interacting_team.guild,
+                    teams,
+                )
+
+            (
+                channel_team,
+                interacting_team,
+                interacting_team_channel,
+                interacting_team_guild,
+                teams,
+            ) = await get_sender_team(interaction)
+
+            if channel_team.id != interacting_team.id:
                 await interaction.response.send_message(
-                    content="You are not on a team! Join a team first", ephemeral=True
+                    content="You are not on this team!", ephemeral=True
                 )
                 return
 
-            teams = await sync_to_async(list)(Team.objects.all())
-
             for team in teams:
-                if not team.emoji or team.id == sender_team.id:
+                if not team.emoji or team.id == interacting_team.id:
                     continue
 
                 options.append(
@@ -314,13 +363,13 @@ class Button(discord.ui.Button):
 
             trade = await sync_to_async(CreateTrade.execute)(
                 {
-                    "initiating_team": sender_team,
+                    "initiating_team": interacting_team,
                     "team_lookup": team_lookup,
                 }
             )
 
-            trade.discord_channel = sender_team_channel
-            trade.discord_guild = sender_team_guild
+            trade.discord_channel = interacting_team_channel
+            trade.discord_guild = interacting_team_guild
 
             await sync_to_async(trade.save)()
 
