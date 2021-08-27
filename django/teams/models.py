@@ -53,6 +53,8 @@ class Team(models.Model):
         related_name="team_menu_channel",
     )
 
+    bank_embed = models.BigIntegerField(null=True, blank=True, default=0)
+
     def __str__(self):
         if self.emoji:
             return f"{self.name} {emojis.decode(self.emoji)} ({self.id})"
@@ -99,7 +101,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
-        # Create a menu for the team
+        # Create a menu channel for the team
         menu_channel = Channel.objects.create(guild=instance.guild, name="menu")
         instance.menu_channel = menu_channel
         QueueTask.execute(
@@ -112,7 +114,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
-        # Create a general for the team
+        # Create a general channel for the team
         general_channel = Channel.objects.create(guild=instance.guild, name="general")
         instance.general_channel = general_channel
         QueueTask.execute(
@@ -121,6 +123,18 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                 "payload": {
                     "team_id": instance.id,
                     "channel_bind_model_id": general_channel.id,
+                },
+            }
+        )
+
+        # Add bank message
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_MESSAGE,
+                "payload": {
+                    "channel_id": instance.menu_channel.id,
+                    "message": "team_bank_embed",
+                    "team_id": instance.id,
                 },
             }
         )

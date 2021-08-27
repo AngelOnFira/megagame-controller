@@ -8,7 +8,7 @@ from asgiref.sync import sync_to_async
 from bot.discord_models.models import Category, Channel, Role
 from bot.users.models import Member
 from currencies.models import Trade
-from currencies.services import CreateTradeEmbed
+from currencies.services import CreateBankEmbed, CreateTradeEmbed
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
@@ -727,6 +727,23 @@ class TaskHandler:
         channel_id = payload["channel_id"]
         message = payload["message"]
 
-        channel = self.client.get_channel(channel_id)
+        channel = await sync_to_async(Channel.objects.get)(id=channel_id)
+        discord_channel = self.client.get_channel(channel.discord_id)
 
-        await channel.send(message)
+        send_params = {}
+        if message == "team_bank_embed":
+            embed = send_params["embed"] = await sync_to_async(CreateBankEmbed.execute)(
+                {
+                    "team_id": payload["team_id"],
+                }
+            )
+
+            discord_message = await discord_channel.send(embed=embed)
+
+            team = await sync_to_async(Team.objects.get)(id=payload["team_id"])
+
+            team.bank_embed = discord_message.id
+            await sync_to_async(team.save)()
+
+        # if message == "team_bank_embed":
+        #     await sync_to_async(messag)()

@@ -78,6 +78,9 @@ async def run_tasks_sync(client: discord.Client):
         elif task.task_type == TaskType.CREATE_BUTTONS:
             await handler.create_button(payload)
 
+        elif task.task_type == TaskType.CREATE_MESSAGE:
+            await handler.create_message(payload)
+
         else:
             # TASK ERROR
             print("Error with task")

@@ -29,6 +29,10 @@ class TaskType(models.TextChoices):
         "TSR",
         _("Create Transaction"),
     )
+    CREATE_MESSAGE = (
+        "CMS",
+        _("Create Message"),
+    )
 
 
 class Task(models.Model):

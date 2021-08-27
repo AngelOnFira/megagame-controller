@@ -64,50 +64,12 @@ class CreateTradeEmbed(Service):
 
 
 class CreateBankEmbed(Service):
-    trade_id = forms.IntegerField()
+    team_id = forms.IntegerField()
 
     def process(self):
-        trade_id = self.cleaned_data["trade_id"]
+        team_id = self.cleaned_data["team_id"]
 
-        trade = Trade.objects.get(id=trade_id)
-
-        embed: discord.Embed = discord.Embed(
-            title=f"Trade for {trade.initiating_party.name} & {trade.receiving_party.name}"
-        )
-
-        initiating_party_transactions = ""
-
-        for transaction in Transaction.objects.filter(
-            trade=trade, from_wallet=trade.initiating_party.wallet
-        ):
-            initiating_party_transactions += (
-                f"{transaction.amount} {transaction.currency.name}\n"
-            )
-
-        if initiating_party_transactions == "":
-            initiating_party_transactions = "-"
-
-        embed.add_field(
-            name=trade.initiating_party.name,
-            value=initiating_party_transactions,
-        )
-
-        receiving_party_transactions = ""
-
-        for transaction in Transaction.objects.filter(
-            trade=trade, from_wallet=trade.receiving_party.wallet
-        ):
-            receiving_party_transactions += (
-                f"{transaction.amount} {transaction.currency.name}\n"
-            )
-
-        if receiving_party_transactions == "":
-            receiving_party_transactions = "-"
-
-        embed.add_field(
-            name=trade.receiving_party.name,
-            value=receiving_party_transactions,
-        )
+        embed: discord.Embed = discord.Embed(title=f"Test")
 
         return embed
 
