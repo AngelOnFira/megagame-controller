@@ -53,7 +53,7 @@ class Team(models.Model):
         related_name="team_menu_channel",
     )
 
-    bank_embed = models.BigIntegerField(null=True, blank=True, default=0)
+    bank_embed_id = models.BigIntegerField(null=True, blank=True, default=0)
 
     def __str__(self):
         if self.emoji:

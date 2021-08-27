@@ -378,6 +378,7 @@ class Button(discord.ui.Button):
 
         async def currency_trade_confirm(interaction: discord.Interaction):
             # get the trade id
+            # TODO: Make sure there is enough money
             trade_id = self.callback_payload["trade_id"]
 
             @sync_to_async
@@ -395,7 +396,48 @@ class Button(discord.ui.Button):
                 await sync_to_async(transaction.complete)()
                 await sync_to_async(transaction.save)()
 
-            # update team's embed?
+            @sync_to_async
+            def get_trade_team_details(trade):
+                return (
+                    trade.initiating_party.menu_channel.discord_id,
+                    trade.initiating_party.bank_embed_id,
+                    trade.initiating_party.id,
+                    trade.receiving_party.menu_channel.discord_id,
+                    trade.receiving_party.bank_embed_id,
+                    trade.receiving_party.id,
+                )
+
+            (
+                menu_channel_initiating_id,
+                bank_initiating_embed_id,
+                initiating_team_id,
+                menu_channel_receiving_id,
+                bank_receiving_embed_id,
+                receiving_team_id,
+            ) = await get_trade_team_details(trade)
+
+            # get the menu channel
+            menu_channel_initiating = interaction.guild.get_channel(
+                menu_channel_initiating_id
+            )
+            initiating_message: discord.Message = await (
+                menu_channel_initiating.fetch_message(bank_initiating_embed_id)
+            )
+            initiating_embed = await sync_to_async(CreateBankEmbed.execute)(
+                {"team_id": initiating_team_id}
+            )
+            await initiating_message.edit(embed=initiating_embed)
+
+            menu_channel_receiving = interaction.guild.get_channel(
+                menu_channel_receiving_id
+            )
+            receiving_message: discord.Message = await (
+                menu_channel_receiving.fetch_message(bank_receiving_embed_id)
+            )
+            receiving_embed = await sync_to_async(CreateBankEmbed.execute)(
+                {"team_id": receiving_team_id}
+            )
+            await receiving_message.edit(embed=receiving_embed)
 
         function_lookup = {
             "adjust_currency_trade": adjust_currency_trade,
@@ -742,7 +784,7 @@ class TaskHandler:
 
             team = await sync_to_async(Team.objects.get)(id=payload["team_id"])
 
-            team.bank_embed = discord_message.id
+            team.bank_embed_id = discord_message.id
             await sync_to_async(team.save)()
 
         # if message == "team_bank_embed":
