@@ -106,7 +106,7 @@ class Dropdown(discord.ui.Select):
                 ephemeral=True,
             )
 
-            handler = TaskHandler(discord.ui.View, self.client)
+            handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
             await handler.create_button(
                 {
@@ -293,7 +293,7 @@ class Button(discord.ui.Button):
 
                 button_rows.append(row)
 
-            handler = TaskHandler(discord.ui.View, self.client)
+            handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
             await handler.create_button(
                 {
@@ -315,7 +315,7 @@ class Button(discord.ui.Button):
 
                 channel_team = Channel.objects.get(
                     discord_id=interaction.channel.id
-                ).team
+                ).team_menu_channel
 
                 interacting_team = Member.objects.get(
                     discord_id=interaction.user.id
@@ -370,16 +370,38 @@ class Button(discord.ui.Button):
 
             await sync_to_async(trade.save)()
 
-            handler = TaskHandler(discord.ui.View(), self.client)
+            handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
             await handler.create_dropdown_response(
                 interaction, options, "trade_country_chosen", {"trade_id": trade.id}
             )
 
+        async def currency_trade_confirm(interaction: discord.Interaction):
+            # get the trade id
+            trade_id = self.callback_payload["trade_id"]
+
+            @sync_to_async
+            def get_trade(trade_id):
+                trade = Trade.objects.get(id=trade_id)
+
+                return trade, list(trade.transactions.all())
+
+            trade, transactions = await get_trade(trade_id)
+
+            trade.complete()
+            await sync_to_async(trade.save)()
+
+            for transaction in transactions:
+                await sync_to_async(transaction.complete)()
+                await sync_to_async(transaction.save)()
+
+            # update team's embed?
+
         function_lookup = {
             "adjust_currency_trade": adjust_currency_trade,
             "start_trading": start_trading,
             "currency_trade_ephemeral_menu": currency_trade_ephemeral_menu,
+            "currency_trade_confirm": currency_trade_confirm,
         }
 
         await function_lookup[self.do_next](interaction)
@@ -503,7 +525,7 @@ class TaskHandler:
     ):
         button_rows = payload["button_rows"]
 
-        view = discord.ui.View()
+        view = discord.ui.View(timeout=None)
 
         for row in button_rows:
             for button in row:
@@ -556,7 +578,7 @@ class TaskHandler:
 
                 @sync_to_async
                 def get_channel_id(team_id):
-                    return Team.objects.get(id=team_id).general_channel.discord_id
+                    return Team.objects.get(id=team_id).menu_channel.discord_id
 
                 channel_id = await get_channel_id(team_id)
             else:
@@ -700,3 +722,11 @@ class TaskHandler:
 
         player.team = new_team
         await sync_to_async(player.save)()
+
+    async def create_message(self, payload: dict):
+        channel_id = payload["channel_id"]
+        message = payload["message"]
+
+        channel = self.client.get_channel(channel_id)
+
+        await channel.send(message)

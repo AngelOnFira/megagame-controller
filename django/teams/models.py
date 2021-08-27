@@ -158,6 +158,25 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
+        # TODO: remove
+
+        # QueueTask.execute(
+        #     {
+        #         "task_type": TaskType.CHANGE_TEAM,
+        #         "payload": {
+        #             "player_id": Member.objects.get(name="null").id,
+        #             "team_id": instance.id,
+        #             "guild_id": instance.guild.discord_id,
+        #             "button_rows": button_rows,
+        #             "embed": {
+        #                 "title": "Team menu",
+        #                 "description": "Choose what you would like to do",
+        #                 "color": 0x00FF00,
+        #             },
+        #         },
+        #     }
+        # )
+
         instance.save()
 
 

@@ -56,6 +56,10 @@ class Trade(models.Model):
         self.receiving_party = Team.objects.get(id=self.team_lookup[values[0]])
         self.modified_date = timezone.now()
 
+    @transition(field=state, source="new", target="completed")
+    def complete(self):
+        pass
+
 
 class Transaction(models.Model):
     # current_message_id = models.IntegerField(default=0, unique=True)
@@ -64,7 +68,13 @@ class Transaction(models.Model):
     currency = models.ForeignKey(
         Currency, on_delete=models.PROTECT, null=True, blank=True
     )
-    trade = models.ForeignKey(Trade, on_delete=models.PROTECT, null=True, blank=True)
+    trade = models.ForeignKey(
+        Trade,
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="transactions",
+    )
 
     created_date = models.DateTimeField(default=timezone.now)
     modified_date = models.DateTimeField(default=timezone.now)
@@ -110,7 +120,7 @@ class Transaction(models.Model):
         modified_date = timezone.now()
 
     @transaction.atomic
-    @transition(field=state, source="created", target="completed")
+    @transition(field=state, source="new", target="completed")
     def complete(self):
         modified_date = timezone.now()
 

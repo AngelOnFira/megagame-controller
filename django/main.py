@@ -54,7 +54,7 @@ async def run_tasks_sync(client: discord.Client):
     task_list = await sync_to_async(list)(Task.objects.filter(completed=False))
 
     for task in task_list:
-        handler = TaskHandler(view=discord.ui.View(), client=client)
+        handler = TaskHandler(view=discord.ui.View(timeout=None), client=client)
         payload: dict = task.payload
 
         if task.task_type == TaskType.MESSAGE:
