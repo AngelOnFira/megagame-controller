@@ -26,12 +26,6 @@ class Dropdown(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         async def trade_country_chosen(interaction: discord.Interaction):
-            # create channel for trade
-            # need interaction author team, interaction trade?
-            pass
-
-            # get the trade category
-
             trade_category = list(
                 filter(
                     lambda x: x.name.lower() == "trades", interaction.guild.categories
@@ -50,23 +44,46 @@ class Dropdown(discord.ui.Select):
                 id=trade.team_lookup[self.values[0]]
             )
 
+            await sync_to_async(trade.save)()
+
             @sync_to_async
             def get_involved_teams(trade: Trade):
                 assert trade.initiating_party is not None
                 assert trade.receiving_party is not None
                 return (
                     trade.initiating_party,
+                    trade.initiating_party.role,
                     trade.receiving_party,
+                    trade.receiving_party.role,
                     trade.discord_guild,
                 )
 
-            initiating_party, receiving_party, discord_guild = await get_involved_teams(
-                trade
+            (
+                initiating_party,
+                initiating_party_role,
+                receiving_party,
+                receiving_party_role,
+                discord_guild,
+            ) = await get_involved_teams(trade)
+
+            everyone_role = interaction.guild.default_role
+            initiating_party_role = interaction.guild.get_role(
+                initiating_party_role.discord_id
             )
+            receiving_party_role = interaction.guild.get_role(
+                receiving_party_role.discord_id
+            )
+
+            overwrites = {
+                everyone_role: discord.PermissionOverwrite(view_channel=False),
+                initiating_party_role: discord.PermissionOverwrite(view_channel=True),
+                receiving_party_role: discord.PermissionOverwrite(view_channel=True),
+            }
 
             text_channel = await interaction.guild.create_text_channel(
                 f"Trade for {initiating_party.name} and {receiving_party.name}",
                 category=trade_category[0],
+                overwrites=overwrites,
             )
 
             # # get guild
@@ -238,6 +255,7 @@ class Button(discord.ui.Button):
                 interaction=interaction,
             )
 
+        # From the team menu, "Start Trading" was pushed
         async def start_trading(inteaction: discord.Interaction):
             options: list[discord.SelectOption] = []
             team_lookup = {}
@@ -247,12 +265,20 @@ class Button(discord.ui.Button):
                 from bot.users.models import Member
 
                 team = Member.objects.get(discord_id=author_id).player.team
+                print(team.name)
 
                 return team, team.general_channel, team.guild
 
             sender_team, sender_team_channel, sender_team_guild = await get_sender_team(
-                interaction.message.author.id
+                interaction.user.id
             )
+
+            # TODO: Change this to properly find the null team
+            if sender_team.name == "null":
+                await interaction.response.send_message(
+                    content="You are not on a team! Join a team first", ephemeral=True
+                )
+                return
 
             teams = await sync_to_async(list)(Team.objects.all())
 
@@ -361,7 +387,6 @@ class TaskHandler:
 
     async def create_category(self, payload: dict):
         guild_id = payload["guild_id"]
-        print(guild_id)
 
         guild: discord.Guild = self.client.get_guild(guild_id)
         if guild is None:
@@ -579,16 +604,16 @@ class TaskHandler:
         @sync_to_async
         def get_models(player_id, new_team_id):
             player = Player.objects.get(id=player_id)
-            team = Team.objects.get(id=new_team_id)
+            new_team = Team.objects.get(id=new_team_id)
             teams = [team for team in Team.objects.all()]
 
             player_guild = player.guild
             discord_member = player.discord_member
-            team_role = team.role
+            team_role = new_team.role
 
             return (
                 player,
-                team,
+                new_team,
                 teams,
                 player_guild,
                 discord_member,
@@ -597,7 +622,7 @@ class TaskHandler:
 
         (
             player,
-            team,
+            new_team,
             teams,
             player_guild,
             discord_member,
@@ -616,3 +641,6 @@ class TaskHandler:
 
         # Add the new team role
         await discord_member.add_roles(guild.get_role(team_role.discord_id))
+
+        player.team = new_team
+        await sync_to_async(player.save)()

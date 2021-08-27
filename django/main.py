@@ -54,7 +54,6 @@ async def run_tasks_sync(client: discord.Client):
     task_list = await sync_to_async(list)(Task.objects.filter(completed=False))
 
     for task in task_list:
-        print(task.task_type)
         handler = TaskHandler(view=discord.ui.View(), client=client)
         payload: dict = task.payload
 
@@ -62,7 +61,7 @@ async def run_tasks_sync(client: discord.Client):
             await handler.send_message(payload)
 
         elif task.task_type == TaskType.CHANGE_TEAM:
-            await handler.send_message(payload)
+            await handler.change_team(payload)
 
         elif task.task_type == TaskType.CREATE_ROLE:
             await handler.create_role(payload)

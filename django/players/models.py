@@ -24,6 +24,9 @@ class Player(models.Model):
         "discord_models.Guild", on_delete=models.CASCADE, null=True
     )
 
+    def __str__(self):
+        return f"{self.name}/{self.discord_member.name}"
+
 
 def default_team(sender, instance, created, **kwargs):
     # Have to import here to prevent circular imports
