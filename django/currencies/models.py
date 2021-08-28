@@ -40,8 +40,11 @@ class Trade(models.Model):
         "discord_models.Guild", on_delete=models.PROTECT, null=True, blank=True
     )
 
+    # Store a list of teams names that points to the their model ids. This is in
+    # case someone changes a team name
     team_lookup = models.JSONField(default=dict, blank=True, null=True)
-    currency_lookup = models.JSONField(default=dict, blank=True, null=True)
+
+    embed_id = models.BigIntegerField(unique=True, null=True)
 
     state = FSMField(default="new")
 

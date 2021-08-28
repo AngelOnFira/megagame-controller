@@ -14,6 +14,7 @@ from importlib import import_module
 
 import discord
 import emojis
+import sentry_sdk
 from aiohttp import payload
 from asgiref.sync import async_to_sync, sync_to_async
 from discord.ext import tasks
@@ -30,6 +31,15 @@ intents = discord.Intents.default()
 intents.members = True
 
 client = discord.Client(intents=intents)
+
+# TODO: Add this to env vars
+sentry_sdk.init(
+    "https://b5254996d45d4a10af15a459c4ee8db4@o979577.ingest.sentry.io/5934630",
+    # Set traces_sample_rate to 1.0 to capture 100%
+    # of transactions for performance monitoring.
+    # We recommend adjusting this value in production.
+    traces_sample_rate=1.0,
+)
 
 
 @client.event

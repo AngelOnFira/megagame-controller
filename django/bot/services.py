@@ -98,8 +98,6 @@ class Dropdown(discord.ui.Select):
 
             trade.discord_channel = new_channel
 
-            await sync_to_async(trade.save)()
-
             # Reply in old channel with link to the trade
             await interaction.response.send_message(
                 content=f"Trade channel created! You can access it here: {text_channel.mention}",
@@ -108,7 +106,7 @@ class Dropdown(discord.ui.Select):
 
             handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
-            await handler.create_button(
+            button_messsage = await handler.create_button(
                 {
                     "guild_id": interaction.guild.id,
                     "trade_id": trade_id,
@@ -161,6 +159,10 @@ class Dropdown(discord.ui.Select):
                     ],
                 },
             )
+
+            trade.embed_id = button_messsage.id
+
+            await sync_to_async(trade.save)()
 
         function_lookup = {
             "trade_country_chosen": trade_country_chosen,
@@ -346,7 +348,6 @@ class Button(discord.ui.Button):
                 return (
                     channel_team,
                     interacting_team,
-                    interacting_team.general_channel,
                     interacting_team.guild,
                     teams,
                 )
@@ -354,7 +355,6 @@ class Button(discord.ui.Button):
             (
                 channel_team,
                 interacting_team,
-                interacting_team_channel,
                 interacting_team_guild,
                 teams,
             ) = await get_sender_team(interaction)
@@ -388,20 +388,54 @@ class Button(discord.ui.Button):
 
             trade.discord_guild = interacting_team_guild
 
-            await sync_to_async(trade.save)()
-
             handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
-            await handler.create_dropdown_response(
+            dropdown_message = await handler.create_dropdown_response(
                 interaction, options, "trade_country_chosen", {"trade_id": trade.id}
             )
+
+            await sync_to_async(trade.save)()
 
         async def accept_trade(interaction: discord.Interaction):
             trade_id = self.callback_payload["trade_id"]
 
-            # get the team interacting
-            # set their accept true
-            # update embed
+            @sync_to_async
+            def get_trade(trade_id, interaction):
+                trade: Trade = Trade.objects.get(id=trade_id)
+                interacting_team: Member = Member.objects.get(
+                    discord_id=interaction.user.id
+                ).player.team
+
+                return (
+                    trade,
+                    interacting_team,
+                    trade.initiating_party,
+                    trade.receiving_party,
+                )
+
+            (
+                trade,
+                interacting_team,
+                trade_initiating_party,
+                trade_receiving_party,
+            ) = await get_trade(trade_id, interaction)
+
+            if interacting_team.id == trade_initiating_party.id:
+                trade.initiating_party_accepted = True
+            elif interacting_team.id == trade_receiving_party.id:
+                trade.receiving_party_accepted = True
+
+            await sync_to_async(trade.save)()
+
+            embed = await sync_to_async(CreateTradeEmbed.execute)(
+                {"trade_id": trade_id}
+            )
+
+            message: discord.Message = await interaction.channel.fetch_message(
+                trade.embed_id
+            )
+
+            await message.edit(embed=embed)
 
         async def lock_in_trade(interaction: discord.Interaction):
             # get the trade id
@@ -473,6 +507,7 @@ class Button(discord.ui.Button):
             "start_trading": start_trading,
             "currency_trade_ephemeral_menu": currency_trade_ephemeral_menu,
             "lock_in_trade": lock_in_trade,
+            "accept_trade": accept_trade,
         }
 
         await function_lookup[self.do_next](interaction)
@@ -657,7 +692,8 @@ class TaskHandler:
 
             channel = self.client.get_guild(guild_id).get_channel(channel_id)
 
-            await channel.send(**params, view=view)
+            button_message = await channel.send(**params, view=view)
+            return button_message
 
         else:
             await interaction.response.send_message(**params, view=view, ephemeral=True)

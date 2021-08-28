@@ -16,7 +16,7 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-TOKEN = "ODgwNDM1NTY4NzA4ODQ1Njc4.YSePhQ.4rKaGiPrazrzJd9yiUmiimP9aoQ"
+TOKEN = "ODgxMDE1Njc1MjM2MjcwMTIx.YSmryQ.BqFwf7vhSHrBjuA0J6F5cXkzMwg"
 
 
 # Quick-start development settings - unsuitable for production
