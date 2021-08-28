@@ -78,6 +78,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
     from currencies.services import CreateTrade
 
     if created:
+        print("I was created!")
         # If a guild is not set, choose the first one
         if not instance.guild:
             instance.guild = Guild.objects.first()
@@ -102,6 +103,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
+
         # Create a category for the team
         QueueTask.execute(
             {
@@ -109,19 +111,6 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                 "payload": {
                     "team_id": instance.id,
                     "guild_id": guild.discord_id,
-                },
-            }
-        )
-
-        # Create a menu channel for the team
-        menu_channel = Channel.objects.create(guild=instance.guild, name="menu")
-        instance.menu_channel = menu_channel
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_CHANNEL,
-                "payload": {
-                    "team_id": instance.id,
-                    "channel_bind_model_id": menu_channel.id,
                 },
             }
         )
@@ -135,6 +124,19 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                 "payload": {
                     "team_id": instance.id,
                     "channel_bind_model_id": general_channel.id,
+                },
+            }
+        )
+
+        # Create a menu channel for the team
+        menu_channel = Channel.objects.create(guild=instance.guild, name="menu")
+        instance.menu_channel = menu_channel
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CHANNEL,
+                "payload": {
+                    "team_id": instance.id,
+                    "channel_bind_model_id": menu_channel.id,
                 },
             }
         )

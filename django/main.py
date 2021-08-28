@@ -117,6 +117,8 @@ async def before_my_task():
     from bot.state import intial_state_check
     from bot.users.services import CreateMember
     from teams.models import Team
+    from tasks.services import QueueTask
+    from tasks.models import TaskType
 
     @sync_to_async
     def get_categories():
@@ -142,30 +144,112 @@ async def before_my_task():
                 }
             )
 
-        print("Deleting channels that aren't in the database...")
-        channels_stored = await sync_to_async(list)(Channel.objects.all())
-        for channel in guild.channels:
-            if (
-                not channel.name.startswith("test-")
-                and isinstance(channel, discord.TextChannel)
-                and channel.id not in channels_stored
-            ):
-                await channel.delete()
+        # print("Deleting channels that aren't in the database...")
+        # channels_stored = await sync_to_async(list)(Channel.objects.all())
+        # for channel in guild.channels:
+        #     if (
+        #         not channel.name.startswith("test-")
+        #         and isinstance(channel, discord.TextChannel)
+        #         and channel.id not in channels_stored
+        #     ):
+        #         await channel.delete()
 
-        print("Deleting categories that aren't in the database...")
-        categories_stored = await sync_to_async(list)(Category.objects.all())
-        for category in guild.categories:
-            if (
-                not category.name.startswith("dev-")
-                and category.id not in categories_stored
-            ):
-                await category.delete()
+        # print("Deleting categories that aren't in the database...")
+        # categories_stored = await sync_to_async(list)(Category.objects.all())
+        # for category in guild.categories:
+        #     if (
+        #         not category.name.startswith("dev-")
+        #         and category.id not in categories_stored
+        #     ):
+        #         await category.delete()
 
-        print("Deleting roles that aren't in the database...")
-        roles_stored = await sync_to_async(list)(Role.objects.all())
-        for role in guild.roles:
-            if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
-                await role.delete()
+        # print("Deleting roles that aren't in the database...")
+        # roles_stored = await sync_to_async(list)(Role.objects.all())
+        # for role in guild.roles:
+        #     if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
+        #         await role.delete()
+        # print("ready")
+
+        # Go through each team and remake their embeds
+        teams = await sync_to_async(list)(Team.objects.all())
+
+        for team in teams:
+            team = await sync_to_async(Team.objects.get)(id=team.id)
+            if team.name == "null":
+                continue
+
+            @sync_to_async
+            def get_team(team):
+                return team.guild, team.menu_channel
+
+            team_guild, team_menu_channel = await get_team(team)
+
+            guild = client.get_guild(team_guild.discord_id)
+            menu_channel = guild.get_channel(team_menu_channel.discord_id)
+            await menu_channel.delete()
+            await sync_to_async(team.menu_channel.delete)()
+
+            # Create a menu channel for the team
+            menu_channel = await sync_to_async(Channel.objects.create)(guild=team.guild, name="menu")
+
+            team.menu_channel = menu_channel
+            await sync_to_async(team.save)()
+
+            await sync_to_async(QueueTask.execute)(
+                {
+                    "task_type": TaskType.CREATE_CHANNEL,
+                    "payload": {
+                        "team_id": team.id,
+                        "channel_bind_model_id": menu_channel.id,
+                    },
+                }
+            )
+
+            # Add bank message
+            await sync_to_async(QueueTask.execute)(
+                {
+                    "task_type": TaskType.CREATE_MESSAGE,
+                    "payload": {
+                        "channel_id": menu_channel.id,
+                        "message": "team_bank_embed",
+                        "team_id": team.id,
+                    },
+                }
+            )
+
+            button_rows = [
+                [
+                    {
+                        "x": 0,
+                        "y": 0,
+                        "style": discord.ButtonStyle.primary,
+                        "disabled": False,
+                        "label": "Start trade",
+                        "custom_id": f"{team.id}",
+                        "emoji": "💱",
+                        "do_next": "start_trading",
+                        "callback_payload": {},
+                    }
+                ]
+            ]
+
+            # Add a buttons message as a menu
+            await sync_to_async(QueueTask.execute)(
+                {
+                    "task_type": TaskType.CREATE_BUTTONS,
+                    "payload": {
+                        "team_id": team.id,
+                        "guild_id": team_guild.discord_id,
+                        "button_rows": button_rows,
+                        "embed": {
+                            "title": "Team menu",
+                            "description": "Choose what you would like to do",
+                            "color": 0x00FF00,
+                        },
+                    },
+                }
+            )
+
 
     await intial_state_check(client)
 
