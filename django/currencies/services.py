@@ -63,7 +63,7 @@ class CreateTradeEmbed(Service):
 
         # Create embed for each team
         initiating_party_transactions += "\n\nAccepted: " + (
-            "✅" if trade.initiating_party_accepted else "❌"
+            "✅" if trade.initiating_party_accepted else "❌" + "\n"
         )
         embed.add_field(
             name=trade.initiating_party.name,
@@ -71,11 +71,21 @@ class CreateTradeEmbed(Service):
         )
 
         receiving_party_transactions += "\n\nAccepted: " + (
-            "✅" if trade.receiving_party_accepted else "❌"
+            "✅" if trade.receiving_party_accepted else "❌" + "\n"
         )
         embed.add_field(
             name=trade.receiving_party.name,
             value=receiving_party_transactions,
+        )
+
+        embed.add_field(
+            name="|",
+            value="|\n" * (num_newlines + 3),
+        )
+
+        embed.add_field(
+            name="Details",
+            value="*Once both teams have accepted, either team can lock in the trade*",
         )
 
         return embed

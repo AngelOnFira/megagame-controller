@@ -125,22 +125,22 @@ class Dropdown(discord.ui.Select):
                                 "do_next": "currency_trade_currency_menu",
                                 "callback_payload": {"trade_id": trade.id},
                             },
-                            {
-                                "x": 0,
-                                "y": 1,
-                                "style": discord.ButtonStyle.danger,
-                                "disabled": False,
-                                "label": "Cancel trade",
-                                "emoji": "❌",
-                                "do_next": "cancel_trade",
-                                "callback_payload": {"trade_id": trade.id},
-                            },
+                            # {
+                            #     "x": 0,
+                            #     "y": 1,
+                            #     "style": discord.ButtonStyle.danger,
+                            #     "disabled": False,
+                            #     "label": "Cancel trade",
+                            #     "emoji": "❌",
+                            #     "do_next": "cancel_trade",
+                            #     "callback_payload": {"trade_id": trade.id},
+                            # },
                             {
                                 "x": 1,
                                 "y": 1,
                                 "style": discord.ButtonStyle.success,
                                 "disabled": False,
-                                "label": "Accept Trade",
+                                "label": "Toggle Trade Accept",
                                 "emoji": "✅",
                                 "do_next": "accept_trade",
                                 "callback_payload": {"trade_id": trade.id},
@@ -149,7 +149,7 @@ class Dropdown(discord.ui.Select):
                                 "x": 2,
                                 "y": 1,
                                 "style": discord.ButtonStyle.primary,
-                                "disabled": False,
+                                "disabled": True,
                                 "label": "Lock in trade",
                                 "emoji": "🔒",
                                 "do_next": "lock_in_trade",
@@ -228,6 +228,81 @@ class Dropdown(discord.ui.Select):
         await function_lookup[self.do_next](interaction)
 
 
+async def trade_view(client, trade):
+    view = discord.ui.View(timeout=None)
+
+    view.add_item(
+        Button(
+            client,
+            0,
+            0,
+            {
+                "style": discord.ButtonStyle.primary,
+                "label": "Adjust trade amounts",
+                "row": 0,
+                "emoji": "✏️",
+            },
+            do_next="currency_trade_currency_menu",
+            callback_payload={"trade_id": trade.id},
+        )
+    )
+
+    # view.add_item(
+    #     Button(
+    #         client,
+    #         0,
+    #         1,
+    #         {
+    #             "style": discord.ButtonStyle.danger,
+    #             "label": "Cancel trade",
+    #             "row": 1,
+    #             "emoji": "❌",
+    #         },
+    #         do_next="cancel_trade",
+    #         callback_payload={"trade_id": trade.id},
+    #     )
+    # )
+
+    view.add_item(
+        Button(
+            client,
+            0,
+            1,
+            {
+                "style": discord.ButtonStyle.success,
+                "label": "Toggle Trade Accept",
+                "row": 1,
+                "emoji": "✅",
+            },
+            do_next="accept_trade",
+            callback_payload={"trade_id": trade.id},
+        )
+    )
+
+    show_lock_in = not (
+        trade.initiating_party_accepted and trade.receiving_party_accepted
+    )
+
+    view.add_item(
+        Button(
+            client,
+            0,
+            1,
+            {
+                "style": discord.ButtonStyle.primary,
+                "label": "Lock in trade",
+                "row": 1,
+                "emoji": "🔒",
+                "disabled": show_lock_in,
+            },
+            do_next="lock_in_trade",
+            callback_payload={"trade_id": trade.id},
+        )
+    )
+
+    return view
+
+
 class Button(discord.ui.Button):
     def __init__(
         self,
@@ -251,7 +326,6 @@ class Button(discord.ui.Button):
         from teams.models import Team
 
         async def adjust_currency_trade(interaction: discord.Interaction):
-            # TODO: Change to payload
             currency_id = self.callback_payload["currency_id"]
             trade_id = self.callback_payload["trade_id"]
             amount = self.callback_payload["amount"]
@@ -323,7 +397,10 @@ class Button(discord.ui.Button):
             else:
                 await sync_to_async(transaction.save)()
 
-            # TODO: Make sure they have enough money
+            trade.initiating_party_accepted = False
+            trade.receiving_party_accepted = False
+
+            await sync_to_async(trade.save)()
 
             embed = await sync_to_async(CreateTradeEmbed.execute)(
                 {"trade_id": trade_id}
@@ -333,7 +410,9 @@ class Button(discord.ui.Button):
                 trade.embed_id
             )
 
-            await message.edit(embed=embed)
+            view = await trade_view(self.client, trade)
+
+            await message.edit(embed=embed, view=view)
 
         async def currency_trade_adjustment_menu(interaction: discord.Interaction):
             # payload: expect a currency id
@@ -482,6 +561,7 @@ class Button(discord.ui.Button):
 
             await sync_to_async(trade.save)()
 
+        # When toggle trade accept is pressed
         async def accept_trade(interaction: discord.Interaction):
             trade_id = self.callback_payload["trade_id"]
 
@@ -507,9 +587,9 @@ class Button(discord.ui.Button):
             ) = await get_trade(trade_id, interaction)
 
             if interacting_team.id == trade_initiating_party.id:
-                trade.initiating_party_accepted = True
+                trade.initiating_party_accepted = not trade.initiating_party_accepted
             elif interacting_team.id == trade_receiving_party.id:
-                trade.receiving_party_accepted = True
+                trade.receiving_party_accepted = not trade.receiving_party_accepted
 
             await sync_to_async(trade.save)()
 
@@ -521,7 +601,9 @@ class Button(discord.ui.Button):
                 trade.embed_id
             )
 
-            await message.edit(embed=embed)
+            view = await trade_view(self.client, trade)
+
+            await message.edit(embed=embed, view=view)
 
         async def lock_in_trade(interaction: discord.Interaction):
             # get the trade id
