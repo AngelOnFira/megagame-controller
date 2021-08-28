@@ -122,7 +122,7 @@ class Dropdown(discord.ui.Select):
                                 "label": "Adjust trade amounts",
                                 "custom_id": f"{trade.id}",
                                 "emoji": "✏️",
-                                "do_next": "currency_trade_ephemeral_menu",
+                                "do_next": "currency_trade_currency_menu",
                                 "callback_payload": {"trade_id": trade.id},
                             },
                             {
@@ -272,7 +272,8 @@ class Button(discord.ui.Button):
 
             await message.edit(embed=embed)
 
-        async def currency_trade_ephemeral_menu(interaction: discord.Interaction):
+        async def currency_trade_adjustment_menu(interaction: discord.Interaction):
+            # payload: expect a currency id
             currencies: Currency = await sync_to_async(list)(Currency.objects.all())
 
             button_rows = []
@@ -324,6 +325,25 @@ class Button(discord.ui.Button):
                     "content": "Adjust this trade",
                 },
                 interaction=interaction,
+            )
+
+        async def currency_trade_currency_menu(interaction: discord.Interaction):
+            currencies: Currency = await sync_to_async(list)(Currency.objects.all())
+
+            options = []
+
+            for currency in currencies:
+                options.append(
+                    discord.SelectOption(
+                        label=currency.name,
+                        emoji=emojis.encode(currency.emoji),
+                    )
+                )
+
+            handler = TaskHandler(discord.ui.View(timeout=None), self.client)
+
+            dropdown_message = await handler.create_dropdown_response(
+                interaction, options, "adjustment_select_trade_currency", {}
             )
 
         # From the team menu, "Start Trading" was pushed
@@ -503,11 +523,12 @@ class Button(discord.ui.Button):
             await receiving_message.edit(embed=receiving_embed)
 
         function_lookup = {
-            "adjust_currency_trade": adjust_currency_trade,
-            "start_trading": start_trading,
-            "currency_trade_ephemeral_menu": currency_trade_ephemeral_menu,
-            "lock_in_trade": lock_in_trade,
             "accept_trade": accept_trade,
+            "adjust_currency_trade": adjust_currency_trade,
+            "currency_trade_adjustment_menu": currency_trade_adjustment_menu,
+            "currency_trade_currency_menu": currency_trade_currency_menu,
+            "lock_in_trade": lock_in_trade,
+            "start_trading": start_trading,
         }
 
         await function_lookup[self.do_next](interaction)
