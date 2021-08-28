@@ -27,35 +27,52 @@ class CreateTradeEmbed(Service):
             title=f"Trade for {trade.initiating_party.name} & {trade.receiving_party.name}"
         )
 
+        # Build recipt for initiating party
         initiating_party_transactions = ""
-
         for transaction in Transaction.objects.filter(
             trade=trade, from_wallet=trade.initiating_party.wallet
         ):
             initiating_party_transactions += (
                 f"{transaction.amount} {transaction.currency.name}\n"
             )
-
         if initiating_party_transactions == "":
             initiating_party_transactions = "-"
 
-        embed.add_field(
-            name=trade.initiating_party.name,
-            value=initiating_party_transactions,
-        )
-
+        # Build recipt for receiving party
         receiving_party_transactions = ""
-
         for transaction in Transaction.objects.filter(
             trade=trade, from_wallet=trade.receiving_party.wallet
         ):
             receiving_party_transactions += (
                 f"{transaction.amount} {transaction.currency.name}\n"
             )
-
         if receiving_party_transactions == "":
             receiving_party_transactions = "-"
 
+        # Count the number of newlines in the transaction strings
+        init_newline_count = initiating_party_transactions.count("\n")
+        recv_newline_count = receiving_party_transactions.count("\n")
+
+        num_newlines = max(init_newline_count, recv_newline_count)
+
+        # Add extra newlines to the shorter string (ty copilot)
+        if init_newline_count < recv_newline_count:
+            initiating_party_transactions += "\n" * (num_newlines - init_newline_count)
+        elif init_newline_count > recv_newline_count:
+            receiving_party_transactions += "\n" * (num_newlines - recv_newline_count)
+
+        # Create embed for each team
+        initiating_party_transactions += "\n\nAccepted: " + (
+            "✅" if trade.initiating_party_accepted else "❌"
+        )
+        embed.add_field(
+            name=trade.initiating_party.name,
+            value=initiating_party_transactions,
+        )
+
+        receiving_party_transactions += "\n\nAccepted: " + (
+            "✅" if trade.receiving_party_accepted else "❌"
+        )
         embed.add_field(
             name=trade.receiving_party.name,
             value=receiving_party_transactions,

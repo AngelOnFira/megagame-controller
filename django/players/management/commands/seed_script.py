@@ -5,7 +5,6 @@ from django_seed import Seed
 
 from bot.accounts.models import User
 from bot.discord_models.models import Category, Channel, Guild, Role
-from bot.plugins.stats.models import LoggedMessage
 from bot.users.models import Member
 from currencies.models import Currency, Trade, Transaction, Wallet
 from django.conf import settings

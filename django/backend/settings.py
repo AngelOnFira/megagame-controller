@@ -51,7 +51,6 @@ INSTALLED_APPS = [
     "bot.discord_models",
     "bot.users",
     ###
-    "bot.plugins.stats",
     "bot.plugins.status",
     ###
     "drf_yasg",
@@ -185,9 +184,6 @@ LOGGING = {
 
 PLUGINS = {
     "bot.plugins.test": {
-        "enabled": True,
-    },
-    "bot.plugins.stats": {
         "enabled": True,
     },
     "currencies": {

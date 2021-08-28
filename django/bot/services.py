@@ -128,13 +128,33 @@ class Dropdown(discord.ui.Select):
                                 "callback_payload": {"trade_id": trade.id},
                             },
                             {
+                                "x": 0,
+                                "y": 1,
+                                "style": discord.ButtonStyle.danger,
+                                "disabled": False,
+                                "label": "Cancel trade",
+                                "emoji": "❌",
+                                "do_next": "cancel_trade",
+                                "callback_payload": {"trade_id": trade.id},
+                            },
+                            {
                                 "x": 1,
-                                "y": 0,
+                                "y": 1,
                                 "style": discord.ButtonStyle.success,
+                                "disabled": False,
+                                "label": "Accept Trade",
+                                "emoji": "✅",
+                                "do_next": "accept_trade",
+                                "callback_payload": {"trade_id": trade.id},
+                            },
+                            {
+                                "x": 2,
+                                "y": 1,
+                                "style": discord.ButtonStyle.primary,
                                 "disabled": False,
                                 "label": "Lock in trade",
                                 "emoji": "🔒",
-                                "do_next": "currency_trade_confirm",
+                                "do_next": "lock_in_trade",
                                 "callback_payload": {"trade_id": trade.id},
                             },
                         ]
@@ -376,29 +396,26 @@ class Button(discord.ui.Button):
                 interaction, options, "trade_country_chosen", {"trade_id": trade.id}
             )
 
-        async def currency_trade_confirm(interaction: discord.Interaction):
+        async def accept_trade(interaction: discord.Interaction):
+            trade_id = self.callback_payload["trade_id"]
+
+            # get the team interacting
+            # set their accept true
+            # update embed
+
+        async def lock_in_trade(interaction: discord.Interaction):
             # get the trade id
             # TODO: Make sure there is enough money
             trade_id = self.callback_payload["trade_id"]
 
+            # Make the database queries
             @sync_to_async
             def get_trade(trade_id):
                 trade = Trade.objects.get(id=trade_id)
 
-                return trade, list(trade.transactions.all())
-
-            trade, transactions = await get_trade(trade_id)
-
-            trade.complete()
-            await sync_to_async(trade.save)()
-
-            for transaction in transactions:
-                await sync_to_async(transaction.complete)()
-                await sync_to_async(transaction.save)()
-
-            @sync_to_async
-            def get_trade_team_details(trade):
                 return (
+                    trade,
+                    list(trade.transactions.all()),
                     trade.initiating_party.menu_channel.discord_id,
                     trade.initiating_party.bank_embed_id,
                     trade.initiating_party.id,
@@ -408,15 +425,26 @@ class Button(discord.ui.Button):
                 )
 
             (
+                trade,
+                transactions,
                 menu_channel_initiating_id,
                 bank_initiating_embed_id,
                 initiating_team_id,
                 menu_channel_receiving_id,
                 bank_receiving_embed_id,
                 receiving_team_id,
-            ) = await get_trade_team_details(trade)
+            ) = await get_trade(trade_id)
 
-            # get the menu channel
+            # Set the state of the trade
+            trade.complete()
+            await sync_to_async(trade.save)()
+
+            # Go through each attached transaction, and make sure it's set to complete
+            for transaction in transactions:
+                await sync_to_async(transaction.complete)()
+                await sync_to_async(transaction.save)()
+
+            # Change the embed on the menu channel for the initiating party
             menu_channel_initiating = interaction.guild.get_channel(
                 menu_channel_initiating_id
             )
@@ -428,6 +456,7 @@ class Button(discord.ui.Button):
             )
             await initiating_message.edit(embed=initiating_embed)
 
+            # Change the embed on the menu channel for the receiving party
             menu_channel_receiving = interaction.guild.get_channel(
                 menu_channel_receiving_id
             )
@@ -443,7 +472,7 @@ class Button(discord.ui.Button):
             "adjust_currency_trade": adjust_currency_trade,
             "start_trading": start_trading,
             "currency_trade_ephemeral_menu": currency_trade_ephemeral_menu,
-            "currency_trade_confirm": currency_trade_confirm,
+            "lock_in_trade": lock_in_trade,
         }
 
         await function_lookup[self.do_next](interaction)

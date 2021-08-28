@@ -72,8 +72,8 @@ async def run_tasks_sync(client: discord.Client):
         elif task.task_type == TaskType.CREATE_CHANNEL:
             await handler.create_channel(payload)
 
-        # elif task.task_type == TaskType.CREATE_DROPDOWN:
-        #     await handler.create_dropdown(payload)
+        elif task.task_type == TaskType.CREATE_DROPDOWN:
+            await handler.create_dropdown(payload)
 
         elif task.task_type == TaskType.CREATE_BUTTONS:
             await handler.create_button(payload)

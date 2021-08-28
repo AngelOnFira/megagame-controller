@@ -30,6 +30,9 @@ class Trade(models.Model):
         blank=True,
     )
 
+    initiating_party_accepted = models.BooleanField(default=False)
+    receiving_party_accepted = models.BooleanField(default=False)
+
     discord_channel = models.ForeignKey(
         "discord_models.Channel", on_delete=models.PROTECT, null=True, blank=True
     )

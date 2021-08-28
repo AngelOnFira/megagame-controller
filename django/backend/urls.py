@@ -2,7 +2,6 @@ from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 from rest_framework import permissions, routers
 
-from bot.plugins.stats import views as stats_views
 from currencies import views as currency_views
 from django.contrib import admin
 from django.urls import include, path
@@ -11,7 +10,6 @@ from players import views as player_views
 from teams import views as team_views
 
 router = routers.DefaultRouter()
-router.register(r"stats", stats_views.MessageViewSet)
 router.register(r"transactions", currency_views.TransactionViewSet)
 router.register(r"wallets", currency_views.WalletViewSet)
 router.register(r"teams", team_views.TeamViewSet)
