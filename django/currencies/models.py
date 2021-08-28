@@ -1,3 +1,6 @@
+from collections import defaultdict
+from operator import truediv
+
 from django_fsm import FSMField, transition
 
 from django.db import models, transaction
@@ -62,8 +65,40 @@ class Trade(models.Model):
         self.receiving_party = Team.objects.get(id=self.team_lookup[values[0]])
         self.modified_date = timezone.now()
 
+    @transaction.atomic
     @transition(field=state, source="new", target="completed")
     def complete(self):
+        initiating_party_balance: defaultdict(
+            int
+        ) = self.initiating_party.get_bank_balance()
+
+        print(initiating_party_balance)
+
+        for transaction in Transaction.objects.filter(
+            trade=self, from_wallet=self.initiating_party.wallet, state="new"
+        ):
+            if initiating_party_balance[transaction.currency.id] < transaction.amount:
+                print(
+                    f"{transaction.amount} is greater than {initiating_party_balance[transaction.currency.id]} of {transaction.currency}"
+                )
+                return False
+
+        receiving_party_balance: defaultdict(
+            int
+        ) = self.receiving_party.get_bank_balance()
+
+        print(receiving_party_balance)
+
+        for transaction in Transaction.objects.filter(
+            trade=self, from_wallet=self.receiving_party.wallet, state="new"
+        ):
+            if receiving_party_balance[transaction.currency.id] < transaction.amount:
+                return False
+
+        return True
+
+    @transition(field=state, source="completed", target="new")
+    def reset(self):
         pass
 
 

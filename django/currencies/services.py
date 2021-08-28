@@ -1,5 +1,6 @@
 import json
 from collections import defaultdict
+from pydoc import describe
 
 import discord
 import emojis
@@ -80,12 +81,18 @@ class CreateTradeEmbed(Service):
 
         embed.add_field(
             name="|",
-            value="|\n" * (num_newlines + 3),
+            value="|\n" * (num_newlines + 4),
         )
+
+        description = """
+            *Once both teams have accepted, either team
+            can lock in the trade. Any changes to the
+            amounts will turn off accepted for both teams*
+            """
 
         embed.add_field(
             name="Details",
-            value="*Once both teams have accepted, either team can lock in the trade*",
+            value=description,
         )
 
         return embed

@@ -217,7 +217,9 @@ class Dropdown(discord.ui.Select):
             view.add_item(currency_button)
 
             await interaction.response.send_message(
-                view=view, content=f"Adjust how many {currency.name} you will send."
+                view=view,
+                content=f"Adjust how many {currency.name} you will send.",
+                ephemeral=True,
             )
 
         function_lookup = {
@@ -638,7 +640,22 @@ class Button(discord.ui.Button):
             ) = await get_trade(trade_id)
 
             # Set the state of the trade
-            trade.complete()
+            completed = await sync_to_async(trade.complete)()
+
+            if completed == False:
+                await interaction.response.send_message(
+                    content="One of the teams did not have enough of at least one currency to complete the transaction."
+                )
+
+                await sync_to_async(trade.reset)()
+
+                trade.initiating_party_accepted = False
+                trade.receiving_party_accepted = False
+
+                await sync_to_async(trade.save)()
+
+                return
+
             await sync_to_async(trade.save)()
 
             # Go through each attached transaction, and make sure it's set to complete
@@ -669,6 +686,12 @@ class Button(discord.ui.Button):
                 {"team_id": receiving_team_id}
             )
             await receiving_message.edit(embed=receiving_embed)
+
+            await interaction.response.send_message(
+                content="This trade is complete, and this channel will lock itself"
+            )
+
+            # TODO: Lock down channel
 
         function_lookup = {
             "accept_trade": accept_trade,

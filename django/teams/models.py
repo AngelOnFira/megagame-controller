@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 
 import discord
 import emojis
@@ -60,6 +61,17 @@ class Team(models.Model):
             return f"{self.name} {emojis.decode(self.emoji)} ({self.id})"
 
         return f"{self.name} ({self.id})"
+
+    def get_bank_balance(self):
+        transaction_totals = defaultdict(int)
+
+        for credit in self.wallet.credits.filter(state="completed"):
+            transaction_totals[credit.currency.id] -= credit.amount
+
+        for debit in self.wallet.debits.filter(state="completed"):
+            transaction_totals[debit.currency.id] += debit.amount
+
+        return transaction_totals
 
 
 def on_team_creation(sender, instance: Team, created, **kwargs):
