@@ -7,7 +7,7 @@ from asgiref.sync import sync_to_async
 
 from bot.discord_models.models import Category, Channel, Role
 from bot.users.models import Member
-from currencies.models import Trade
+from currencies.models import Currency, Trade
 from currencies.services import CreateBankEmbed, CreateTradeEmbed
 from players.models import Player
 from responses.models import Response
@@ -164,8 +164,65 @@ class Dropdown(discord.ui.Select):
 
             await sync_to_async(trade.save)()
 
+        async def adjustment_select_trade_currency(interaction: discord.Interaction):
+            # get currency by name
+            # replace this embed with buttons
+            currency_name = self.values[0]
+
+            currency: Currency = await sync_to_async(Currency.objects.get)(
+                name=currency_name
+            )
+
+            view = discord.ui.View(timeout=None)
+
+            for j, label in enumerate(["-5", "-1", "+1", "+5"]):
+                style = (
+                    discord.ButtonStyle.danger if j < 2 else discord.ButtonStyle.success
+                )
+
+                button = Button(
+                    self.client,
+                    j,
+                    0,
+                    {
+                        "style": style,
+                        "label": label,
+                        "row": 1,
+                    },
+                    do_next="adjust_currency_trade",
+                    callback_payload={
+                        "trade_id": self.callback_payload["trade_id"],
+                        "currency_id": currency.id,
+                        "amount": int(label),
+                    },
+                )
+
+                view.add_item(button)
+
+            currency_button = Button(
+                self.client,
+                4,
+                0,
+                {
+                    "style": discord.ButtonStyle.primary,
+                    "label": currency.name,
+                    "row": 1,
+                    "emoji": emojis.encode(currency.emoji),
+                    "disabled": True,
+                },
+                do_next="unreachable",
+                callback_payload={},
+            )
+
+            view.add_item(currency_button)
+
+            await interaction.response.send_message(
+                view=view, content=f"Adjust how many {currency.name} you will send."
+            )
+
         function_lookup = {
             "trade_country_chosen": trade_country_chosen,
+            "adjustment_select_trade_currency": adjustment_select_trade_currency,
         }
 
         await function_lookup[self.do_next](interaction)
@@ -195,20 +252,26 @@ class Button(discord.ui.Button):
 
         async def adjust_currency_trade(interaction: discord.Interaction):
             # TODO: Change to payload
-            currency_id, trade_id, adjustment = self.custom_id.split("|")
+            currency_id = self.callback_payload["currency_id"]
+            trade_id = self.callback_payload["trade_id"]
+            amount = self.callback_payload["amount"]
 
             @sync_to_async
-            def get_trade(trade_id):
+            def get_trade(trade_id, currency_id):
                 trade = Trade.objects.get(id=trade_id)
+                currency = Currency.objects.get(id=currency_id)
 
                 initiating_party_wallet = trade.initiating_party.wallet
                 receiving_party_wallet = trade.receiving_party.wallet
 
-                return trade, initiating_party_wallet, receiving_party_wallet
+                return trade, currency, initiating_party_wallet, receiving_party_wallet
 
-            trade, initiating_party_wallet, receiving_party_wallet = await get_trade(
-                trade_id
-            )
+            (
+                trade,
+                currency,
+                initiating_party_wallet,
+                receiving_party_wallet,
+            ) = await get_trade(trade_id, currency_id)
 
             currency = await sync_to_async(Currency.objects.get)(id=currency_id)
 
@@ -252,7 +315,7 @@ class Button(discord.ui.Button):
                 },
             )
 
-            transaction.amount += int(adjustment)
+            transaction.amount += amount
             transaction.amount = max(transaction.amount, 0)
 
             if transaction.amount == 0:
@@ -267,7 +330,7 @@ class Button(discord.ui.Button):
             )
 
             message: discord.Message = await interaction.channel.fetch_message(
-                self.callback_payload["message_id"]
+                trade.embed_id
             )
 
             await message.edit(embed=embed)
@@ -297,7 +360,7 @@ class Button(discord.ui.Button):
                         "label": label,
                         "custom_id": f"{currency.id}|{self.callback_payload['trade_id']}|{label}",
                         "do_next": "adjust_currency_trade",
-                        "callback_payload": {"message_id": interaction.message.id},
+                        "callback_payload": {},
                     }
 
                     row.append(value_button)
@@ -343,7 +406,10 @@ class Button(discord.ui.Button):
             handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
             dropdown_message = await handler.create_dropdown_response(
-                interaction, options, "adjustment_select_trade_currency", {}
+                interaction,
+                options,
+                "adjustment_select_trade_currency",
+                {"trade_id": self.callback_payload["trade_id"]},
             )
 
         # From the team menu, "Start Trading" was pushed

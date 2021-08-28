@@ -68,8 +68,6 @@ class Trade(models.Model):
 
 
 class Transaction(models.Model):
-    # current_message_id = models.IntegerField(default=0, unique=True)
-
     amount = models.IntegerField(default=0, null=True, blank=True)
     currency = models.ForeignKey(
         Currency, on_delete=models.PROTECT, null=True, blank=True

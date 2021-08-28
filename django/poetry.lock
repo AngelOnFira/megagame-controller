@@ -356,6 +356,17 @@ docopt = ">=0.6.1"
 pyparsing = ">=2.4.1"
 
 [[package]]
+name = "discord-sentry-reporting"
+version = "2.0.4"
+description = "A small compatibility library that provides functionality to report errors from discord.py to Sentry."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+sentry-sdk = "*"
+
+[[package]]
 name = "discord.py"
 version = "2.0.0a3575+g45d498c1"
 description = "A Python wrapper for the Discord API"
@@ -1148,7 +1159,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "f95fd1c7f9f29084469e52019e66d2d5ffc51a70311e5878e6642db0dee77f9f"
+content-hash = "d5ebc2f85cb0e7059bc17d9680f69a0e17df7945cfb31a243540604b8365a4c8"
 
 [metadata.files]
 aiohttp = [
@@ -1348,6 +1359,10 @@ daphne = [
 dice = [
     {file = "dice-3.1.2-py2.py3-none-any.whl", hash = "sha256:64305a094bf896bb81ec7d0cc24846202c8b52767f4661d052fda34e9d1d2774"},
     {file = "dice-3.1.2.tar.gz", hash = "sha256:e3df477cfd7327f630867311169202db0cab67acf4de96c863c5c42623c5d4f4"},
+]
+discord-sentry-reporting = [
+    {file = "discord-sentry-reporting-2.0.4.tar.gz", hash = "sha256:788d4bb3e754595768577a6011695f22096894b0f34554c03c3329abfe97e85f"},
+    {file = "discord_sentry_reporting-2.0.4-py3-none-any.whl", hash = "sha256:6300aaf092b2d1ca3823974e98f85e0adce97d05620ea0d6261b3554a1d934d4"},
 ]
 "discord.py" = []
 django = [
