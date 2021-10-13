@@ -426,6 +426,17 @@ optional = false
 python-versions = "*"
 
 [[package]]
+name = "django-schema-graph"
+version = "1.2.0"
+description = "An interactive graph of your Django model structure."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+attrs = "*"
+
+[[package]]
 name = "django-seed"
 version = "0.2.2"
 description = "Seed your Django project with fake data"
@@ -1159,7 +1170,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.8"
-content-hash = "d5ebc2f85cb0e7059bc17d9680f69a0e17df7945cfb31a243540604b8365a4c8"
+content-hash = "10ac2039f601dc6be68d1dfd4a5bece2f1bcc2bbfc7d349f4de5e24753ff17b7"
 
 [metadata.files]
 aiohttp = [
@@ -1376,6 +1387,10 @@ django-extensions = [
 django-fsm = [
     {file = "django-fsm-2.7.1.tar.gz", hash = "sha256:219b204777a932720d8583cb1f34713bd08b4713e1beb39ab2e674810e21d5e9"},
     {file = "django_fsm-2.7.1-py2.py3-none-any.whl", hash = "sha256:c96a844853de0f5dc67791b64beb367b5d56f992dff7c00f9b88c483e09f15ec"},
+]
+django-schema-graph = [
+    {file = "django-schema-graph-1.2.0.tar.gz", hash = "sha256:9efb3b9f18c1875a9ef5b2af0f7f4aac59109da5ea5d8202b265a09f0d7b2425"},
+    {file = "django_schema_graph-1.2.0-py2.py3-none-any.whl", hash = "sha256:baa8b06e4dabfa55a52b84d555e97f058990bfd857fa39b1e24e112e0d9e948e"},
 ]
 django-seed = []
 django-service-objects = [

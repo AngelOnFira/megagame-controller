@@ -24,19 +24,19 @@ class Command(BaseCommand):
             return
 
         # LoggedMessage.objects.all().delete()
-        Player.objects.all().delete()
-        Transaction.objects.all().delete()
-        Trade.objects.all().delete()  # requires transaction
-        Team.objects.all().delete()  # requires trade
-        Role.objects.all().delete()  # requires team
-        Member.objects.all().delete()
-        Task.objects.all().delete()
-        Currency.objects.all().delete()
-        Wallet.objects.all().delete()
+        # Player.objects.all().delete()
+        # Transaction.objects.all().delete()
+        # Trade.objects.all().delete()  # requires transaction
+        # Team.objects.all().delete()  # requires trade
+        # Role.objects.all().delete()  # requires team
+        # Member.objects.all().delete()
+        # Task.objects.all().delete()
+        # Currency.objects.all().delete()
+        # Wallet.objects.all().delete()
 
-        # Discord items
-        Category.objects.all().delete()
-        Channel.objects.all().delete()
+        # # Discord items
+        # Category.objects.all().delete()
+        # Channel.objects.all().delete()
 
         guild = Guild.objects.all().first()
 

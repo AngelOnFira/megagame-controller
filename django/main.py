@@ -185,32 +185,13 @@ async def before_my_task():
             team_guild, team_menu_channel = await get_team(team)
 
             guild = client.get_guild(team_guild.discord_id)
-            menu_channel = guild.get_channel(team_menu_channel.discord_id)
-            await menu_channel.delete()
-            await sync_to_async(team.menu_channel.delete)()
-
-            # Create a menu channel for the team
-            menu_channel = await sync_to_async(Channel.objects.create)(guild=team.guild, name="menu")
-
-            team.menu_channel = menu_channel
-            await sync_to_async(team.save)()
-
-            await sync_to_async(QueueTask.execute)(
-                {
-                    "task_type": TaskType.CREATE_CHANNEL,
-                    "payload": {
-                        "team_id": team.id,
-                        "channel_bind_model_id": menu_channel.id,
-                    },
-                }
-            )
 
             # Add bank message
             await sync_to_async(QueueTask.execute)(
                 {
                     "task_type": TaskType.CREATE_MESSAGE,
                     "payload": {
-                        "channel_id": menu_channel.id,
+                        "channel_id": team_menu_channel.id,
                         "message": "team_bank_embed",
                         "team_id": team.id,
                     },
@@ -249,7 +230,6 @@ async def before_my_task():
                     },
                 }
             )
-
 
     await intial_state_check(client)
 

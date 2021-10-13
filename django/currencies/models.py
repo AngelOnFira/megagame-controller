@@ -51,6 +51,9 @@ class Trade(models.Model):
 
     state = FSMField(default="new")
 
+    def __str__(self):
+        return f"Trade between {self.initiating_party} and {self.receiving_party}"
+
     @transaction.atomic
     @transition(field=state, source="new", target="created")
     def create(self):
@@ -163,9 +166,15 @@ class Transaction(models.Model):
     def complete(self):
         modified_date = timezone.now()
 
+    def __str__(self):
+        return f"{self.from_wallet} -> {self.to_wallet} ({self.amount})"
+
 
 class Wallet(models.Model):
     name = models.CharField(max_length=40)
+
+    def __str__(self):
+        return f"{self.name} (id: {self.id})"
 
 
 # class BankAccount(models.Model):

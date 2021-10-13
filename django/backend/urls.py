@@ -8,6 +8,7 @@ from django.urls import include, path
 from django.views.generic import TemplateView
 from players import views as player_views
 from teams import views as team_views
+from schema_graph.views import Schema
 
 router = routers.DefaultRouter()
 router.register(r"transactions", currency_views.TransactionViewSet)
@@ -33,6 +34,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     # third party urls
     path(r"", include(router.urls)),
+    path("schema/", Schema.as_view()),
     path("api-auth/", include("rest_framework.urls", namespace="rest_framework")),
     path(
         r"swagger/",

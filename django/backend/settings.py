@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "service_objects",
     "channels",
     "django_seed",
+    "schema_graph",
 ]
 
 MIDDLEWARE = [
