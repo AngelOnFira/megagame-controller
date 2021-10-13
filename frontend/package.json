@@ -18,7 +18,6 @@
     "vue3-discordpicker": "^1.0.7",
     "vuedraggable": "^4.0.3",
     "vuex": "^4.0.1",
-    "xmldom": "^0.7.0",
     "yarn": "^1.22.11"
   },
   "devDependencies": {
