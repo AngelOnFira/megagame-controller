@@ -57,6 +57,13 @@ class Team(models.Model):
     bank_embed_id = models.BigIntegerField(null=True, blank=True, default=0)
 
     def __str__(self):
+        # balance = self.get_bank_balance()
+        # balance_string = ""
+
+        # for currency, amount in balance.items():
+        #     balance_string += f"{amount} {emojis.get(currency)} "
+        # print(balance_string)
+
         if self.emoji:
             return f"{self.name} {emojis.decode(self.emoji)} ({self.id})"
 
@@ -102,7 +109,6 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                 },
             }
         )
-
 
         # Create a category for the team
         QueueTask.execute(
@@ -153,6 +159,18 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
+        # Add test thread
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_THREAD,
+                "payload": {
+                    "channel_id": instance.menu_channel.id,
+                    "message": "ola",
+                },
+            }
+        )
+
+        # Add bank message
         button_rows = [
             [
                 {
@@ -165,7 +183,18 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "emoji": "💱",
                     "do_next": "start_trading",
                     "callback_payload": {},
-                }
+                },
+                # {
+                #     "x": 1,
+                #     "y": 0,
+                #     "style": discord.ButtonStyle.primary,
+                #     "disabled": False,
+                #     "label": "Start trade",
+                #     "custom_id": f"{instance.id}",
+                #     "emoji": "💱",
+                #     "do_next": "start_trading",
+                #     "callback_payload": {},
+                # },
             ]
         ]
 

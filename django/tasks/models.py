@@ -33,6 +33,10 @@ class TaskType(models.TextChoices):
         "CMS",
         _("Create Message"),
     )
+    CREATE_THREAD = (
+        "CTH",
+        _("Create Thread"),
+    )
 
 
 class Task(models.Model):

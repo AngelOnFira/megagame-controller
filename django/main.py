@@ -84,8 +84,8 @@ async def run_tasks_sync(client: discord.Client):
         elif task.task_type == TaskType.CREATE_CHANNEL:
             await handler.create_channel(payload)
 
-        elif task.task_type == TaskType.CREATE_DROPDOWN:
-            await handler.create_dropdown(payload)
+        # elif task.task_type == TaskType.CREATE_DROPDOWN:
+        #     await handler.create_dropdown(payload)
 
         elif task.task_type == TaskType.CREATE_BUTTONS:
             await handler.create_button(payload)
@@ -93,9 +93,12 @@ async def run_tasks_sync(client: discord.Client):
         elif task.task_type == TaskType.CREATE_MESSAGE:
             await handler.create_message(payload)
 
+        elif task.task_type == TaskType.CREATE_THREAD:
+            await handler.create_thread(payload)
+
         else:
             # TASK ERROR
-            print("Error with task")
+            print(f"Error with task: {task.task_type}")
 
         task.completed = True
         await sync_to_async(task.save)()
@@ -144,31 +147,31 @@ async def before_my_task():
                 }
             )
 
-        # print("Deleting channels that aren't in the database...")
-        # channels_stored = await sync_to_async(list)(Channel.objects.all())
-        # for channel in guild.channels:
-        #     if (
-        #         not channel.name.startswith("test-")
-        #         and isinstance(channel, discord.TextChannel)
-        #         and channel.id not in channels_stored
-        #     ):
-        #         await channel.delete()
+        print("Deleting channels that aren't in the database...")
+        channels_stored = await sync_to_async(list)(Channel.objects.all())
+        for channel in guild.channels:
+            if (
+                not channel.name.startswith("test-")
+                and isinstance(channel, discord.TextChannel)
+                and channel.id not in channels_stored
+            ):
+                await channel.delete()
 
-        # print("Deleting categories that aren't in the database...")
-        # categories_stored = await sync_to_async(list)(Category.objects.all())
-        # for category in guild.categories:
-        #     if (
-        #         not category.name.startswith("dev-")
-        #         and category.id not in categories_stored
-        #     ):
-        #         await category.delete()
+        print("Deleting categories that aren't in the database...")
+        categories_stored = await sync_to_async(list)(Category.objects.all())
+        for category in guild.categories:
+            if (
+                not category.name.startswith("dev-")
+                and category.id not in categories_stored
+            ):
+                await category.delete()
 
-        # print("Deleting roles that aren't in the database...")
-        # roles_stored = await sync_to_async(list)(Role.objects.all())
-        # for role in guild.roles:
-        #     if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
-        #         await role.delete()
-        # print("ready")
+        print("Deleting roles that aren't in the database...")
+        roles_stored = await sync_to_async(list)(Role.objects.all())
+        for role in guild.roles:
+            if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
+                await role.delete()
+        print("ready")
 
         # Go through each team and remake their embeds
         teams = await sync_to_async(list)(Team.objects.all())

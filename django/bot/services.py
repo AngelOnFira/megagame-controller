@@ -1046,3 +1046,13 @@ class TaskHandler:
 
         # if message == "team_bank_embed":
         #     await sync_to_async(messag)()
+
+    async def create_thread(self, payload: dict):
+        from discord.enums import ChannelType
+        channel_id = payload["channel_id"]
+        message = payload["message"]
+
+        channel = await sync_to_async(Channel.objects.get)(id=channel_id)
+        discord_channel = self.client.get_channel(channel.discord_id)
+
+        await discord_channel.create_thread(name="test", type=ChannelType.public_thread)
