@@ -46,6 +46,14 @@ class Team(models.Model):
         related_name="team_general_channel",
     )
 
+    trade_channel = models.OneToOneField(
+        "discord_models.Channel",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="team_trade_channel",
+    )
+
     menu_channel = models.OneToOneField(
         "discord_models.Channel",
         on_delete=models.CASCADE,
@@ -134,6 +142,19 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
+        # Create a trade channel for the team
+        trade_channel = Channel.objects.create(guild=instance.guild, name="trade")
+        instance.trade_channel = trade_channel
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CHANNEL,
+                "payload": {
+                    "team_id": instance.id,
+                    "channel_bind_model_id": trade_channel.id,
+                },
+            }
+        )
+
         # Create a menu channel for the team
         menu_channel = Channel.objects.create(guild=instance.guild, name="menu")
         instance.menu_channel = menu_channel
@@ -155,17 +176,6 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "channel_id": instance.menu_channel.id,
                     "message": "team_bank_embed",
                     "team_id": instance.id,
-                },
-            }
-        )
-
-        # Add test thread
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_THREAD,
-                "payload": {
-                    "channel_id": instance.menu_channel.id,
-                    "message": "ola",
                 },
             }
         )

@@ -1,5 +1,6 @@
 import json
 from code import interact
+from typing import Tuple
 
 import discord
 import emojis
@@ -43,28 +44,34 @@ class Dropdown(discord.ui.Select):
             receiving_team_id = trade.team_lookup[self.values[0]]
 
             trade.receiving_party = await sync_to_async(Team.objects.get)(
-                id=trade.team_lookup[self.values[0]]
+                id=receiving_team_id
             )
 
             await sync_to_async(trade.save)()
 
             @sync_to_async
-            def get_involved_teams(trade: Trade):
+            def get_involved_teams(
+                trade: Trade,
+            ) -> Tuple[Team, Role, Channel, Team, Role, Channel, Guild]:
                 assert trade.initiating_party is not None
                 assert trade.receiving_party is not None
                 return (
                     trade.initiating_party,
                     trade.initiating_party.role,
+                    trade.initiating_party.trade_channel,
                     trade.receiving_party,
                     trade.receiving_party.role,
+                    trade.receiving_party.trade_channel,
                     trade.discord_guild,
                 )
 
             (
                 initiating_party,
                 initiating_party_role,
+                initiating_party_trade_channel,
                 receiving_party,
                 receiving_party_role,
+                receiving_party_trade_channel,
                 discord_guild,
             ) = await get_involved_teams(trade)
 
@@ -72,9 +79,26 @@ class Dropdown(discord.ui.Select):
             initiating_party_role = interaction.guild.get_role(
                 initiating_party_role.discord_id
             )
+
+            if initiating_party_role is None:
+                await interaction.response.send_message(
+                    content="Could not find initiating party role",
+                    ephemeral=True,
+                )
+
+                return
+
             receiving_party_role = interaction.guild.get_role(
                 receiving_party_role.discord_id
             )
+
+            if receiving_party_role is None:
+                await interaction.response.send_message(
+                    content="Could not find receiving party role",
+                    ephemeral=True,
+                )
+
+                return
 
             overwrites = {
                 everyone_role: discord.PermissionOverwrite(view_channel=False),
@@ -82,35 +106,112 @@ class Dropdown(discord.ui.Select):
                 receiving_party_role: discord.PermissionOverwrite(view_channel=True),
             }
 
-            text_channel = await interaction.guild.create_text_channel(
-                f"Trade for {initiating_party.name} and {receiving_party.name}",
-                category=trade_category[0],
-                overwrites=overwrites,
+            # Create handler to call creation methods directly
+            handler = TaskHandler(
+                view=discord.ui.View(timeout=None), client=self.client
             )
 
-            # # get guild
-            # guild, _ = await sync_to_async(Guild.objects.get)(id=interaction.guild.id)
+            # Create the threads
+            initiating_thread_name = f"Trade with {receiving_party.name}"
+            initiating_party_trade_thread = await handler.create_thread(
+                {
+                    "channel_id": initiating_party_trade_channel.id,  # initiating party trade channel
+                    "message": f"{initiating_party_role.mention}, your trade with {receiving_party.name} has been created",  # ping that team
+                    "name": initiating_thread_name,  # trade with other team
+                }
+            )
 
             # create channel for trade
-            new_channel, _ = await sync_to_async(Channel.objects.get_or_create)(
-                discord_id=text_channel.id, guild=discord_guild, name=text_channel.name
+            trade.initiating_party_discord_thread, _ = await sync_to_async(
+                Channel.objects.get_or_create
+            )(
+                discord_id=initiating_party_trade_thread.id,
+                guild=discord_guild,
+                name=initiating_party_trade_thread.name,
             )
 
-            trade.discord_channel = new_channel
+            receiving_thread_name = f"Trade with {initiating_party.name}"
+            receiving_party_trade_thread = await handler.create_thread(
+                {
+                    "channel_id": receiving_party_trade_channel.id,
+                    "message": f"{receiving_party_role.mention} a trade for you has been created by {initiating_party.name}",
+                    "name": receiving_thread_name,
+                }
+            )
+
+            trade.receiving_party_discord_thread, _ = await sync_to_async(
+                Channel.objects.get_or_create
+            )(
+                discord_id=receiving_party_trade_thread.id,
+                guild=discord_guild,
+                name=receiving_party_trade_thread.name,
+            )
 
             # Reply in old channel with link to the trade
             await interaction.response.send_message(
-                content=f"Trade channel created! You can access it here: {text_channel.mention}",
+                content=f"Trade channel created! You can access it here: {initiating_party_trade_thread.mention}",
                 ephemeral=True,
             )
-
-            handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
             button_messsage = await handler.create_button(
                 {
                     "guild_id": interaction.guild.id,
                     "trade_id": trade_id,
-                    "channel_id": text_channel.id,
+                    "channel_id": initiating_party_trade_thread.id,
+                    "callback_payload": {},
+                    "button_rows": [
+                        [
+                            {
+                                "x": 0,
+                                "y": 0,
+                                "style": discord.ButtonStyle.primary,
+                                "disabled": False,
+                                "label": "Adjust trade amounts",
+                                "custom_id": f"{trade.id}",
+                                "emoji": "✏️",
+                                "do_next": "currency_trade_currency_menu",
+                                "callback_payload": {"trade_id": trade.id},
+                            },
+                            # {
+                            #     "x": 0,
+                            #     "y": 1,
+                            #     "style": discord.ButtonStyle.danger,
+                            #     "disabled": False,
+                            #     "label": "Cancel trade",
+                            #     "emoji": "❌",
+                            #     "do_next": "cancel_trade",
+                            #     "callback_payload": {"trade_id": trade.id},
+                            # },
+                            {
+                                "x": 1,
+                                "y": 1,
+                                "style": discord.ButtonStyle.success,
+                                "disabled": False,
+                                "label": "Toggle Trade Accept",
+                                "emoji": "✅",
+                                "do_next": "accept_trade",
+                                "callback_payload": {"trade_id": trade.id},
+                            },
+                            {
+                                "x": 2,
+                                "y": 1,
+                                "style": discord.ButtonStyle.primary,
+                                "disabled": True,
+                                "label": "Lock in trade",
+                                "emoji": "🔒",
+                                "do_next": "lock_in_trade",
+                                "callback_payload": {"trade_id": trade.id},
+                            },
+                        ]
+                    ],
+                },
+            )
+
+            button_messsage = await handler.create_button(
+                {
+                    "guild_id": interaction.guild.id,
+                    "trade_id": trade_id,
+                    "channel_id": receiving_party_trade_thread.id,
                     "callback_payload": {},
                     "button_rows": [
                         [
@@ -534,9 +635,6 @@ class Button(discord.ui.Button):
                 # )
                 # return
 
-            print(interacting_team)
-            print(teams)
-
             for team in teams:
                 print(team)
                 if not team.emoji or team.id == interacting_team.id:
@@ -791,12 +889,12 @@ class TaskHandler:
             team_id = payload["team_id"]
 
             @sync_to_async
-            def get_team(team_id):
+            def get_team(team_id) -> Tuple[Team, Guild, Role]:
                 team = Team.objects.get(id=team_id)
                 team_guild = team.guild
                 team_role = team.role
 
-                return team, team_guild, team_role
+                return (team, team_guild, team_role)
 
             team, team_guild, team_role = await get_team(team_id)
 
@@ -888,7 +986,9 @@ class TaskHandler:
             else:
                 raise Exception("No channel or team id found; don't know how to handle")
 
-            channel = self.client.get_guild(guild_id).get_channel(channel_id)
+            channel = self.client.get_guild(guild_id).get_channel_or_thread(channel_id)
+            print("Channel", channel)
+            print("Threads", await self.client.get_guild(guild_id).active_threads())
 
             button_message = await channel.send(**params, view=view)
             return button_message
@@ -1058,8 +1158,21 @@ class TaskHandler:
 
         channel_id = payload["channel_id"]
         message = payload["message"]
+        name = payload["name"]
 
-        channel = await sync_to_async(Channel.objects.get)(id=channel_id)
-        discord_channel = self.client.get_channel(channel.discord_id)
+        channel: Channel = await sync_to_async(Channel.objects.get)(id=channel_id)
+        discord_channel: discord.TextChannel = self.client.get_channel(
+            channel.discord_id
+        )
 
-        await discord_channel.create_thread(name="test", type=ChannelType.public_thread)
+        new_thread = await discord_channel.create_thread(
+            name=name,
+            type=ChannelType.public_thread,
+            # message=discord_message,
+            auto_archive_duration=1440,
+        )
+
+        # Send the initial message
+        await new_thread.send(message)
+
+        return new_thread
