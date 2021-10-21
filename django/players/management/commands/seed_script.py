@@ -54,67 +54,67 @@ class Command(BaseCommand):
             }
         )
 
-        # seeder = Seed.seeder(locale="en_CA")
+        seeder = Seed.seeder(locale="en_CA")
 
-        # emoji_list = ["💰", "🃏", "🛩️"]
-        # currencies = ["Credits", "Action card", "Interceptor"]
+        emoji_list = ["💰", "🃏", "🛩️"]
+        currencies = ["Credits", "Action card", "Interceptor"]
 
-        # for i in range(len(emoji_list)):
-        #     seeder.add_entity(
-        #         Currency,
-        #         1,
-        #         {
-        #             "name": currencies[i],
-        #             "emoji": emojis.decode(emoji_list[i]),
-        #         },
-        #     )
+        for i in range(len(emoji_list)):
+            seeder.add_entity(
+                Currency,
+                1,
+                {
+                    "name": currencies[i],
+                    "emoji": emojis.decode(emoji_list[i]),
+                },
+            )
 
-        # emoji = seeder.execute()
+        emoji = seeder.execute()
 
-        # guild = Guild.objects.all().first()
-        # emoji_list = ["🇨🇦", "🇬🇧", "🇺🇸", "🇫🇷", "🇩🇪", "🇮🇹"]
-        # country_names = [
-        #     "Canada",
-        #     "United Kingdom",
-        #     "United States",
-        #     "France",
-        #     "Germany",
-        #     "Italy",
-        # ]
+        guild = Guild.objects.all().first()
+        emoji_list = ["🇨🇦", "🇬🇧", "🇺🇸", "🇫🇷", "🇩🇪", "🇮🇹"]
+        country_names = [
+            "Canada",
+            "United Kingdom",
+            "United States",
+            "France",
+            "Germany",
+            "Italy",
+        ]
 
-        # credits_currency = Currency.objects.get(name="Credits")
-        # bank_wallet = Wallet.objects.get_or_create(name="Bank")[0]
+        credits_currency = Currency.objects.get(name="Credits")
+        bank_wallet = Wallet.objects.get_or_create(name="Bank")[0]
 
-        # for i in range(len(emoji_list) - 4):
-        #     seeder.add_entity(Wallet, 1, {"name": f"{country_names[i]}'s wallet"})
+        for i in range(len(emoji_list) - 4):
+            seeder.add_entity(Wallet, 1, {"name": f"{country_names[i]}'s wallet"})
 
-        #     results = seeder.execute()
+            results = seeder.execute()
 
-        #     team_wallet_id = results[Wallet][0]
+            team_wallet_id = results[Wallet][0]
 
-        #     seeder.add_entity(
-        #         Team,
-        #         1,
-        #         {
-        #             "name": country_names[i],
-        #             "emoji": emojis.decode(emoji_list[i]),
-        #             "wallet": Wallet.objects.get(id=team_wallet_id),
-        #             "guild": guild,
-        #         },
-        #     )
+            seeder.add_entity(
+                Team,
+                1,
+                {
+                    "name": country_names[i],
+                    "emoji": emojis.decode(emoji_list[i]),
+                    "wallet": Wallet.objects.get(id=team_wallet_id),
+                    "guild": guild,
+                },
+            )
 
-        #     seeder.add_entity(
-        #         Transaction,
-        #         1,
-        #         {
-        #             "amount": random.randint(10, 15),
-        #             "currency": credits_currency,
-        #             "from_wallet": bank_wallet,
-        #             "to_wallet": Wallet.objects.get(id=team_wallet_id),
-        #             "state": "completed",
-        #         },
-        #     )
+            seeder.add_entity(
+                Transaction,
+                1,
+                {
+                    "amount": random.randint(10, 15),
+                    "currency": credits_currency,
+                    "from_wallet": bank_wallet,
+                    "to_wallet": Wallet.objects.get(id=team_wallet_id),
+                    "state": "completed",
+                },
+            )
 
-        #     seeder.execute()
+            seeder.execute()
 
         print("Seeding Complete")

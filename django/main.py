@@ -148,22 +148,23 @@ async def before_my_task():
             )
 
         print("Deleting channels that aren't in the database...")
-        channels_stored = await sync_to_async(list)(Channel.objects.all())
+        channels_stored: list[Channel] = await sync_to_async(list)(
+            Channel.objects.all()
+        )
+        channel_ids = [channel.discord_id for channel in channels_stored]
         for channel in guild.channels:
             if (
                 not channel.name.startswith("test-")
                 and isinstance(channel, discord.TextChannel)
-                and channel.id not in channels_stored
+                and channel.id not in channel_ids
             ):
                 await channel.delete()
 
         print("Deleting categories that aren't in the database...")
         categories_stored = await sync_to_async(list)(Category.objects.all())
+        category_ids = [category.discord_id for category in categories_stored]
         for category in guild.categories:
-            if (
-                not category.name.startswith("dev-")
-                and category.id not in categories_stored
-            ):
+            if not category.name.startswith("dev-") and category.id not in category_ids:
                 await category.delete()
 
         print("Deleting roles that aren't in the database...")
@@ -174,6 +175,7 @@ async def before_my_task():
         print("ready")
 
         # Go through each team and remake their embeds
+        # TODO: get this to delete old messages
         teams = await sync_to_async(list)(Team.objects.all())
 
         for team in teams:

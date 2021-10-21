@@ -5,7 +5,7 @@ import discord
 import emojis
 from asgiref.sync import sync_to_async
 
-from bot.discord_models.models import Category, Channel, Role
+from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
 from currencies.services import CreateBankEmbed, CreateTradeEmbed
@@ -448,7 +448,6 @@ class Button(discord.ui.Button):
 
                 currency_button = {
                     "x": 4,
-                    "y": i,
                     "style": discord.ButtonStyle.primary,
                     "emoji": emojis.encode(currency.emoji),
                     "disabled": True,
@@ -527,12 +526,19 @@ class Button(discord.ui.Button):
             ) = await get_sender_team(interaction)
 
             if channel_team.id != interacting_team.id:
-                await interaction.response.send_message(
-                    content="You are not on this team!", ephemeral=True
-                )
-                return
+                interacting_team = channel_team
+
+                # TODO: Add check back
+                # await interaction.response.send_message(
+                #     content="You are not on this team!", ephemeral=True
+                # )
+                # return
+
+            print(interacting_team)
+            print(teams)
 
             for team in teams:
+                print(team)
                 if not team.emoji or team.id == interacting_team.id:
                     continue
 
@@ -1006,7 +1012,7 @@ class TaskHandler:
             team_role,
         ) = await get_models(player_id, new_team_id)
 
-        guild = self.client.get_guild(player_guild.discord_id)
+        guild: Guild = self.client.get_guild(player_guild.discord_id)
 
         # TODO: Try to change this to get_member
         discord_member = await guild.fetch_member(discord_member.discord_id)
@@ -1049,6 +1055,7 @@ class TaskHandler:
 
     async def create_thread(self, payload: dict):
         from discord.enums import ChannelType
+
         channel_id = payload["channel_id"]
         message = payload["message"]
 
