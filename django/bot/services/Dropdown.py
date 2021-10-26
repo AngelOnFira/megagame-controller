@@ -14,7 +14,7 @@ from teams.models import Team
 
 from .TaskHandler import TaskHandler
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bot")
 
 
 class Dropdown(discord.ui.Select):

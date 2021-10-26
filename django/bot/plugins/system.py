@@ -15,7 +15,7 @@ from django.core.management import call_command
 from django.template.defaultfilters import filesizeformat
 from django.utils.timesince import timesince
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bot")
 
 
 RE_CHECKOUT = re.compile(r"(?P<branch>.+)$", re.IGNORECASE)

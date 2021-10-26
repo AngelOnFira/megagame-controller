@@ -7,7 +7,7 @@ from discord import CustomActivity
 
 from .models import GameStatus
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bot")
 
 
 class Plugin(BasePlugin):

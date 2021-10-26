@@ -15,7 +15,7 @@ from teams.models import Team
 
 from .services import CreateTrade, SelectTradeReceiver
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bot")
 
 
 class Dropdown(discord.ui.Select):

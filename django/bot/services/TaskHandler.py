@@ -20,7 +20,7 @@ from teams.models import Team
 
 TEAM_ROLE_COLOUR = discord.Colour.red()
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bot")
 
 
 class TaskHandler:

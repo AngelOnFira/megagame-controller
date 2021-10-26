@@ -7,7 +7,7 @@ from bot.plugins.base import BasePlugin
 # from discord import DMChannel
 from .models import Response
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bot")
 
 
 class Plugin(BasePlugin):

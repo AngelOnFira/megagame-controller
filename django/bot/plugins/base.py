@@ -5,7 +5,7 @@ import logging
 from . import commands
 from .events import command_resolved
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("bot")
 
 
 class MethodPool(dict):
