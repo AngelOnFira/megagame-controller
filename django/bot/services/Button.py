@@ -318,7 +318,6 @@ class Button(discord.ui.Button):
                 # return
 
             for team in teams:
-                print(team)
                 if not team.emoji or team.id == interacting_team.id:
                     continue
 

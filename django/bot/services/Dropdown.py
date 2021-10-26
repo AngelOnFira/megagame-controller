@@ -1,3 +1,4 @@
+import logging
 from typing import Tuple
 
 import discord
@@ -13,13 +14,16 @@ from teams.models import Team
 
 from .TaskHandler import TaskHandler
 
+logger = logging.getLogger(__name__)
+
 
 class Dropdown(discord.ui.Select):
     def __init__(self, client, options, do_next, callback_payload: dict):
         super().__init__(**options)
 
         if client is None:
-            raise Exception("Client is None")
+            logger.error("Dropdown: client is None")
+            return
 
         self.client: discord.Client = client
 
@@ -34,8 +38,8 @@ class Dropdown(discord.ui.Select):
                 )
             )
 
-            if len(trade_category) != 1:
-                raise Exception("No trade category found")
+            if len(trade_category) > 1:
+                logger.warning("There is more than one trade category!")
 
             trade_id = self.callback_payload["trade_id"]
 
@@ -54,9 +58,9 @@ class Dropdown(discord.ui.Select):
                 trade: Trade,
             ) -> Tuple[Team, Role, Channel, Team, Role, Channel, Guild]:
                 if trade.initiating_party is None:
-                    raise Exception("Initiating party is None")
+                    logger.error("Trade has no initiating party!")
                 if trade.receiving_party is None:
-                    raise Exception("Receiving party is None")
+                    logger.error("Trade has no receiving party!")
 
                 return (
                     trade.initiating_party,

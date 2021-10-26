@@ -26,7 +26,7 @@ import django
 from django.apps import AppConfig
 from django.conf import settings
 
-logger = logging.getLogger("bot")
+logger = logging.getLogger(__name__)
 
 intents = discord.Intents.default()
 intents.members = True
@@ -92,7 +92,7 @@ async def run_tasks_sync(client: discord.Client):
 
         else:
             # TASK ERROR
-            print(f"Error with task: {task.task_type}")
+            logger.error(f"Error with task: {task.task_type}, payload: {payload}")
 
         task.completed = True
         await sync_to_async(task.save)()
@@ -110,7 +110,7 @@ async def before_my_task():
 
     from bot.discord_models.models import Category, Channel, Guild, Role
     from bot.discord_models.services import CreateGuild
-    from bot.services import TEAM_ROLE_COLOUR
+    from bot.services.TaskHandler import TEAM_ROLE_COLOUR
     from bot.state import intial_state_check
     from bot.users.services import CreateMember
     from tasks.models import TaskType
@@ -141,7 +141,7 @@ async def before_my_task():
                 }
             )
 
-        print("Deleting channels that aren't in the database...")
+        logger.debug("Deleting channels that aren't in the database...")
         channels_stored: list[Channel] = await sync_to_async(list)(
             Channel.objects.all()
         )
@@ -154,19 +154,19 @@ async def before_my_task():
             ):
                 await channel.delete()
 
-        print("Deleting categories that aren't in the database...")
+        logger.debug("Deleting categories that aren't in the database...")
         categories_stored = await sync_to_async(list)(Category.objects.all())
         category_ids = [category.discord_id for category in categories_stored]
         for category in guild.categories:
             if not category.name.startswith("dev-") and category.id not in category_ids:
                 await category.delete()
 
-        print("Deleting roles that aren't in the database...")
+        logger.debug("Deleting roles that aren't in the database...")
         roles_stored = await sync_to_async(list)(Role.objects.all())
         for role in guild.roles:
             if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
                 await role.delete()
-        print("ready")
+        logger.debug("Done preparing...")
 
         # Go through each team and remake their embeds
         # TODO: get this to delete old messages
@@ -235,7 +235,7 @@ async def before_my_task():
 
 if __name__ == "__main__":
     os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
-    django.setup()  # configures logging etc.
+    django.setup()  # configures logger etc.
     logger.info("Starting up bot")
 
     pool = MethodPool()  # pool that holds all callbacks

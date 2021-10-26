@@ -1,4 +1,5 @@
 import json
+import logging
 from code import interact
 from typing import Tuple
 
@@ -17,9 +18,9 @@ from teams.models import Team
 # from .Button import Button
 
 
-
-
 TEAM_ROLE_COLOUR = discord.Colour.red()
+
+logger = logging.getLogger(__name__)
 
 
 class TaskHandler:
@@ -27,7 +28,7 @@ class TaskHandler:
         self.view = view
 
         if client is None:
-            raise Exception("Client is None")
+            logger.error("Client is None")
 
         self.client = client
 
@@ -93,7 +94,7 @@ class TaskHandler:
 
         guild: discord.Guild = self.client.get_guild(guild_id)
         if guild is None:
-            raise Exception("Guild not found")
+            logger.error(f"Guild {guild_id} not found")
 
         everyone_role = guild.default_role
 
@@ -166,7 +167,7 @@ class TaskHandler:
                     options_dict["custom_id"] = button["custom_id"]
 
                 if button["do_next"] == "":
-                    raise Exception("Do next is empty")
+                    logger.error(f"Button {button['label']} has no do_next")
 
                 button = Button(
                     self.client,
@@ -204,7 +205,7 @@ class TaskHandler:
 
                 channel_id = await get_channel_id(team_id)
             else:
-                raise Exception("No channel or team id found; don't know how to handle")
+                logger.error("No channel_id or team_id")
 
             channel = self.client.get_guild(guild_id).get_channel_or_thread(channel_id)
 
