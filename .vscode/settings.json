@@ -6,6 +6,7 @@
   "python.testing.pytestEnabled": true,
   "python.analysis.diagnosticSeverityOverrides": {
     "reportGeneralTypeIssues": "none",
-    "reportOptionalMemberAccess": "none"
+    "reportOptionalMemberAccess": "none",
+    "reportUnboundVariable": "none"
   }
 }
