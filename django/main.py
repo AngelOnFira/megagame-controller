@@ -17,12 +17,12 @@ import emojis
 import sentry_sdk
 from aiohttp import payload
 from asgiref.sync import async_to_sync, sync_to_async
+from bot.plugins.base import MethodPool
+from bot.plugins.events import EventPool
 from discord.ext import tasks
 from discord_sentry_reporting import use_sentry
 
 import django
-from bot.plugins.base import MethodPool
-from bot.plugins.events import EventPool
 from django.apps import AppConfig
 from django.conf import settings
 
@@ -113,9 +113,9 @@ async def before_my_task():
     from bot.services import TEAM_ROLE_COLOUR
     from bot.state import intial_state_check
     from bot.users.services import CreateMember
-    from teams.models import Team
-    from tasks.services import QueueTask
     from tasks.models import TaskType
+    from tasks.services import QueueTask
+    from teams.models import Team
 
     @sync_to_async
     def get_categories():

@@ -1,16 +1,17 @@
 from typing import Tuple
+
+import discord
+import emojis
 from asgiref.sync import sync_to_async
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
 from currencies.services import CreateBankEmbed, CreateTradeEmbed
-import emojis
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
-from .TaskHandler import TaskHandler
 
-import discord
+from .TaskHandler import TaskHandler
 
 
 class Dropdown(discord.ui.Select):

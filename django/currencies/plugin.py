@@ -6,7 +6,6 @@ import dice
 import discord
 import emojis
 from asgiref.sync import sync_to_async
-
 from bot.discord_models.models import Channel, Guild
 from bot.plugins.base import BasePlugin
 from currencies.models import Currency

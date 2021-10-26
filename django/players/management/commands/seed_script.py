@@ -1,18 +1,18 @@
 import random
 
 import emojis
-from django_seed import Seed
-
 from bot.accounts.models import User
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade, Transaction, Wallet
-from django.conf import settings
-from django.core.management.base import BaseCommand
+from django_seed import Seed
 from players.models import Player
 from tasks.models import Task, TaskType
 from tasks.services import QueueTask
 from teams.models import Team
+
+from django.conf import settings
+from django.core.management.base import BaseCommand
 
 
 class Command(BaseCommand):

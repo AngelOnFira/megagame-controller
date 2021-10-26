@@ -1,8 +1,3 @@
-import discord
-
-# from .Dropdown import Dropdown
-# from .Button import Button
-
 import json
 from code import interact
 from typing import Tuple
@@ -10,7 +5,6 @@ from typing import Tuple
 import discord
 import emojis
 from asgiref.sync import sync_to_async
-
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
@@ -18,6 +12,12 @@ from currencies.services import CreateBankEmbed, CreateTradeEmbed
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
+
+# from .Dropdown import Dropdown
+# from .Button import Button
+
+
+
 
 TEAM_ROLE_COLOUR = discord.Colour.red()
 
