@@ -17,7 +17,9 @@ class Dropdown(discord.ui.Select):
     def __init__(self, client, options, do_next, callback_payload: dict):
         super().__init__(**options)
 
-        assert client is not None
+        if client is None:
+            raise Exception("Client is None")
+
         self.client: discord.Client = client
 
         self.do_next = do_next
@@ -31,7 +33,8 @@ class Dropdown(discord.ui.Select):
                 )
             )
 
-            assert len(trade_category) == 1
+            if len(trade_category) != 1:
+                raise Exception("No trade category found")
 
             trade_id = self.callback_payload["trade_id"]
 
@@ -49,8 +52,12 @@ class Dropdown(discord.ui.Select):
             def get_involved_teams(
                 trade: Trade,
             ) -> Tuple[Team, Role, Channel, Team, Role, Channel, Guild]:
-                assert trade.initiating_party is not None
-                assert trade.receiving_party is not None
+                if trade.initiating_party is None:
+                    raise Exception("Initiating party is None")
+                if trade.receiving_party is None:
+                    raise Exception("Receiving party is None")
+
+
                 return (
                     trade.initiating_party,
                     trade.initiating_party.role,

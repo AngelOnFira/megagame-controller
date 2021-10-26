@@ -26,7 +26,9 @@ class TaskHandler:
     def __init__(self, view: discord.ui.View, client: discord.Client):
         self.view = view
 
-        assert client is not None
+        if client is None:
+            raise Exception("Client is None")
+
         self.client = client
 
     async def create_dropdown_response(
@@ -163,7 +165,8 @@ class TaskHandler:
                 if "custom_id" in button:
                     options_dict["custom_id"] = button["custom_id"]
 
-                assert button["do_next"] != ""
+                if button["do_next"] == "":
+                    raise Exception("Do next is empty")
 
                 button = Button(
                     self.client,

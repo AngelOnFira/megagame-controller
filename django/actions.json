@@ -1,0 +1,17 @@
+{
+    "actions": {
+        "deploy-interceptor": {
+            "title": "Deploy Interceptor",
+            "cost": "2"
+        },
+        "Pay reserach costs": {
+            "cost": "3"
+        }
+    },
+    "currencies": {
+        "megabucks": {
+            "emoji": "💵"
+        }
+    },
+    "teams": {}
+}

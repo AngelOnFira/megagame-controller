@@ -52,15 +52,9 @@ async def on_ready():
 
 
 async def run_tasks_sync(client: discord.Client):
-    from bot.discord_models.models import Category, Channel, Role
-    from bot.services import Button, Dropdown, TaskHandler
-    from bot.users.models import Member
-    from currencies.models import Trade
-    from currencies.services import CreateTrade, CreateTradeEmbed, SelectTradeReceiver
-    from players.models import Player
-    from responses.models import Response
+    # Need to import here to not cause circular imports
+    from bot.services.TaskHandler import TaskHandler
     from tasks.models import Task, TaskType
-    from teams.models import Team
 
     # Get all tasks that need to still be completed
     task_list = await sync_to_async(list)(Task.objects.filter(completed=False))

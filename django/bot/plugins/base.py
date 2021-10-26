@@ -155,7 +155,10 @@ class BasePlugin(metaclass=BasePluginMeta):
             command.for_message, command.client = message, self.client
             stop = await command_resolved.dispatch(command=command, handler=handler)
             if not stop:
-                assert asyncio.iscoroutinefunction(handler)
+                if asyncio.iscoroutinefunction(handler) == False:
+                    raise TypeError(
+                        "Handler must be a coroutine function, not a normal function"
+                    )
                 await handler(self, command)
 
     async def on_message_edit(self, before, after):
