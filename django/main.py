@@ -17,12 +17,12 @@ import emojis
 import sentry_sdk
 from aiohttp import payload
 from asgiref.sync import async_to_sync, sync_to_async
-from bot.plugins.base import MethodPool
-from bot.plugins.events import EventPool
 from discord.ext import tasks
 from discord_sentry_reporting import use_sentry
 
 import django
+from bot.plugins.base import MethodPool
+from bot.plugins.events import EventPool
 from django.apps import AppConfig
 from django.conf import settings
 
@@ -172,63 +172,63 @@ async def before_my_task():
         # TODO: get this to delete old messages
         teams = await sync_to_async(list)(Team.objects.all())
 
-        for team in teams:
-            team = await sync_to_async(Team.objects.get)(id=team.id)
-            if team.name == "null":
-                continue
+        # for team in teams:
+        #     team = await sync_to_async(Team.objects.get)(id=team.id)
+        #     if team.name == "null":
+        #         continue
 
-            @sync_to_async
-            def get_team(team):
-                return team.guild, team.menu_channel
+        #     @sync_to_async
+        #     def get_team(team):
+        #         return team.guild, team.menu_channel
 
-            team_guild, team_menu_channel = await get_team(team)
+        #     team_guild, team_menu_channel = await get_team(team)
 
-            guild = client.get_guild(team_guild.discord_id)
+        #     guild = client.get_guild(team_guild.discord_id)
 
-            # Add bank message
-            await sync_to_async(QueueTask.execute)(
-                {
-                    "task_type": TaskType.CREATE_MESSAGE,
-                    "payload": {
-                        "channel_id": team_menu_channel.id,
-                        "message": "team_bank_embed",
-                        "team_id": team.id,
-                    },
-                }
-            )
+        #     # Add bank message
+        #     await sync_to_async(QueueTask.execute)(
+        #         {
+        #             "task_type": TaskType.CREATE_MESSAGE,
+        #             "payload": {
+        #                 "channel_id": team_menu_channel.id,
+        #                 "message": "team_bank_embed",
+        #                 "team_id": team.id,
+        #             },
+        #         }
+        #     )
 
-            button_rows = [
-                [
-                    {
-                        "x": 0,
-                        "y": 0,
-                        "style": discord.ButtonStyle.primary,
-                        "disabled": False,
-                        "label": "Start trade",
-                        "custom_id": f"{team.id}",
-                        "emoji": "💱",
-                        "do_next": "start_trading",
-                        "callback_payload": {},
-                    }
-                ]
-            ]
+        #     button_rows = [
+        #         [
+        #             {
+        #                 "x": 0,
+        #                 "y": 0,
+        #                 "style": discord.ButtonStyle.primary,
+        #                 "disabled": False,
+        #                 "label": "Start trade",
+        #                 "custom_id": f"{team.id}",
+        #                 "emoji": "💱",
+        #                 "do_next": "start_trading",
+        #                 "callback_payload": {},
+        #             }
+        #         ]
+        #     ]
 
-            # Add a buttons message as a menu
-            await sync_to_async(QueueTask.execute)(
-                {
-                    "task_type": TaskType.CREATE_BUTTONS,
-                    "payload": {
-                        "team_id": team.id,
-                        "guild_id": team_guild.discord_id,
-                        "button_rows": button_rows,
-                        "embed": {
-                            "title": "Team menu",
-                            "description": "Choose what you would like to do",
-                            "color": 0x00FF00,
-                        },
-                    },
-                }
-            )
+        #     # Add a buttons message as a menu
+        #     await sync_to_async(QueueTask.execute)(
+        #         {
+        #             "task_type": TaskType.CREATE_BUTTONS,
+        #             "payload": {
+        #                 "team_id": team.id,
+        #                 "guild_id": team_guild.discord_id,
+        #                 "button_rows": button_rows,
+        #                 "embed": {
+        #                     "title": "Team menu",
+        #                     "description": "Choose what you would like to do",
+        #                     "color": 0x00FF00,
+        #                 },
+        #             },
+        #         }
+        #     )
 
     await intial_state_check(client)
 

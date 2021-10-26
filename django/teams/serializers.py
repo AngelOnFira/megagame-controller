@@ -1,5 +1,6 @@
-from players.models import Player
 from rest_framework import serializers
+
+from players.models import Player
 
 from .models import Team
 

@@ -4,13 +4,13 @@ from collections import defaultdict
 import discord
 import emojis
 from asgiref.sync import sync_to_async
+
 from bot.discord_models.models import Channel, Guild, Role
 from currencies.models import Wallet
-from tasks.models import TaskType
-from tasks.services import QueueTask
-
 from django.db import models
 from django.db.models.signals import post_save
+from tasks.models import TaskType
+from tasks.services import QueueTask
 
 
 # Create your models here.
@@ -180,6 +180,8 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
+        from bot.services.Button import Button
+
         # Add bank message
         button_rows = [
             [
@@ -191,7 +193,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "label": "Start trade",
                     "custom_id": f"{instance.id}",
                     "emoji": "💱",
-                    "do_next": "start_trading",
+                    "do_next": Button.start_trading.__name__,
                     "callback_payload": {},
                 },
                 {
@@ -202,7 +204,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "label": "Open Comms",
                     "custom_id": f"{instance.id}-discuss",
                     "emoji": "💬",
-                    "do_next": "start_trading",
+                    "do_next": Button.start_trading.__name__,
                     "callback_payload": {},
                 },
                 {
@@ -213,7 +215,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "label": "Create Treaty",
                     "custom_id": f"{instance.id}-treaty",
                     "emoji": "📝",
-                    "do_next": "start_trading",
+                    "do_next": Button.start_trading.__name__,
                     "callback_payload": {},
                 },
             ]

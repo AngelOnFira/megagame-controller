@@ -4,6 +4,7 @@ from typing import Tuple
 import discord
 import emojis
 from asgiref.sync import sync_to_async
+
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
@@ -160,6 +161,8 @@ class Dropdown(discord.ui.Select):
                 ephemeral=True,
             )
 
+            from .Button import Button
+
             button_messsage = await handler.create_button(
                 {
                     "guild_id": interaction.guild.id,
@@ -176,7 +179,7 @@ class Dropdown(discord.ui.Select):
                                 "label": "Adjust trade amounts",
                                 "custom_id": f"{trade.id}",
                                 "emoji": "✏️",
-                                "do_next": "currency_trade_adjustment_menu",
+                                "do_next": Button.currency_trade_adjustment_menu.__name__,
                                 "callback_payload": {"trade_id": trade.id},
                             },
                             # {
@@ -196,7 +199,7 @@ class Dropdown(discord.ui.Select):
                                 "disabled": False,
                                 "label": "Toggle Trade Accept",
                                 "emoji": "✅",
-                                "do_next": "accept_trade",
+                                "do_next": Button.accept_trade.__name__,
                                 "callback_payload": {"trade_id": trade.id},
                             },
                             {
@@ -206,13 +209,15 @@ class Dropdown(discord.ui.Select):
                                 "disabled": True,
                                 "label": "Lock in trade",
                                 "emoji": "🔒",
-                                "do_next": "lock_in_trade",
+                                "do_next": Button.lock_in_trade.__name__,
                                 "callback_payload": {"trade_id": trade.id},
                             },
                         ]
                     ],
                 },
             )
+
+            from .Button import Button
 
             button_messsage = await handler.create_button(
                 {
@@ -230,7 +235,7 @@ class Dropdown(discord.ui.Select):
                                 "label": "Adjust trade amounts",
                                 "custom_id": f"{trade.id}",
                                 "emoji": "✏️",
-                                "do_next": "currency_trade_adjustment_menu",
+                                "do_next": Button.currency_trade_adjustment_menu.__name__,
                                 "callback_payload": {"trade_id": trade.id},
                             },
                             # {
@@ -250,7 +255,7 @@ class Dropdown(discord.ui.Select):
                                 "disabled": False,
                                 "label": "Toggle Trade Accept",
                                 "emoji": "✅",
-                                "do_next": "accept_trade",
+                                "do_next": Button.accept_trade.__name__,
                                 "callback_payload": {"trade_id": trade.id},
                             },
                             {
@@ -260,7 +265,7 @@ class Dropdown(discord.ui.Select):
                                 "disabled": True,
                                 "label": "Lock in trade",
                                 "emoji": "🔒",
-                                "do_next": "lock_in_trade",
+                                "do_next": Button.lock_in_trade.__name__,
                                 "callback_payload": {"trade_id": trade.id},
                             },
                         ]
