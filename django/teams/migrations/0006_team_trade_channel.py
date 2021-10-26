@@ -7,14 +7,20 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('discord_models', '0003_alter_channel_discord_id'),
-        ('teams', '0005_rename_bank_embed_team_bank_embed_id'),
+        ("discord_models", "0003_alter_channel_discord_id"),
+        ("teams", "0005_rename_bank_embed_team_bank_embed_id"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='team',
-            name='trade_channel',
-            field=models.OneToOneField(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='team_trade_channel', to='discord_models.channel'),
+            model_name="team",
+            name="trade_channel",
+            field=models.OneToOneField(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="team_trade_channel",
+                to="discord_models.channel",
+            ),
         ),
     ]

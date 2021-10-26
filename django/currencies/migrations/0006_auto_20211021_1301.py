@@ -7,23 +7,35 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('discord_models', '0003_alter_channel_discord_id'),
-        ('currencies', '0005_auto_20210827_2303'),
+        ("discord_models", "0003_alter_channel_discord_id"),
+        ("currencies", "0005_auto_20210827_2303"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='trade',
-            name='discord_channel',
+            model_name="trade",
+            name="discord_channel",
         ),
         migrations.AddField(
-            model_name='trade',
-            name='initiating_party_discord_thread',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='initiating_trade_thread', to='discord_models.channel'),
+            model_name="trade",
+            name="initiating_party_discord_thread",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="initiating_trade_thread",
+                to="discord_models.channel",
+            ),
         ),
         migrations.AddField(
-            model_name='trade',
-            name='receiving_party_discord_thread',
-            field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.PROTECT, related_name='receiving_trade_thread', to='discord_models.channel'),
+            model_name="trade",
+            name="receiving_party_discord_thread",
+            field=models.ForeignKey(
+                blank=True,
+                null=True,
+                on_delete=django.db.models.deletion.PROTECT,
+                related_name="receiving_trade_thread",
+                to="discord_models.channel",
+            ),
         ),
     ]

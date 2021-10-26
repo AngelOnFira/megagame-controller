@@ -6,13 +6,28 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('tasks', '0003_alter_task_task_type'),
+        ("tasks", "0003_alter_task_task_type"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='task',
-            name='task_type',
-            field=models.CharField(choices=[('MSG', 'Message'), ('CHT', 'Change Team'), ('CRO', 'Create Role'), ('CCA', 'Create Category'), ('CCH', 'Create Channel'), ('CDR', 'Create Dropdown'), ('CBT', 'Create Buttons'), ('TSR', 'Create Transaction'), ('CMS', 'Create Message'), ('CTH', 'Create Thread')], default='MSG', max_length=3),
+            model_name="task",
+            name="task_type",
+            field=models.CharField(
+                choices=[
+                    ("MSG", "Message"),
+                    ("CHT", "Change Team"),
+                    ("CRO", "Create Role"),
+                    ("CCA", "Create Category"),
+                    ("CCH", "Create Channel"),
+                    ("CDR", "Create Dropdown"),
+                    ("CBT", "Create Buttons"),
+                    ("TSR", "Create Transaction"),
+                    ("CMS", "Create Message"),
+                    ("CTH", "Create Thread"),
+                ],
+                default="MSG",
+                max_length=3,
+            ),
         ),
     ]

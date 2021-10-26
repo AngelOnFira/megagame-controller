@@ -57,7 +57,6 @@ class Dropdown(discord.ui.Select):
                 if trade.receiving_party is None:
                     raise Exception("Receiving party is None")
 
-
                 return (
                     trade.initiating_party,
                     trade.initiating_party.role,
