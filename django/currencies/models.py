@@ -66,6 +66,14 @@ class Trade(models.Model):
     def __str__(self):
         return f"Trade between {self.initiating_party} and {self.receiving_party}"
 
+    # States
+    #
+    # new
+    # initiating_party_accepted
+    # receiving_party_accepted
+    # initiating_party_confirmed
+    # completed
+
     @transaction.atomic
     @transition(field=state, source="new", target="created")
     def create(self):

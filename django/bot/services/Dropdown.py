@@ -1,4 +1,5 @@
 import logging
+from turtle import update
 from typing import Tuple
 
 import discord
@@ -14,6 +15,7 @@ from responses.models import Response
 from teams.models import Team
 
 from .TaskHandler import TaskHandler
+from .Trade import update_trade_view
 
 logger = logging.getLogger("bot")
 
@@ -31,17 +33,22 @@ class Dropdown(discord.ui.Select):
         self.do_next = do_next
         self.callback_payload = callback_payload
 
-    async def trade_country_chosen(self, interaction: discord.Interaction):
-        trade_category = list(
-            filter(lambda x: x.name.lower() == "trades", interaction.guild.categories)
-        )
+    async def set_up_trade_prompt(self, interaction: discord.Interaction):
+        # Figure out what part of the trade we are on
+        #
 
-        if len(trade_category) > 1:
-            logger.warning("There is more than one trade category!")
+        # trade_category = list(
+        #     filter(lambda x: x.name.lower() == "trades", interaction.guild.categories)
+        # )
+
+        # if len(trade_category) > 1:
+        #     logger.warning("There is more than one trade category!")
+
+        # Get trade info
 
         trade_id = self.callback_payload["trade_id"]
 
-        trade: Trade = await sync_to_async(Trade.objects.get)(id=trade_id)
+        trade = await sync_to_async(Trade.objects.get)(id=trade_id)
 
         receiving_team_id = trade.team_lookup[self.values[0]]
 
@@ -51,226 +58,10 @@ class Dropdown(discord.ui.Select):
 
         await sync_to_async(trade.save)()
 
-        @sync_to_async
-        def get_involved_teams(
-            trade: Trade,
-        ) -> Tuple[Team, Role, Channel, Team, Role, Channel, Guild]:
-            if trade.initiating_party is None:
-                logger.error("Trade has no initiating party!")
-            if trade.receiving_party is None:
-                logger.error("Trade has no receiving party!")
-
-            return (
-                trade.initiating_party,
-                trade.initiating_party.role,
-                trade.initiating_party.trade_channel,
-                trade.receiving_party,
-                trade.receiving_party.role,
-                trade.receiving_party.trade_channel,
-                trade.discord_guild,
-            )
-
-        (
-            initiating_party,
-            initiating_party_role,
-            initiating_party_trade_channel,
-            receiving_party,
-            receiving_party_role,
-            receiving_party_trade_channel,
-            discord_guild,
-        ) = await get_involved_teams(trade)
-
-        everyone_role = interaction.guild.default_role
-        initiating_party_role = interaction.guild.get_role(
-            initiating_party_role.discord_id
-        )
-
-        if initiating_party_role is None:
-            await interaction.response.send_message(
-                content="Could not find initiating party role",
-                ephemeral=True,
-            )
-
-            return
-
-        receiving_party_role = interaction.guild.get_role(
-            receiving_party_role.discord_id
-        )
-
-        if receiving_party_role is None:
-            await interaction.response.send_message(
-                content="Could not find receiving party role",
-                ephemeral=True,
-            )
-
-            return
-
-        overwrites = {
-            everyone_role: discord.PermissionOverwrite(view_channel=False),
-            initiating_party_role: discord.PermissionOverwrite(view_channel=True),
-            receiving_party_role: discord.PermissionOverwrite(view_channel=True),
-        }
-
         # Create handler to call creation methods directly
         handler = TaskHandler(view=discord.ui.View(timeout=None), client=self.client)
 
-        # Create the threads
-        initiating_thread_name = f"Trade with {receiving_party.name}"
-        initiating_party_trade_thread = await handler.create_thread(
-            {
-                "channel_id": initiating_party_trade_channel.id,  # initiating party trade channel
-                "message": f"{initiating_party_role.mention}, your trade with {receiving_party.name} has been created",  # ping that team
-                "name": initiating_thread_name,  # trade with other team
-            }
-        )
-
-        # create channel for trade
-        trade.initiating_party_discord_thread, _ = await sync_to_async(
-            Channel.objects.get_or_create
-        )(
-            discord_id=initiating_party_trade_thread.id,
-            guild=discord_guild,
-            name=initiating_party_trade_thread.name,
-        )
-
-        receiving_thread_name = f"Trade with {initiating_party.name}"
-        receiving_party_trade_thread = await handler.create_thread(
-            {
-                "channel_id": receiving_party_trade_channel.id,
-                "message": f"{receiving_party_role.mention} a trade for you has been created by {initiating_party.name}",
-                "name": receiving_thread_name,
-            }
-        )
-
-        trade.receiving_party_discord_thread, _ = await sync_to_async(
-            Channel.objects.get_or_create
-        )(
-            discord_id=receiving_party_trade_thread.id,
-            guild=discord_guild,
-            name=receiving_party_trade_thread.name,
-        )
-
-        # Reply in old channel with link to the trade
-        await interaction.response.send_message(
-            content=f"Trade channel created! You can access it here: {initiating_party_trade_thread.mention}",
-            ephemeral=True,
-        )
-
-        from .Button import Button
-
-        button_messsage = await handler.create_button(
-            {
-                "guild_id": interaction.guild.id,
-                "trade_id": trade_id,
-                "channel_id": initiating_party_trade_thread.id,
-                "callback_payload": {},
-                "button_rows": [
-                    [
-                        {
-                            "x": 0,
-                            "y": 0,
-                            "style": discord.ButtonStyle.primary,
-                            "disabled": False,
-                            "label": "Adjust trade amounts",
-                            "custom_id": f"{trade.id}",
-                            "emoji": "✏️",
-                            "do_next": Button.currency_trade_adjustment_menu.__name__,
-                            "callback_payload": {"trade_id": trade.id},
-                        },
-                        # {
-                        #     "x": 0,
-                        #     "y": 1,
-                        #     "style": discord.ButtonStyle.danger,
-                        #     "disabled": False,
-                        #     "label": "Cancel trade",
-                        #     "emoji": "❌",
-                        #     "do_next": "cancel_trade",
-                        #     "callback_payload": {"trade_id": trade.id},
-                        # },
-                        {
-                            "x": 1,
-                            "y": 1,
-                            "style": discord.ButtonStyle.success,
-                            "disabled": False,
-                            "label": "Toggle Trade Accept",
-                            "emoji": "✅",
-                            "do_next": Button.accept_trade.__name__,
-                            "callback_payload": {"trade_id": trade.id},
-                        },
-                        {
-                            "x": 2,
-                            "y": 1,
-                            "style": discord.ButtonStyle.primary,
-                            "disabled": True,
-                            "label": "Lock in trade",
-                            "emoji": "🔒",
-                            "do_next": Button.lock_in_trade.__name__,
-                            "callback_payload": {"trade_id": trade.id},
-                        },
-                    ]
-                ],
-            },
-        )
-
-        from .Button import Button
-
-        button_messsage = await handler.create_button(
-            {
-                "guild_id": interaction.guild.id,
-                "trade_id": trade_id,
-                "channel_id": receiving_party_trade_thread.id,
-                "callback_payload": {},
-                "button_rows": [
-                    [
-                        {
-                            "x": 0,
-                            "y": 0,
-                            "style": discord.ButtonStyle.primary,
-                            "disabled": False,
-                            "label": "Adjust trade amounts",
-                            "custom_id": f"{trade.id}",
-                            "emoji": "✏️",
-                            "do_next": Button.currency_trade_adjustment_menu.__name__,
-                            "callback_payload": {"trade_id": trade.id},
-                        },
-                        # {
-                        #     "x": 0,
-                        #     "y": 1,
-                        #     "style": discord.ButtonStyle.danger,
-                        #     "disabled": False,
-                        #     "label": "Cancel trade",
-                        #     "emoji": "❌",
-                        #     "do_next": "cancel_trade",
-                        #     "callback_payload": {"trade_id": trade.id},
-                        # },
-                        {
-                            "x": 1,
-                            "y": 1,
-                            "style": discord.ButtonStyle.success,
-                            "disabled": False,
-                            "label": "Toggle Trade Accept",
-                            "emoji": "✅",
-                            "do_next": Button.accept_trade.__name__,
-                            "callback_payload": {"trade_id": trade.id},
-                        },
-                        {
-                            "x": 2,
-                            "y": 1,
-                            "style": discord.ButtonStyle.primary,
-                            "disabled": True,
-                            "label": "Lock in trade",
-                            "emoji": "🔒",
-                            "do_next": Button.lock_in_trade.__name__,
-                            "callback_payload": {"trade_id": trade.id},
-                        },
-                    ]
-                ],
-            },
-        )
-
-        trade.embed_id = button_messsage.id
-
-        await sync_to_async(trade.save)()
+        await sync_to_async(update_trade_view)(handler, trade, interaction)
 
     async def adjustment_select_trade_currency(self, interaction: discord.Interaction):
         # get currency by name
@@ -332,7 +123,7 @@ class Dropdown(discord.ui.Select):
 
     async def callback(self, interaction: discord.Interaction):
         function_lookup = {
-            self.trade_country_chosen.__name__: self.trade_country_chosen,
+            self.set_up_trade_prompt.__name__: self.set_up_trade_prompt,
             self.adjustment_select_trade_currency.__name__: self.adjustment_select_trade_currency,
         }
 

@@ -341,7 +341,7 @@ class Button(discord.ui.Button):
         dropdown_message = await handler.create_dropdown_response(
             interaction=interaction,
             options=options,
-            do_next=Dropdown.trade_country_chosen.__name__,
+            do_next=Dropdown.set_up_trade_prompt.__name__,
             callback_payload={
                 "trade_id": trade.id,
                 "placeholder": "Which country do you want to trade with?",
