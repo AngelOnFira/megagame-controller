@@ -3,6 +3,7 @@ import emojis
 from asgiref.sync import sync_to_async
 
 from bot.discord_models.models import Category, Channel, Guild, Role
+from bot.services.Dropdown import Dropdown
 from bot.users.models import Member
 from currencies.models import Currency, Trade, Transaction
 from currencies.services import CreateBankEmbed, CreateTrade, CreateTradeEmbed
@@ -27,7 +28,7 @@ async def trade_view(client, trade):
                 "row": 0,
                 "emoji": "✏️",
             },
-            do_next="currency_trade_adjustment_menu",
+            do_next=Dropdown.adjustment_select_trade_currency.__name__,
             callback_payload={"trade_id": trade.id},
         )
     )
@@ -80,7 +81,7 @@ async def trade_view(client, trade):
                 "emoji": "🔒",
                 "disabled": show_lock_in,
             },
-            do_next="lock_in_trade",
+            do_next=Button.lock_in_trade.__name__,
             callback_payload={"trade_id": trade.id},
         )
     )
