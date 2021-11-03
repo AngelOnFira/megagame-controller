@@ -46,7 +46,7 @@ class TaskHandler:
             Dropdown(
                 self.client,
                 {
-                    "placeholder": "Which country do you want to trade with?",
+                    "placeholder": callback_payload["placeholder"],
                     "min_values": 1,
                     "max_values": 1,
                     "options": options,

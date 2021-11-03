@@ -262,10 +262,13 @@ class Button(discord.ui.Button):
         handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
         dropdown_message = await handler.create_dropdown_response(
-            interaction,
-            options,
-            "adjustment_select_trade_currency",
-            {"trade_id": self.callback_payload["trade_id"]},
+            interaction=interaction,
+            options=options,
+            do_next=Dropdown.adjustment_select_trade_currency.__name__,
+            callback_payload={
+                "trade_id": self.callback_payload["trade_id"],
+                "placeholder": "Which country do you want to trade with?",
+            },
         )
 
     # From the team menu, "Start Trading" was pushed
@@ -336,7 +339,13 @@ class Button(discord.ui.Button):
         handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
         dropdown_message = await handler.create_dropdown_response(
-            interaction, options, "trade_country_chosen", {"trade_id": trade.id}
+            interaction=interaction,
+            options=options,
+            do_next=Dropdown.trade_country_chosen.__name__,
+            callback_payload={
+                "trade_id": trade.id,
+                "placeholder": "Which country do you want to trade with?",
+            },
         )
 
         await sync_to_async(trade.save)()
