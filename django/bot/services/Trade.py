@@ -1,119 +1,104 @@
+import logging
+
 import discord
 from asgiref.sync import async_to_sync, sync_to_async
 
 from bot.discord_models.models import Channel
 from bot.services.TaskHandler import TaskHandler
 from currencies.models import Trade
+from teams.models import Team
 
-# @sync_to_async
-# def get_trade_info(
-#     trade_id, recieving_id
-# ) -> Tuple[Team, Role, Channel, Team, Role, Channel, Guild]:
-#     trade: Trade = Trade.objects.get(id=trade_id)
+from .Button import Button
 
-#     if trade.initiating_party is None:
-#         logger.error("Trade has no initiating party!")
-#     if trade.receiving_party is None:
-#         logger.error("Trade has no receiving party!")
-
-#     return (
-#         trade,
-#         trade.initiating_party,
-#         trade.initiating_party.role,
-#         trade.initiating_party.trade_channel,
-#         trade.receiving_party,
-#         trade.receiving_party.role,
-#         trade.receiving_party.trade_channel,
-#         trade.discord_guild,
-#     )
-
-# trade_id = self.callback_payload["trade_id"]
-
-# receiving_team_id = trade.team_lookup[self.values[0]]
-
-# (
-#     trade,
-#     initiating_party,
-#     initiating_party_role,
-#     initiating_party_trade_channel,
-#     receiving_party,
-#     receiving_party_role,
-#     receiving_party_trade_channel,
-#     discord_guild,
-# ) = await get_trade_info(trade_id, receiving_team_id)
+logger = logging.getLogger("bot")
 
 
 def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
-    if trade.state == "new":
+    if trade.state in [
+        "initiating_party_view",
+        "receiving_party_view",
+    ]:
+        # Alternate the main team
+        if trade.state == "initiating_party_view":
+            trade.pass_to_receiving()
+
+            party_name = trade.receiving_party.name
+            other_party_name = trade.initiating_party.name
+            party_trade_channel_id = trade.receiving_party.trade_channel.id
+            party_role_id = trade.receiving_party.role.discord_id
+            other_party_role_id = trade.initiating_party.role.discord_id
+        elif trade.state == "receiving_party_view":
+            trade.pass_to_initiating()
+
+            party_name = trade.initiating_party.name
+            other_party_name = trade.receiving_party.name
+            party_trade_channel_id = trade.initiating_party.trade_channel.id
+            party_role_id = trade.initiating_party.role.discord_id
+            other_party_role_id = trade.receiving_party.role.discord_id
+
+        trade.save()
+
         everyone_role = interaction.guild.default_role
-        initiating_party_discord_role: discord.Role = interaction.guild.get_role(
-            trade.initiating_party.role.discord_id
-        )
+        party_discord_role: discord.Role = interaction.guild.get_role(party_role_id)
 
-        if initiating_party_discord_role is None:
+        if party_discord_role is None:
             async_to_sync(
                 interaction.response.send_message(
-                    content="Could not find initiating party role",
+                    content="Could not find current party role",
                     ephemeral=True,
                 )
             )
 
             return
 
-        receiving_party_discord_role: discord.Role = interaction.guild.get_role(
-            trade.receiving_party.role.discord_id
+        other_party_discord_role: discord.Role = interaction.guild.get_role(
+            other_party_role_id
         )
 
-        if receiving_party_discord_role is None:
+        if other_party_discord_role is None:
             async_to_sync(
                 interaction.response.send_message(
-                    content="Could not find receiving party role",
+                    content="Could not find other party role",
                     ephemeral=True,
                 )
             )
 
             return
 
-        overwrites = {
-            everyone_role: discord.PermissionOverwrite(view_channel=False),
-            initiating_party_discord_role: discord.PermissionOverwrite(
-                view_channel=True
-            ),
-            receiving_party_discord_role: discord.PermissionOverwrite(
-                view_channel=True
-            ),
-        }
+        # overwrites = {
+        #     everyone_role: discord.PermissionOverwrite(view_channel=False),
+        #     initiating_party_discord_role: discord.PermissionOverwrite(
+        #         view_channel=True
+        #     ),
+        #     receiving_party_discord_role: discord.PermissionOverwrite(
+        #         view_channel=True
+        #     ),
+        # }
 
         # Create the threads
-        initiating_thread_name = f"Trade with {trade.receiving_party.name}"
-        initiating_party_trade_thread = async_to_sync(handler.create_thread)(
+        thread_name = f"Trade with {party_name}"
+        trade_thread = async_to_sync(handler.create_thread)(
             {
-                "channel_id": trade.initiating_party.trade_channel.id,  # initiating party trade channel
-                "message": f"{initiating_party_discord_role.mention}, your trade with {trade.receiving_party.name} has been created",  # ping that team
-                "name": initiating_thread_name,  # trade with other team
+                "channel_id": party_trade_channel_id,  # initiating party trade channel
+                "message": f"{party_discord_role.mention}, your trade with {other_party_name} has been created",  # ping that team
+                "name": thread_name,  # trade with other team
             }
         )
 
         # create channel for trade
-        trade.initiating_party_discord_thread, _ = Channel.objects.get_or_create(
-            discord_id=initiating_party_trade_thread.id,
+        trade.current_discord_trade_thread, _ = Channel.objects.get_or_create(
+            discord_id=trade_thread.id,
             guild=trade.discord_guild,
-            name=initiating_party_trade_thread.name,
+            name=trade_thread.name,
         )
 
-        # Reply in old channel with link to the trade
-        async_to_sync(interaction.response.send_message)(
-            content=f"Trade channel created! You can access it here: {initiating_party_trade_thread.mention}",
-            ephemeral=True,
-        )
-
-        from .Button import Button
+        trade.save()
 
         button_messsage = async_to_sync(handler.create_button)(
             {
                 "guild_id": interaction.guild.id,
                 "trade_id": trade.id,
-                "channel_id": trade.initiating_party.trade_channel.discord_id,
+                "channel_id": trade.current_discord_trade_thread.discord_id,
                 "callback_payload": {},
                 "button_rows": [
                     [
@@ -162,61 +147,33 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
                 ],
             },
         )
+        logger.debug(trade.current_discord_trade_thread)
 
-        # button_messsage = await handler.create_button(
-        #     {
-        #         "guild_id": interaction.guild.id,
-        #         "trade_id": trade_id,
-        #         "channel_id": receiving_party_trade_thread.id,
-        #         "callback_payload": {},
-        #         "button_rows": [
-        #             [
-        #                 {
-        #                     "x": 0,
-        #                     "y": 0,
-        #                     "style": discord.ButtonStyle.primary,
-        #                     "disabled": False,
-        #                     "label": "Adjust trade amounts",
-        #                     "custom_id": f"{trade.id}",
-        #                     "emoji": "✏️",
-        #                     "do_next": Button.currency_trade_adjustment_menu.__name__,
-        #                     "callback_payload": {"trade_id": trade.id},
-        #                 },
-        #                 # {
-        #                 #     "x": 0,
-        #                 #     "y": 1,
-        #                 #     "style": discord.ButtonStyle.danger,
-        #                 #     "disabled": False,
-        #                 #     "label": "Cancel trade",
-        #                 #     "emoji": "❌",
-        #                 #     "do_next": "cancel_trade",
-        #                 #     "callback_payload": {"trade_id": trade.id},
-        #                 # },
-        #                 {
-        #                     "x": 1,
-        #                     "y": 1,
-        #                     "style": discord.ButtonStyle.success,
-        #                     "disabled": False,
-        #                     "label": "Toggle Trade Accept",
-        #                     "emoji": "✅",
-        #                     "do_next": Button.accept_trade.__name__,
-        #                     "callback_payload": {"trade_id": trade.id},
-        #                 },
-        #                 {
-        #                     "x": 2,
-        #                     "y": 1,
-        #                     "style": discord.ButtonStyle.primary,
-        #                     "disabled": True,
-        #                     "label": "Lock in trade",
-        #                     "emoji": "🔒",
-        #                     "do_next": Button.lock_in_trade.__name__,
-        #                     "callback_payload": {"trade_id": trade.id},
-        #                 },
-        #             ]
-        #         ],
-        #     },
-        # )
+        # print(trade.current_discord_trade_thread)
 
         trade.embed_id = button_messsage.id
 
         trade.save()
+
+    # elif trade.state == "initiating_party_accepted":
+    #     interacting_team: Team = trade.initiating_party
+
+    #     # delete that channel
+    #     # create second thread for other team
+
+    #     if interacting_team.id == trade.initiating_party.id:
+    #         trade.initiating_party_accepted = not trade.initiating_party_accepted
+    #     elif interacting_team.id == trade.receiving_party.id:
+    #         trade.receiving_party_accepted = not trade.receiving_party_accepted
+
+    #     await sync_to_async(trade.save)()
+
+    #     embed = await sync_to_async(CreateTradeEmbed.execute)({"trade_id": trade_id})
+
+    #     message: discord.Message = await interaction.channel.fetch_message(
+    #         trade.embed_id
+    #     )
+
+    #     view = await trade_view(self.client, trade)
+
+    #     await message.edit(embed=embed, view=view)

@@ -1,4 +1,5 @@
 import logging
+import time
 from turtle import update
 from typing import Tuple
 
@@ -61,7 +62,22 @@ class Dropdown(discord.ui.Select):
         # Create handler to call creation methods directly
         handler = TaskHandler(view=discord.ui.View(timeout=None), client=self.client)
 
+        logger.debug("Start")
+
         await sync_to_async(update_trade_view)(handler, trade, interaction)
+        logger.debug("Done")
+
+        @sync_to_async
+        def thread_id(trade):
+            return trade.current_discord_trade_thread.id
+
+        trade_thread = interaction.guild.get_channel(await thread_id(trade))
+
+        # Reply in old channel with link to the trade
+        await interaction.response.send_message(
+            content=f"Trade channel created! You can access it here: {trade_thread.mention}",
+            ephemeral=True,
+        )
 
     async def adjustment_select_trade_currency(self, interaction: discord.Interaction):
         # get currency by name

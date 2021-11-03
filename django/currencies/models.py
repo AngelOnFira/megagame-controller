@@ -36,19 +36,12 @@ class Trade(models.Model):
     initiating_party_accepted = models.BooleanField(default=False)
     receiving_party_accepted = models.BooleanField(default=False)
 
-    initiating_party_discord_thread = models.ForeignKey(
+    current_discord_trade_thread = models.ForeignKey(
         "discord_models.Channel",
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        related_name="initiating_trade_thread",
-    )
-    receiving_party_discord_thread = models.ForeignKey(
-        "discord_models.Channel",
-        on_delete=models.PROTECT,
-        null=True,
-        blank=True,
-        related_name="receiving_trade_thread",
+        related_name="current_discord_trade_thread",
     )
 
     discord_guild = models.ForeignKey(
@@ -75,18 +68,24 @@ class Trade(models.Model):
     # completed
 
     @transaction.atomic
-    @transition(field=state, source="new", target="created")
-    def create(self):
+    @transition(field=state, source="new", target="initiating_party_accepted")
+    def initiating_party_accept(self):
         self.created_date = timezone.now()
         self.modified_date = timezone.now()
 
     @transaction.atomic
-    @transition(field=state, source="created", target="receiving_party_set")
-    def set_receiver(self, values):
-        from teams.models import Team
+    @transition(
+        field=state, source="receiving_party_view", target="initiating_party_view"
+    )
+    def pass_to_initiating(self, values):
+        pass
 
-        self.receiving_party = Team.objects.get(id=self.team_lookup[values[0]])
-        self.modified_date = timezone.now()
+    @transaction.atomic
+    @transition(
+        field=state, source="initiating_party_view", target="receiving_party_view"
+    )
+    def pass_to_receiving(self, values):
+        pass
 
     @transaction.atomic
     @transition(field=state, source="new", target="completed")

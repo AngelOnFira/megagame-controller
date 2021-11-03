@@ -12,6 +12,7 @@ from responses.models import Response
 from teams.models import Team
 
 from .TaskHandler import TaskHandler
+from .Trade import update_trade_view
 
 
 async def trade_view(client, trade):
@@ -354,43 +355,19 @@ class Button(discord.ui.Button):
     async def accept_trade(self, interaction: discord.Interaction):
         trade_id = self.callback_payload["trade_id"]
 
-        @sync_to_async
-        def get_trade(trade_id, interaction):
-            trade: Trade = Trade.objects.get(id=trade_id)
-            interacting_team: Member = Member.objects.get(
-                discord_id=interaction.user.id
-            ).player.team
+        trade: Trade = await sync_to_async(Trade.objects.get)(id=trade_id)
 
-            return (
-                trade,
-                interacting_team,
-                trade.initiating_party,
-                trade.receiving_party,
-            )
+        # update trade state
+        trade.initiating_party_accept()
 
-        (
-            trade,
-            interacting_team,
-            trade_initiating_party,
-            trade_receiving_party,
-        ) = await get_trade(trade_id, interaction)
-
-        if interacting_team.id == trade_initiating_party.id:
-            trade.initiating_party_accepted = not trade.initiating_party_accepted
-        elif interacting_team.id == trade_receiving_party.id:
-            trade.receiving_party_accepted = not trade.receiving_party_accepted
+        # Delete the current thread
+        await interaction.channel.delete()
 
         await sync_to_async(trade.save)()
 
-        embed = await sync_to_async(CreateTradeEmbed.execute)({"trade_id": trade_id})
-
-        message: discord.Message = await interaction.channel.fetch_message(
-            trade.embed_id
-        )
-
-        view = await trade_view(self.client, trade)
-
-        await message.edit(embed=embed, view=view)
+        # pass off rest to trade function
+        handler = TaskHandler(discord.ui.View(timeout=None), self.client)
+        update_trade_view(handler, trade, interaction)
 
     async def lock_in_trade(self, interaction: discord.Interaction):
         # get the trade id
