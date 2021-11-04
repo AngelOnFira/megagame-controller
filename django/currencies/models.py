@@ -54,7 +54,7 @@ class Trade(models.Model):
 
     embed_id = models.BigIntegerField(unique=True, null=True)
 
-    state = FSMField(default="new")
+    state = FSMField(default="initiating_party_view")
 
     def __str__(self):
         return f"Trade between {self.initiating_party} and {self.receiving_party}"
@@ -77,15 +77,21 @@ class Trade(models.Model):
     @transition(
         field=state, source="receiving_party_view", target="initiating_party_view"
     )
-    def pass_to_initiating(self, values):
+    def pass_to_initiating(self):
         pass
 
     @transaction.atomic
     @transition(
         field=state, source="initiating_party_view", target="receiving_party_view"
     )
-    def pass_to_receiving(self, values):
+    def pass_to_receiving(self):
         pass
+
+    def swap_views(self):
+        if self.state == "initiating_party_view":
+            self.pass_to_receiving()
+        else:
+            self.pass_to_initiating()
 
     @transaction.atomic
     @transition(field=state, source="new", target="completed")

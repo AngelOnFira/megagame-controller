@@ -62,16 +62,20 @@ class Dropdown(discord.ui.Select):
         # Create handler to call creation methods directly
         handler = TaskHandler(view=discord.ui.View(timeout=None), client=self.client)
 
-        logger.debug("Start")
-
         await sync_to_async(update_trade_view)(handler, trade, interaction)
-        logger.debug("Done")
 
+        # TODO: Fix this
         @sync_to_async
-        def thread_id(trade):
-            return trade.current_discord_trade_thread.id
+        def get_thread_id(trade):
+            return trade.current_discord_trade_thread.discord_id
 
-        trade_thread = interaction.guild.get_channel(await thread_id(trade))
+        # Update this copy of trade
+        await sync_to_async(trade.refresh_from_db)()
+        # trade = await sync_to_async(Trade.objects.get)(id=trade_id)
+
+        thread_id = await get_thread_id(trade)
+        print(thread_id)
+        trade_thread = interaction.guild.get_thread(thread_id)
 
         # Reply in old channel with link to the trade
         await interaction.response.send_message(

@@ -358,7 +358,7 @@ class Button(discord.ui.Button):
         trade: Trade = await sync_to_async(Trade.objects.get)(id=trade_id)
 
         # update trade state
-        trade.initiating_party_accept()
+        await sync_to_async(trade.swap_views)()
 
         # Delete the current thread
         await interaction.channel.delete()
@@ -367,7 +367,7 @@ class Button(discord.ui.Button):
 
         # pass off rest to trade function
         handler = TaskHandler(discord.ui.View(timeout=None), self.client)
-        update_trade_view(handler, trade, interaction)
+        await sync_to_async(update_trade_view)(handler, trade, interaction)
 
     async def lock_in_trade(self, interaction: discord.Interaction):
         # get the trade id

@@ -8,8 +8,6 @@ from bot.services.TaskHandler import TaskHandler
 from currencies.models import Trade
 from teams.models import Team
 
-from .Button import Button
-
 logger = logging.getLogger("bot")
 
 
@@ -20,21 +18,18 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
     ]:
         # Alternate the main team
         if trade.state == "initiating_party_view":
-            trade.pass_to_receiving()
-
-            party_name = trade.receiving_party.name
-            other_party_name = trade.initiating_party.name
-            party_trade_channel_id = trade.receiving_party.trade_channel.id
-            party_role_id = trade.receiving_party.role.discord_id
-            other_party_role_id = trade.initiating_party.role.discord_id
-        elif trade.state == "receiving_party_view":
-            trade.pass_to_initiating()
-
             party_name = trade.initiating_party.name
             other_party_name = trade.receiving_party.name
             party_trade_channel_id = trade.initiating_party.trade_channel.id
             party_role_id = trade.initiating_party.role.discord_id
             other_party_role_id = trade.receiving_party.role.discord_id
+
+        elif trade.state == "receiving_party_view":
+            party_name = trade.receiving_party.name
+            other_party_name = trade.initiating_party.name
+            party_trade_channel_id = trade.receiving_party.trade_channel.id
+            party_role_id = trade.receiving_party.role.discord_id
+            other_party_role_id = trade.initiating_party.role.discord_id
 
         trade.save()
 
@@ -93,6 +88,8 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
         )
 
         trade.save()
+
+        from .Button import Button
 
         button_messsage = async_to_sync(handler.create_button)(
             {
@@ -154,6 +151,8 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
         trade.embed_id = button_messsage.id
 
         trade.save()
+    else:
+        logger.debug("Trade not in correct state")
 
     # elif trade.state == "initiating_party_accepted":
     #     interacting_team: Team = trade.initiating_party
