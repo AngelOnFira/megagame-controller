@@ -33,6 +33,8 @@ intents.members = True
 
 client = discord.Client(intents=intents)
 
+PAYMENT = "payment"
+
 # TODO: Add this to env vars
 use_sentry(
     client,
@@ -96,6 +98,25 @@ async def run_tasks_sync(client: discord.Client):
 
         task.completed = True
         await sync_to_async(task.save)()
+
+
+@client.event
+async def on_interaction(interaction: discord.Interaction):
+    from bot.services.Payment import update_payment_view
+    from bot.services.TaskHandler import TaskHandler
+    from currencies.models import Payment
+
+    if interaction.type == discord.InteractionType.application_command:
+        data = interaction.data
+
+        if data["name"] == PAYMENT:
+            payment = await sync_to_async(Payment.objects.create)(
+                action=data["options"][0]["value"],
+                cost=data["options"][1]["value"],
+            )
+
+            handler = TaskHandler(discord.ui.View(timeout=None), client)
+            await sync_to_async(update_payment_view)(handler, payment, interaction)
 
 
 # Check for new tasks once a second
@@ -229,6 +250,39 @@ async def before_my_task():
         #             },
         #         }
         #     )
+
+        import requests
+
+        url = "https://discord.com/api/v8/applications/881015675236270121/guilds/855215558994821120/commands"
+
+        # This is an example CHAT_INPUT or Slash Command, with a type of 1
+        json = {
+            "name": PAYMENT,
+            "type": 1,
+            "description": "Create a payment that teams can react to",
+            "options": [
+                {
+                    "name": "action",
+                    "description": "The string that will be show as what players are purchsing",
+                    "type": 3,
+                    "required": True,
+                },
+                {
+                    "name": "cost",
+                    "description": "Cost of this action, in the 'common' currency",
+                    "type": 4,
+                    "required": True,
+                },
+            ],
+        }
+
+        # For authorization, you can use either your bot token
+        headers = {
+            "Authorization": "Bot ODgxMDE1Njc1MjM2MjcwMTIx.YSmryQ.BqFwf7vhSHrBjuA0J6F5cXkzMwg"
+        }
+
+        r = requests.post(url, headers=headers, json=json)
+        print(r.text)
 
     await intial_state_check(client)
 

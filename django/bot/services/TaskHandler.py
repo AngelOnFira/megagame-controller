@@ -10,7 +10,8 @@ from asgiref.sync import sync_to_async
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
-from currencies.services import CreateBankEmbed, CreateTradeEmbed
+from currencies.services import (CreateBankEmbed, CreatePaymentEmbed,
+                                 CreateTradeEmbed)
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
@@ -187,6 +188,11 @@ class TaskHandler:
             trade_id = payload["trade_id"]
             params["embed"] = await sync_to_async(CreateTradeEmbed.execute)(
                 {"trade_id": trade_id}
+            )
+        elif "payment_id" in payload:
+            payment_id = payload["payment_id"]
+            params["embed"] = await sync_to_async(CreatePaymentEmbed.execute)(
+                {"payment_id": payment_id}
             )
         elif "embed" in payload:
             params["embed"] = discord.Embed(**payload["embed"])

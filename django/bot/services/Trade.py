@@ -71,7 +71,7 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
         # }
 
         # Create the threads
-        thread_name = f"Trade with {party_name}"
+        thread_name = f"Trade with {other_party_name}"
         trade_thread = async_to_sync(handler.create_thread)(
             {
                 "channel_id": party_trade_channel_id,  # initiating party trade channel
@@ -144,10 +144,6 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
                 ],
             },
         )
-        logger.debug(trade.current_discord_trade_thread)
-
-        # print(trade.current_discord_trade_thread)
-
         trade.embed_id = button_messsage.id
 
         trade.save()

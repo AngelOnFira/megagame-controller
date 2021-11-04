@@ -13,7 +13,7 @@ from tasks.models import TaskType
 from tasks.services import QueueTask
 from teams.models import Team
 
-from .models import Currency, Trade, Transaction, Wallet
+from .models import Currency, Payment, Trade, Transaction, Wallet
 
 
 class CreateTradeEmbed(Service):
@@ -98,7 +98,19 @@ class CreateTradeEmbed(Service):
         return embed
 
 
-from collections import defaultdict
+class CreatePaymentEmbed(Service):
+    payment_id = forms.IntegerField()
+
+    def process(self):
+        payment_id = self.cleaned_data["payment_id"]
+
+        payment = Payment.objects.get(id=payment_id)
+
+        embed: discord.Embed = discord.Embed(
+            title=f"Payment", description=f"{payment.action}\nCost: {payment.cost}"
+        )
+
+        return embed
 
 
 class CreateBankEmbed(Service):

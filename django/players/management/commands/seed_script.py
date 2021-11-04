@@ -3,6 +3,7 @@ import random
 import emojis
 from django_seed import Seed
 
+from actions import watch_the_skies_data
 from bot.accounts.models import User
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
@@ -72,21 +73,15 @@ class Command(BaseCommand):
         emoji = seeder.execute()
 
         guild = Guild.objects.all().first()
-        emoji_list = ["🇨🇦", "🇬🇧", "🇺🇸", "🇫🇷", "🇩🇪", "🇮🇹"]
-        country_names = [
-            "Canada",
-            "United Kingdom",
-            "United States",
-            "France",
-            "Germany",
-            "Italy",
-        ]
 
         credits_currency = Currency.objects.get(name="Credits")
         bank_wallet = Wallet.objects.get_or_create(name="Bank")[0]
 
-        for i in range(len(emoji_list) - 4):
-            seeder.add_entity(Wallet, 1, {"name": f"{country_names[i]}'s wallet"})
+        for i, (team_name, team) in enumerate(watch_the_skies_data["teams"].items()):
+            if i > 1:
+                break
+
+            seeder.add_entity(Wallet, 1, {"name": f"{team_name}'s wallet"})
 
             results = seeder.execute()
 
@@ -96,18 +91,19 @@ class Command(BaseCommand):
                 Team,
                 1,
                 {
-                    "name": country_names[i],
-                    "emoji": emojis.decode(emoji_list[i]),
+                    "name": team_name,
+                    "emoji": emojis.decode(team["flag"]),
                     "wallet": Wallet.objects.get(id=team_wallet_id),
                     "guild": guild,
                 },
             )
 
+            # Pay each country their income
             seeder.add_entity(
                 Transaction,
                 1,
                 {
-                    "amount": random.randint(10, 15),
+                    "amount": team["income_track"][5],
                     "currency": credits_currency,
                     "from_wallet": bank_wallet,
                     "to_wallet": Wallet.objects.get(id=team_wallet_id),
