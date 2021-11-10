@@ -119,22 +119,16 @@ class CreateBankEmbed(Service):
     def process(self):
         team_id = self.cleaned_data["team_id"]
 
-        team = Team.objects.get(id=team_id)
+        team: Team = Team.objects.get(id=team_id)
 
-        transaction_totals = defaultdict(int)
-
-        for credit in team.wallet.credits.filter(state="completed"):
-            transaction_totals[credit.currency.name] -= credit.amount
-
-        for debit in team.wallet.debits.filter(state="completed"):
-            transaction_totals[debit.currency.name] += debit.amount
+        transaction_totals = team.wallet.get_bank_balance()
 
         print(transaction_totals)
 
         text = ""
 
         for currency, amount in transaction_totals.items():
-            text += f"{amount} {currency}\n"
+            text += f"{amount} {currency.name}\n"
 
         embed: discord.Embed = discord.Embed(
             title=f"Bank of {team.name}", description=text

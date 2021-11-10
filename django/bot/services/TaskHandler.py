@@ -43,6 +43,9 @@ class TaskHandler:
     ):
         from .Dropdown import Dropdown
 
+        print("Options", options)
+        print("Callbackpayload", callback_payload)
+
         self.view.add_item(
             Dropdown(
                 self.client,
@@ -61,35 +64,38 @@ class TaskHandler:
             content="_🔽_", view=self.view, ephemeral=True
         )
 
-    # async def create_dropdown(self, payload: dict):
-    #     guild_id = payload["guild_id"]
-    #     channel_id = payload["channel_id"]
-    #     dropdown = payload["dropdown"]
-    #     do_next = payload["do_next"]
+    async def create_dropdown(self, payload: dict, interaction: discord.Interaction):
+        from .Dropdown import Dropdown
 
-    #     options = []
+        guild_id = payload["guild_id"]
+        channel_id = payload["channel_id"]
+        dropdown = payload["dropdown"]
+        do_next = payload["do_next"]
+        callback = payload["callback"]
 
-    #     for option in dropdown["options"]:
-    #         options.append(discord.SelectOption(**option))
+        options = []
 
-    #     self.view.add_item(
-    #         Dropdown(
-    #             self.client,
-    #             {
-    #                 "placeholder": "Which country do you want to trade with?",
-    #                 "min_values": 1,
-    #                 "max_values": 1,
-    #                 "options": options,
-    #             },
-    #             callback,
-    #             do_next=do_next,
-    #         )
-    #     )
-    #     channel = self.client.get_guild(guild_id).get_channel(channel_id)
+        for option in dropdown["options"]:
+            options.append(discord.SelectOption(**option))
 
-    #     embedVar = discord.Embed(title=" ads", description=" d", color=0x00FF00)
+        self.view.add_item(
+            Dropdown(
+                self.client,
+                {
+                    "placeholder": "Which country do you want to trade with?",
+                    "min_values": 1,
+                    "max_values": 1,
+                    "options": options,
+                },
+                callback,
+                do_next=do_next,
+            )
+        )
+        channel = self.client.get_guild(guild_id).get_channel(channel_id)
 
-    #     async_to_sync(channel.send)(embed=embedVar, view=self.view)
+        embedVar = discord.Embed(title=" ads", description=" d", color=0x00FF00)
+
+        await channel.send(embed=embedVar, view=self.view)
 
     async def create_category(self, payload: dict):
         guild_id = payload["guild_id"]
@@ -172,10 +178,10 @@ class TaskHandler:
                     logger.error(f"Button {button['label']} has no do_next")
 
                 button = Button(
-                    self.client,
-                    button["x"],
-                    button["y"],
-                    options_dict,
+                    client=self.client,
+                    x=button["x"],
+                    y=button["y"],
+                    options=options_dict,
                     do_next=button["do_next"],
                     callback_payload=button["callback_payload"],
                 )

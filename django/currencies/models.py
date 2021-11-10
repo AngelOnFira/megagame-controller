@@ -1,4 +1,5 @@
 from collections import defaultdict
+from locale import currency
 from operator import truediv
 
 from django_fsm import FSMField, transition
@@ -209,6 +210,34 @@ class Wallet(models.Model):
 
     def __str__(self):
         return f"{self.name} (id: {self.id})"
+
+    def get_currencies_available(self) -> list[Currency]:
+        """Get all currencies in this wallet that are greater than 0
+
+        Returns:
+            list[Currency]: List of currencies
+        """
+        return list(
+            currency for currency, count in self.get_bank_balance().items() if count > 0
+        )
+
+    def get_bank_balance(self) -> dict[Currency, int]:
+        """Get the bank balance of this wallet
+
+        Returns:
+            dict[Currency, int]: Dictionary of currencies and their count
+        """
+        transaction_totals = defaultdict(int)
+
+        for credit in self.credits.filter(state="completed"):
+            transaction_totals[credit.currency] -= credit.amount
+
+        for debit in self.debits.filter(state="completed"):
+            transaction_totals[debit.currency] += debit.amount
+
+        print(transaction_totals)
+
+        return dict(transaction_totals)
 
 
 # class BankAccount(models.Model):

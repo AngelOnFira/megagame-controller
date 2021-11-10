@@ -195,56 +195,60 @@ class Button(discord.ui.Button):
         await message.edit(embed=embed, view=view)
 
     async def currency_trade_adjustment_menu(self, interaction: discord.Interaction):
+        """When the "Adjust Trade Amounts" is clicked
+
+        Creates a dropdown with all currencies for this team
+
+        Args:
+            interaction (discord.Interaction): The interaction object
+
+        Payload:
+            trade_id: The trade id
+            team_id: The team id
+        """
+        from .Dropdown import Dropdown
+
         # payload: expect a currency id
         # TODO: change to only currencies that a team has in their bank
-        currencies: Currency = await sync_to_async(list)(Currency.objects.all())
 
-        button_rows = []
+        trade_id = self.callback_payload["trade_id"]
+        team_id = self.callback_payload["team_id"]
 
-        currency: Currency
-        for i, currency in enumerate(currencies):
-            row = []
+        # Get all currencies that a team has in their bank
 
-            for j, label in enumerate(["-5", "-1", "+1", "+5"]):
-                style = (
-                    discord.ButtonStyle.danger if j < 2 else discord.ButtonStyle.success
+        @sync_to_async
+        def get_currencies(team_id):
+            team: Team = Team.objects.get(id=team_id)
+
+            currencies = team.wallet.get_currencies_available()
+            print(currencies)
+
+            return currencies
+
+        currencies: list[Currency] = await get_currencies(team_id)
+
+        currency_options = []
+        for currency in currencies:
+            currency_options.append(
+                discord.SelectOption(
+                    label=currency.name,
+                    value=currency.id,
+                    emoji=emojis.encode(currency.emoji),
                 )
-
-                value_button = {
-                    "x": j,
-                    "y": i,
-                    "style": style,
-                    "disabled": False,
-                    "label": label,
-                    "custom_id": f"{currency.id}|{self.callback_payload['trade_id']}|{label}",
-                    "do_next": Button.adjust_currency_trade.__name__,
-                    "callback_payload": {},
-                }
-
-                row.append(value_button)
-
-            currency_button = {
-                "x": 4,
-                "style": discord.ButtonStyle.primary,
-                "emoji": emojis.encode(currency.emoji),
-                "disabled": True,
-                "label": currency.name,
-                "do_next": "unreachable",
-                "callback_payload": {},
-            }
-            row.append(currency_button)
-
-            button_rows.append(row)
+            )
 
         handler = TaskHandler(discord.ui.View(timeout=None), self.client)
 
-        await handler.create_button(
-            {
-                "guild_id": interaction.guild.id,
-                "button_rows": button_rows,
-                "content": "Adjust this trade",
-            },
+        await handler.create_dropdown_response(
             interaction=interaction,
+            options=currency_options,
+            do_next=Dropdown.adjustment_select_trade_currency.__name__,
+            callback_payload={
+                "guild_id": interaction.guild.id,
+                "channel_id": interaction.channel_id,
+                "trade_id": self.callback_payload["trade_id"],
+                "placeholder": "Select a currency",
+            },
         )
 
     async def currency_trade_currency_menu(self, interaction: discord.Interaction):
@@ -467,4 +471,15 @@ class Button(discord.ui.Button):
             self.start_trading.__name__: self.start_trading,
         }
 
-        await function_lookup[self.do_next](interaction)
+        if self.do_next in function_lookup:
+            await function_lookup[self.do_next](interaction)
+        # Otherwise, pass to dropdown
+        else:
+            dropdown = Dropdown(
+                client=self.client,
+                options=self.options,
+                do_next=self.do_next,
+                callback_payload=self.callback_payload,
+            )
+
+            await dropdown.callback(interaction)

@@ -26,7 +26,7 @@ class Team(models.Model):
 
     emoji = models.CharField(max_length=30, blank=True, null=True)
 
-    wallet = models.ForeignKey(
+    wallet: Wallet = models.ForeignKey(
         "currencies.Wallet", on_delete=models.CASCADE, null=True, blank=True
     )
 
@@ -129,18 +129,18 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
-        # Create a general channel for the team
-        general_channel = Channel.objects.create(guild=instance.guild, name="general")
-        instance.general_channel = general_channel
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_CHANNEL,
-                "payload": {
-                    "team_id": instance.id,
-                    "channel_bind_model_id": general_channel.id,
-                },
-            }
-        )
+        # # Create a general channel for the team
+        # general_channel = Channel.objects.create(guild=instance.guild, name="general")
+        # instance.general_channel = general_channel
+        # QueueTask.execute(
+        #     {
+        #         "task_type": TaskType.CREATE_CHANNEL,
+        #         "payload": {
+        #             "team_id": instance.id,
+        #             "channel_bind_model_id": general_channel.id,
+        #         },
+        #     }
+        # )
 
         # Create a trade channel for the team
         trade_channel = Channel.objects.create(guild=instance.guild, name="trade")

@@ -1,8 +1,8 @@
 watch_the_skies_data = {
-    "actions": {
-        "deploy-interceptor": {"title": "Deploy Interceptor", "cost": "2"},
-        "Pay reserach costs": {"cost": "3"},
-    },
+    # "actions": {
+    #     "deploy-interceptor": {"title": "Deploy Interceptor", "cost": "2"},
+    #     "Pay reserach costs": {"cost": "3"},
+    # },
     "currencies": {
         "rare": [
             # Earth Item Cards
@@ -25,7 +25,7 @@ watch_the_skies_data = {
             ("Alien Communications System", "📡"),
             ("Alien Computer", "💻"),
         ],
-        "common": [("Megabucks", "💵")],
+        "common": [("Megabucks", "💵"), ("Income", "📈")],
         "admin": [
             ("Public Relations", "📰"),
         ],
@@ -36,6 +36,9 @@ watch_the_skies_data = {
             "Interceptors",
             "Special Agents",
             "Nuclear Missile",
+        ],
+        "admin": [
+            "Public Order",
         ],
     },
     "teams": {

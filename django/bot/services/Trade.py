@@ -19,6 +19,7 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
         # Alternate the main team
         if trade.state == "initiating_party_view":
             party_name = trade.initiating_party.name
+            party_id = trade.initiating_party.id
             other_party_name = trade.receiving_party.name
             party_trade_channel_id = trade.initiating_party.trade_channel.id
             party_role_id = trade.initiating_party.role.discord_id
@@ -26,6 +27,7 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
 
         elif trade.state == "receiving_party_view":
             party_name = trade.receiving_party.name
+            party_id = trade.receiving_party.id
             other_party_name = trade.initiating_party.name
             party_trade_channel_id = trade.receiving_party.trade_channel.id
             party_role_id = trade.receiving_party.role.discord_id
@@ -108,7 +110,10 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
                             "custom_id": f"{trade.id}",
                             "emoji": "✏️",
                             "do_next": Button.currency_trade_adjustment_menu.__name__,
-                            "callback_payload": {"trade_id": trade.id},
+                            "callback_payload": {
+                                "trade_id": trade.id,
+                                "team_id": party_id,
+                            },
                         },
                         # {
                         #     "x": 0,
