@@ -1,5 +1,4 @@
 from asgiref.sync import async_to_sync, sync_to_async
-
 from bot.discord_models.models import Category
 
 

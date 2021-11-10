@@ -2,7 +2,6 @@ import logging
 
 import discord
 from asgiref.sync import async_to_sync, sync_to_async
-
 from bot.discord_models.models import Channel
 from bot.services.TaskHandler import TaskHandler
 from currencies.models import Trade

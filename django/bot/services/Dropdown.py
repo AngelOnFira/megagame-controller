@@ -6,7 +6,6 @@ from typing import Tuple
 import discord
 import emojis
 from asgiref.sync import sync_to_async
-
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
@@ -74,7 +73,6 @@ class Dropdown(discord.ui.Select):
         # trade = await sync_to_async(Trade.objects.get)(id=trade_id)
 
         thread_id = await get_thread_id(trade)
-        print(thread_id)
         trade_thread = interaction.guild.get_thread(thread_id)
 
         # Reply in old channel with link to the trade
@@ -84,8 +82,14 @@ class Dropdown(discord.ui.Select):
         )
 
     async def adjustment_select_trade_currency(self, interaction: discord.Interaction):
-        # get currency by name
-        # replace this embed with buttons
+        """When a currency is selected, make a list of buttons to adjust the amount on the trade
+
+        Args:
+            interaction (discord.Interaction)
+
+        Payload:
+            trade_id
+        """
         currency_name = self.values[0]
 
         from .Button import Button
@@ -100,10 +104,10 @@ class Dropdown(discord.ui.Select):
             style = discord.ButtonStyle.danger if j < 2 else discord.ButtonStyle.success
 
             button = Button(
-                self.client,
-                j,
-                0,
-                {
+                client=self.client,
+                x=j,
+                y=0,
+                options={
                     "style": style,
                     "label": label,
                     "row": 1,
@@ -119,10 +123,10 @@ class Dropdown(discord.ui.Select):
             view.add_item(button)
 
         currency_button = Button(
-            self.client,
-            4,
-            0,
-            {
+            client=self.client,
+            x=4,
+            y=0,
+            options={
                 "style": discord.ButtonStyle.primary,
                 "label": currency.name,
                 "row": 1,

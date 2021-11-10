@@ -1,11 +1,11 @@
 from asgiref.sync import sync_to_async
-
 from bot.plugins.events import receiver
+from players.models import Player
+
 from django.contrib.auth import get_user_model
 from django.db import models
 from django.db.models.signals import post_save
 from django.utils.translation import gettext_lazy as _
-from players.models import Player
 
 # from .services import CreateMember
 

@@ -4,13 +4,13 @@ from collections import defaultdict
 import discord
 import emojis
 from asgiref.sync import sync_to_async
-
 from bot.discord_models.models import Channel, Guild, Role
 from currencies.models import Wallet
-from django.db import models
-from django.db.models.signals import post_save
 from tasks.models import TaskType
 from tasks.services import QueueTask
+
+from django.db import models
+from django.db.models.signals import post_save
 
 
 # Create your models here.
@@ -93,7 +93,6 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
     from currencies.services import CreateTrade
 
     if created:
-        print("I was created!")
         # If a guild is not set, choose the first one
         if not instance.guild:
             instance.guild = Guild.objects.first()

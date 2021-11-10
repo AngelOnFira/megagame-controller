@@ -17,12 +17,12 @@ import emojis
 import sentry_sdk
 from aiohttp import payload
 from asgiref.sync import async_to_sync, sync_to_async
+from bot.plugins.base import MethodPool
+from bot.plugins.events import EventPool
 from discord.ext import tasks
 from discord_sentry_reporting import use_sentry
 
 import django
-from bot.plugins.base import MethodPool
-from bot.plugins.events import EventPool
 from django.apps import AppConfig
 from django.conf import settings
 
@@ -284,7 +284,6 @@ async def before_my_task():
         }
 
         r = requests.post(url, headers=headers, json=json)
-        print(r.text)
 
     await intial_state_check(client)
 

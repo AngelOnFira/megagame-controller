@@ -1,7 +1,8 @@
+from os import sync
+
 import discord
 import emojis
 from asgiref.sync import sync_to_async
-
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.services.Dropdown import Dropdown
 from bot.users.models import Member
@@ -131,6 +132,7 @@ class Button(discord.ui.Button):
 
         currency = await sync_to_async(Currency.objects.get)(id=currency_id)
 
+        # Get team interacting based on what channel the interaction is in
         @sync_to_async
         def get_player_team_interacting(interaction):
             interacting_team = Member.objects.get(
@@ -177,6 +179,7 @@ class Button(discord.ui.Button):
         if transaction.amount == 0:
             await sync_to_async(transaction.delete)()
         else:
+            await sync_to_async(trade.transactions.add)(transaction)
             await sync_to_async(transaction.save)()
 
         trade.initiating_party_accepted = False
@@ -190,9 +193,9 @@ class Button(discord.ui.Button):
             trade.embed_id
         )
 
-        view = await trade_view(self.client, trade)
+        # view = await trade_view(self.client, trade)
 
-        await message.edit(embed=embed, view=view)
+        await message.edit(embed=embed)
 
     async def currency_trade_adjustment_menu(self, interaction: discord.Interaction):
         """When the "Adjust Trade Amounts" is clicked
@@ -203,36 +206,32 @@ class Button(discord.ui.Button):
             interaction (discord.Interaction): The interaction object
 
         Payload:
-            trade_id: The trade id
-            team_id: The team id
+            trade_id
+            team_id
         """
         from .Dropdown import Dropdown
-
-        # payload: expect a currency id
-        # TODO: change to only currencies that a team has in their bank
 
         trade_id = self.callback_payload["trade_id"]
         team_id = self.callback_payload["team_id"]
 
         # Get all currencies that a team has in their bank
-
         @sync_to_async
         def get_currencies(team_id):
             team: Team = Team.objects.get(id=team_id)
 
             currencies = team.wallet.get_currencies_available()
-            print(currencies)
 
             return currencies
 
         currencies: list[Currency] = await get_currencies(team_id)
 
+        # Collect all the currencies
         currency_options = []
         for currency in currencies:
             currency_options.append(
                 discord.SelectOption(
                     label=currency.name,
-                    value=currency.id,
+                    value=currency.name,
                     emoji=emojis.encode(currency.emoji),
                 )
             )
@@ -246,7 +245,7 @@ class Button(discord.ui.Button):
             callback_payload={
                 "guild_id": interaction.guild.id,
                 "channel_id": interaction.channel_id,
-                "trade_id": self.callback_payload["trade_id"],
+                "trade_id": trade_id,
                 "placeholder": "Select a currency",
             },
         )

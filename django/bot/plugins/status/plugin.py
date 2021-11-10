@@ -1,10 +1,9 @@
 import logging
 import re
 
-from discord import CustomActivity
-
 from bot.plugins.base import BasePlugin
 from bot.plugins.commands import command
+from discord import CustomActivity
 
 from .models import GameStatus
 

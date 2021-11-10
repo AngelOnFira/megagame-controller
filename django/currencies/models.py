@@ -175,8 +175,6 @@ class Trade(models.Model):
             int
         ) = self.initiating_party.get_bank_balance()
 
-        print(initiating_party_balance)
-
         for transaction in Transaction.objects.filter(
             trade=self, from_wallet=self.initiating_party.wallet, state="new"
         ):
@@ -189,8 +187,6 @@ class Trade(models.Model):
         receiving_party_balance: defaultdict(
             int
         ) = self.receiving_party.get_bank_balance()
-
-        print(receiving_party_balance)
 
         for transaction in Transaction.objects.filter(
             trade=self, from_wallet=self.receiving_party.wallet, state="new"
@@ -234,8 +230,6 @@ class Wallet(models.Model):
 
         for debit in self.debits.filter(state="completed"):
             transaction_totals[debit.currency] += debit.amount
-
-        print(transaction_totals)
 
         return dict(transaction_totals)
 

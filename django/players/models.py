@@ -1,14 +1,15 @@
 from bot.discord_models.models import Guild
 from currencies.models import Wallet
-from django.db import models
-from django.db.models.signals import post_save
 from responses.models import Response
 from teams.models import Team
+
+from django.db import models
+from django.db.models.signals import post_save
 
 
 class Player(models.Model):
     wallet = models.OneToOneField(Wallet, on_delete=models.CASCADE)
-    name = models.CharField(max_length=100, default="")
+    name = models.CharField(max_length=100, default="", blank=True, null=True)
 
     team = models.ForeignKey(
         "teams.Team",
@@ -18,7 +19,7 @@ class Player(models.Model):
         related_name="players",
     )
 
-    responses = models.ManyToManyField(Response)
+    responses = models.ManyToManyField(Response, blank=True)
 
     guild = models.ForeignKey(
         "discord_models.Guild", on_delete=models.CASCADE, null=True

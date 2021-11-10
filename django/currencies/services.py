@@ -4,14 +4,14 @@ from pydoc import describe
 
 import discord
 import emojis
+from bot.users.models import Member
 from service_objects.fields import DictField, ListField, ModelField
 from service_objects.services import Service
-
-from bot.users.models import Member
-from django import forms
 from tasks.models import TaskType
 from tasks.services import QueueTask
 from teams.models import Team
+
+from django import forms
 
 from .models import Currency, Payment, Trade, Transaction, Wallet
 
@@ -122,8 +122,6 @@ class CreateBankEmbed(Service):
         team: Team = Team.objects.get(id=team_id)
 
         transaction_totals = team.wallet.get_bank_balance()
-
-        print(transaction_totals)
 
         text = ""
 

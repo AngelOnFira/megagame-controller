@@ -1,8 +1,4 @@
 watch_the_skies_data = {
-    # "actions": {
-    #     "deploy-interceptor": {"title": "Deploy Interceptor", "cost": "2"},
-    #     "Pay reserach costs": {"cost": "3"},
-    # },
     "currencies": {
         "rare": [
             # Earth Item Cards
