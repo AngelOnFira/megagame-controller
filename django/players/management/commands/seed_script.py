@@ -55,62 +55,65 @@ class Command(BaseCommand):
             }
         )
 
-        seeder = Seed.seeder(locale="en_CA")
+        # seeder = Seed.seeder(locale="en_CA")
 
-        emoji_list = ["💰", "🃏", "🛩️"]
-        currencies = ["Credits", "Action card", "Interceptor"]
-
-        for i in range(len(emoji_list)):
-            seeder.add_entity(
-                Currency,
-                1,
-                {
-                    "name": currencies[i],
-                    "emoji": emojis.decode(emoji_list[i]),
-                },
-            )
-
-        emoji = seeder.execute()
+        for currency_type in watch_the_skies_data["currencies"].keys():
+            for currency in watch_the_skies_data["currencies"][currency_type]:
+                Currency.objects.create(
+                    name=currency[0],
+                    emoji=emojis.decode(currency[1]),
+                    currency_type={
+                        "admin": "ADM",
+                        "common": "COM",
+                        "rare": "RAR",
+                        "logistics": "LOG",
+                        "hidden": "HID",
+                        "special": "SPE",
+                    }[currency_type],
+                )
 
         guild = Guild.objects.all().first()
 
-        credits_currency = Currency.objects.get(name="Credits")
         bank_wallet = Wallet.objects.get_or_create(name="Bank")[0]
+
+        currency_lookup = {}
+        for currency in Currency.objects.all():
+            currency_lookup[currency.name] = currency
 
         for i, (team_name, team) in enumerate(watch_the_skies_data["teams"].items()):
             if i > 1:
                 break
 
-            seeder.add_entity(Wallet, 1, {"name": f"{team_name}'s wallet"})
+            wallet = Wallet.objects.create(
+                name=f"{team_name}'s wallet",
+            )
 
-            results = seeder.execute()
+            team_wallet_id = wallet.id
 
-            team_wallet_id = results[Wallet][0]
-
-            seeder.add_entity(
-                Team,
-                1,
-                {
-                    "name": team_name,
-                    "emoji": emojis.decode(team["flag"]),
-                    "wallet": Wallet.objects.get(id=team_wallet_id),
-                    "guild": guild,
-                },
+            Team.objects.create(
+                name=team_name,
+                emoji=emojis.decode(team["flag"]),
+                wallet=Wallet.objects.get(id=team_wallet_id),
+                guild=guild,
             )
 
             # Pay each country their income
-            seeder.add_entity(
-                Transaction,
-                1,
-                {
-                    "amount": team["income_track"][5],
-                    "currency": credits_currency,
-                    "from_wallet": bank_wallet,
-                    "to_wallet": Wallet.objects.get(id=team_wallet_id),
-                    "state": "completed",
-                },
+            Transaction.objects.create(
+                amount=team["income_track"][5],
+                currency=currency_lookup["Megabucks"],
+                from_wallet=bank_wallet,
+                to_wallet=Wallet.objects.get(id=team_wallet_id),
+                state="completed",
             )
 
-            seeder.execute()
+            # Set up each country's initial currencies
+            for currency_name, currency_amount in team["initial_currencies"]:
+                Transaction.objects.create(
+                    amount=currency_amount,
+                    currency=currency_lookup[currency_name],
+                    from_wallet=bank_wallet,
+                    to_wallet=Wallet.objects.get(id=team_wallet_id),
+                    state="completed",
+                )
 
         print("Seeding Complete")

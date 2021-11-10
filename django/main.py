@@ -193,6 +193,8 @@ async def before_my_task():
         # TODO: get this to delete old messages
         teams = await sync_to_async(list)(Team.objects.all())
 
+        # TODO: create test channel to print all emojis of teams, currencies, and so on
+
         # for team in teams:
         #     team = await sync_to_async(Team.objects.get)(id=team.id)
         #     if team.name == "null":

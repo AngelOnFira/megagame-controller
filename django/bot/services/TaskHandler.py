@@ -1,3 +1,4 @@
+from distutils.log import info, debug
 import json
 import logging
 from code import interact
@@ -43,8 +44,8 @@ class TaskHandler:
     ):
         from .Dropdown import Dropdown
 
-        print("Options", options)
-        print("Callbackpayload", callback_payload)
+        debug("Options", options)
+        debug("Callbackpayload", callback_payload)
 
         self.view.add_item(
             Dropdown(
