@@ -111,6 +111,8 @@ class Trade(models.Model):
     initiating_party_accepted = models.BooleanField(default=False)
     receiving_party_accepted = models.BooleanField(default=False)
 
+    locked_in = models.BooleanField(default=False)
+
     current_discord_trade_thread = models.ForeignKey(
         "discord_models.Channel",
         on_delete=models.PROTECT,
@@ -153,14 +155,14 @@ class Trade(models.Model):
         field=state, source="receiving_party_view", target="initiating_party_view"
     )
     def pass_to_initiating(self):
-        pass
+        self.receiving_party_accepted = True
 
     @transaction.atomic
     @transition(
         field=state, source="initiating_party_view", target="receiving_party_view"
     )
     def pass_to_receiving(self):
-        pass
+        self.initiating_party_accepted = True
 
     def swap_views(self):
         if self.state == "initiating_party_view":
@@ -169,11 +171,13 @@ class Trade(models.Model):
             self.pass_to_initiating()
 
     @transaction.atomic
-    @transition(field=state, source="new", target="completed")
+    @transition(
+        field=state,
+        source=["receiving_party_view", "initiating_party_view"],
+        target="completed",
+    )
     def complete(self):
-        initiating_party_balance: defaultdict(
-            int
-        ) = self.initiating_party.get_bank_balance()
+        initiating_party_balance: dict(int) = self.initiating_party.get_bank_balance()
 
         for transaction in Transaction.objects.filter(
             trade=self, from_wallet=self.initiating_party.wallet, state="new"
@@ -193,6 +197,12 @@ class Trade(models.Model):
         ):
             if receiving_party_balance[transaction.currency.id] < transaction.amount:
                 return False
+
+        for transaction in Transaction.objects.filter(trade=self):
+            transaction.complete()
+            transaction.save()
+
+        # TODO: Add recipt
 
         return True
 

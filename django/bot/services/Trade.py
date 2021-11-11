@@ -92,60 +92,94 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
 
         from .Button import Button
 
+        button_rows = [
+            [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "style": discord.ButtonStyle.primary,
+                    "disabled": False,
+                    "label": "Adjust trade amounts",
+                    "custom_id": f"{trade.id}",
+                    "emoji": "✏️",
+                    "do_next": Button.currency_trade_adjustment_menu.__name__,
+                    "callback_payload": {
+                        "trade_id": trade.id,
+                        "team_id": party_id,
+                    },
+                }
+            ]
+        ]
+
+        if (
+            trade.initiating_party_accepted == False
+            and trade.receiving_party_accepted == False
+        ):
+            button_rows[0].append(
+                {
+                    "x": 0,
+                    "y": 1,
+                    "style": discord.ButtonStyle.success,
+                    "disabled": False,
+                    "label": f"Send to {other_party_name}",
+                    "emoji": "✅",
+                    "do_next": Button.accept_trade.__name__,
+                    "callback_payload": {"trade_id": trade.id},
+                },
+            )
+        elif (
+            trade.initiating_party_accepted == True
+            and trade.receiving_party_accepted == False
+        ):
+            button_rows[0].append(
+                {
+                    "x": 0,
+                    "y": 1,
+                    "style": discord.ButtonStyle.success,
+                    "disabled": False,
+                    "label": f"Return to {other_party_name}",
+                    "emoji": "✅",
+                    "do_next": Button.accept_trade.__name__,
+                    "callback_payload": {"trade_id": trade.id},
+                },
+            )
+        elif (
+            trade.initiating_party_accepted == True
+            and trade.receiving_party_accepted == True
+        ):
+            button_rows[0].append(
+                {
+                    "x": 0,
+                    "y": 1,
+                    "style": discord.ButtonStyle.primary,
+                    "disabled": False,
+                    "label": "Lock in trade",
+                    "emoji": "🔒",
+                    "do_next": Button.lock_in_trade.__name__,
+                    "callback_payload": {"trade_id": trade.id},
+                },
+            )
+
+        button_rows[0].append(
+            {
+                "x": 1,
+                "y": 1,
+                "style": discord.ButtonStyle.danger,
+                "disabled": False,
+                "label": "Cancel trade",
+                "emoji": "❌",
+                "do_next": "cancel_trade",
+                "callback_payload": {"trade_id": trade.id},
+            }
+        )
+
         button_messsage = async_to_sync(handler.create_button)(
             {
                 "guild_id": interaction.guild.id,
                 "trade_id": trade.id,
                 "channel_id": trade.current_discord_trade_thread.discord_id,
                 "callback_payload": {},
-                "button_rows": [
-                    [
-                        {
-                            "x": 0,
-                            "y": 0,
-                            "style": discord.ButtonStyle.primary,
-                            "disabled": False,
-                            "label": "Adjust trade amounts",
-                            "custom_id": f"{trade.id}",
-                            "emoji": "✏️",
-                            "do_next": Button.currency_trade_adjustment_menu.__name__,
-                            "callback_payload": {
-                                "trade_id": trade.id,
-                                "team_id": party_id,
-                            },
-                        },
-                        # {
-                        #     "x": 0,
-                        #     "y": 1,
-                        #     "style": discord.ButtonStyle.danger,
-                        #     "disabled": False,
-                        #     "label": "Cancel trade",
-                        #     "emoji": "❌",
-                        #     "do_next": "cancel_trade",
-                        #     "callback_payload": {"trade_id": trade.id},
-                        # },
-                        {
-                            "x": 1,
-                            "y": 1,
-                            "style": discord.ButtonStyle.success,
-                            "disabled": False,
-                            "label": "Toggle Trade Accept",
-                            "emoji": "✅",
-                            "do_next": Button.accept_trade.__name__,
-                            "callback_payload": {"trade_id": trade.id},
-                        },
-                        {
-                            "x": 2,
-                            "y": 1,
-                            "style": discord.ButtonStyle.primary,
-                            "disabled": True,
-                            "label": "Lock in trade",
-                            "emoji": "🔒",
-                            "do_next": Button.lock_in_trade.__name__,
-                            "callback_payload": {"trade_id": trade.id},
-                        },
-                    ]
-                ],
+                "button_rows": button_rows,
             },
         )
         trade.embed_id = button_messsage.id

@@ -15,80 +15,79 @@ from teams.models import Team
 from .TaskHandler import TaskHandler
 from .Trade import update_trade_view
 
+# async def trade_view(client, trade):
+#     view = discord.ui.View(timeout=None)
 
-async def trade_view(client, trade):
-    view = discord.ui.View(timeout=None)
+#     view.add_item(
+#         Button(
+#             client,
+#             0,
+#             0,
+#             {
+#                 "style": discord.ButtonStyle.primary,
+#                 "label": "Adjust trade amounts",
+#                 "row": 0,
+#                 "emoji": "✏️",
+#             },
+#             do_next=Dropdown.adjustment_select_trade_currency.__name__,
+#             callback_payload={"trade_id": trade.id},
+#         )
+#     )
 
-    view.add_item(
-        Button(
-            client,
-            0,
-            0,
-            {
-                "style": discord.ButtonStyle.primary,
-                "label": "Adjust trade amounts",
-                "row": 0,
-                "emoji": "✏️",
-            },
-            do_next=Dropdown.adjustment_select_trade_currency.__name__,
-            callback_payload={"trade_id": trade.id},
-        )
-    )
+#     # view.add_item(
+#     #     Button(
+#     #         client,
+#     #         0,
+#     #         1,
+#     #         {
+#     #             "style": discord.ButtonStyle.danger,
+#     #             "label": "Cancel trade",
+#     #             "row": 1,
+#     #             "emoji": "❌",
+#     #         },
+#     #         do_next="cancel_trade",
+#     #         callback_payload={"trade_id": trade.id},
+#     #     )
+#     # )
 
-    # view.add_item(
-    #     Button(
-    #         client,
-    #         0,
-    #         1,
-    #         {
-    #             "style": discord.ButtonStyle.danger,
-    #             "label": "Cancel trade",
-    #             "row": 1,
-    #             "emoji": "❌",
-    #         },
-    #         do_next="cancel_trade",
-    #         callback_payload={"trade_id": trade.id},
-    #     )
-    # )
+#     view.add_item(
+#         Button(
+#             client,
+#             0,
+#             1,
+#             {
+#                 "style": discord.ButtonStyle.success,
+#                 "label": "Toggle Trade Accept",
+#                 "row": 1,
+#                 "emoji": "✅",
+#             },
+#             do_next=Button.accept_trade.__name__,
+#             callback_payload={"trade_id": trade.id},
+#         )
+#     )
 
-    view.add_item(
-        Button(
-            client,
-            0,
-            1,
-            {
-                "style": discord.ButtonStyle.success,
-                "label": "Toggle Trade Accept",
-                "row": 1,
-                "emoji": "✅",
-            },
-            do_next=Button.accept_trade.__name__,
-            callback_payload={"trade_id": trade.id},
-        )
-    )
+#     show_lock_in = not (
+#         trade.initiating_party_accepted and trade.receiving_party_accepted
+#     )
 
-    show_lock_in = not (
-        trade.initiating_party_accepted and trade.receiving_party_accepted
-    )
+#     view.add_item(
+#         Button(
+#             client,
+#             0,
+#             1,
+#             {
+#                 "style": discord.ButtonStyle.primary,
+#                 "label": "Lock in trade",
+#                 "row": 1,
+#                 "emoji": "🔒",
+#                 "disabled": show_lock_in,
+#             },
+#             do_next=Button.lock_in_trade.__name__,
+#             callback_payload={"trade_id": trade.id},
+#         )
+#     )
 
-    view.add_item(
-        Button(
-            client,
-            0,
-            1,
-            {
-                "style": discord.ButtonStyle.primary,
-                "label": "Lock in trade",
-                "row": 1,
-                "emoji": "🔒",
-                "disabled": show_lock_in,
-            },
-            do_next=Button.lock_in_trade.__name__,
-            callback_payload={"trade_id": trade.id},
-        )
-    )
-
-    return view
+#     return view
 
 
 class Button(discord.ui.Button):
@@ -452,9 +451,11 @@ class Button(discord.ui.Button):
         )
         await receiving_message.edit(embed=receiving_embed)
 
-        await interaction.response.send_message(
-            content="This trade is complete, and this channel will lock itself"
-        )
+        # await interaction.response.send_message(
+        #     content="This trade is complete, and this channel will lock itself"
+        # )
+
+        await interaction.channel.delete()
 
         # TODO: Lock down channel
 
