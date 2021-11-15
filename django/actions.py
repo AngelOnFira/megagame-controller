@@ -44,6 +44,8 @@ watch_the_skies_data = {
                 ("Nuclear Missile", 1),
                 ("Interceptors", 3),
                 ("Special Agents", 2),
+                ("Dead Alien", 2),
+                ("Alien Entertainment System", 1),
             ],
         },
         "United States": {

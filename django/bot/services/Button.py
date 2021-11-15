@@ -249,6 +249,58 @@ class Button(discord.ui.Button):
             },
         )
 
+    async def make_payment(self, interaction: discord.Interaction):
+        """When the "Pay X" is clicked
+
+        Adds a transaction to the payment for that team
+
+        Args:
+            interaction (discord.Interaction): The interaction object
+
+        Payload:
+            payment_id
+        """
+        from .Dropdown import Dropdown
+
+        trade_id = self.callback_payload["trade_id"]
+        team_id = self.callback_payload["team_id"]
+
+        # Get all currencies that a team has in their bank
+        @sync_to_async
+        def get_currencies(team_id):
+            team: Team = Team.objects.get(id=team_id)
+
+            currencies = team.wallet.get_currencies_available()
+
+            return currencies
+
+        currencies: list[Currency] = await get_currencies(team_id)
+
+        # Collect all the currencies
+        currency_options = []
+        for currency in currencies:
+            currency_options.append(
+                discord.SelectOption(
+                    label=currency.name,
+                    value=currency.name,
+                    emoji=emojis.encode(currency.emoji),
+                )
+            )
+
+        handler = TaskHandler(discord.ui.View(timeout=None), self.client)
+
+        await handler.create_dropdown_response(
+            interaction=interaction,
+            options=currency_options,
+            do_next=Dropdown.adjustment_select_trade_currency.__name__,
+            callback_payload={
+                "guild_id": interaction.guild.id,
+                "channel_id": interaction.channel_id,
+                "trade_id": trade_id,
+                "placeholder": "Select a currency",
+            },
+        )
+
     async def currency_trade_currency_menu(self, interaction: discord.Interaction):
         currencies: Currency = await sync_to_async(list)(Currency.objects.all())
 
@@ -469,17 +521,7 @@ class Button(discord.ui.Button):
             self.currency_trade_currency_menu.__name__: self.currency_trade_currency_menu,
             self.lock_in_trade.__name__: self.lock_in_trade,
             self.start_trading.__name__: self.start_trading,
+            self.make_payment.__name__: self.make_payment,
         }
 
-        if self.do_next in function_lookup:
-            await function_lookup[self.do_next](interaction)
-        # Otherwise, pass to dropdown
-        else:
-            dropdown = Dropdown(
-                client=self.client,
-                options=self.options,
-                do_next=self.do_next,
-                callback_payload=self.callback_payload,
-            )
-
-            await dropdown.callback(interaction)
+        await function_lookup[self.do_next](interaction)

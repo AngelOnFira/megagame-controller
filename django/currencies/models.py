@@ -253,4 +253,5 @@ class Payment(models.Model):
     action = models.TextField(default="")
     cost = models.IntegerField(default=0)
 
+    embed_message = models.BigIntegerField(null=True, blank=True)
     transactions = models.ManyToManyField(Transaction)

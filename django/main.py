@@ -102,7 +102,7 @@ async def run_tasks_sync(client: discord.Client):
 
 @client.event
 async def on_interaction(interaction: discord.Interaction):
-    from bot.services.Payment import update_payment_view
+    from bot.services.Payment import create_payment_view
     from bot.services.TaskHandler import TaskHandler
     from currencies.models import Payment
 
@@ -116,7 +116,7 @@ async def on_interaction(interaction: discord.Interaction):
             )
 
             handler = TaskHandler(discord.ui.View(timeout=None), client)
-            await sync_to_async(update_payment_view)(handler, payment, interaction)
+            await sync_to_async(create_payment_view)(handler, payment, interaction)
 
 
 # Check for new tasks once a second

@@ -121,16 +121,29 @@ class CreateBankEmbed(Service):
 
         team: Team = Team.objects.get(id=team_id)
 
-        transaction_totals = team.wallet.get_bank_balance()
+        embed: discord.Embed = discord.Embed(title=f"Bank of {team.name}")
 
-        text = ""
+        transaction_totals: dict[Currency, int] = team.wallet.get_bank_balance()
 
-        for currency, amount in transaction_totals.items():
-            text += f"{amount} {currency.name}\n"
+        type_lookup = defaultdict(list)
 
-        embed: discord.Embed = discord.Embed(
-            title=f"Bank of {team.name}", description=text
-        )
+        for currency in transaction_totals.keys():
+            type_lookup[currency.currency_type].append(currency)
+
+        for type_name in ["COM", "RAR", "SPE", "LOG"]:
+            text = ""
+            for currency in type_lookup[type_name]:
+                currency_type_name = currency.get_currency_type_display()
+                text += f"{transaction_totals[currency]} {emojis.encode(currency.emoji)} {currency.name}\n"
+
+            if text == "":
+                continue
+
+            # TODO: Make look better
+            embed.add_field(
+                name=currency_type_name,
+                value=text,
+            )
 
         return embed
 

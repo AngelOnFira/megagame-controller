@@ -10,6 +10,47 @@ from teams.models import Team
 logger = logging.getLogger("bot")
 
 
+def create_payment_view(
+    handler: TaskHandler, payment: Payment, interaction: discord.Interaction
+):
+    # embed: discord.Embed = discord.Embed(
+    #     title=f"Payment", description=f"{payment.action}\nCost: {payment.cost}"
+    # )
+
+    # discord_message = async_to_sync(interaction.response.send_message)(
+    #     embed=embed, ephemeral=False
+    # )
+
+    from .Button import Button
+
+    button_messsage = async_to_sync(handler.create_button)(
+        {
+            "guild_id": interaction.guild.id,
+            "payment_id": payment.id,
+            "channel_id": interaction.channel_id,
+            "callback_payload": {},
+            "button_rows": [
+                [
+                    {
+                        "x": 0,
+                        "y": 0,
+                        "style": discord.ButtonStyle.primary,
+                        "disabled": False,
+                        "label": f"Pay {payment.cost}",
+                        "custom_id": f"{payment.id}",
+                        "emoji": "✅",
+                        "do_next": Button.make_payment.__name__,
+                        "callback_payload": {"payment_id": payment.id},
+                    },
+                ]
+            ],
+        },
+    )
+
+    payment.embed_message_id = button_messsage.id
+
+    payment.save()
+
 def update_payment_view(
     handler: TaskHandler, payment: Payment, interaction: discord.Interaction
 ):
@@ -39,10 +80,14 @@ def update_payment_view(
                         "label": f"Pay {payment.cost}",
                         "custom_id": f"{payment.id}",
                         "emoji": "✅",
-                        "do_next": Button.currency_trade_adjustment_menu.__name__,
+                        "do_next": Button.make_payment.__name__,
                         "callback_payload": {"payment_id": payment.id},
                     },
                 ]
             ],
         },
     )
+
+    payment.embed_message_id = button_messsage.id
+
+    payment.save()
