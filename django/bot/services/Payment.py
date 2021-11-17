@@ -37,33 +37,91 @@ def create_payment_view(
                         "y": 0,
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
-                        "label": f"Buy 1 (Pay {payment.cost})",
-                        "custom_id": f"{payment.id}",
+                        "label": "Buy 1",
+                        "custom_id": f"{payment.id}-1",
                         "emoji": "✅",
-                        "do_next": Button.make_payment.__name__,
-                        "callback_payload": {"payment_id": payment.id, "multiplier": 1},
+                        "do_next": Button.confirm.__name__,
+                        "callback_payload": {
+                            "success_callback": {
+                                "do_next": Button.make_payment.__name__,
+                                "callback_payload": {
+                                    "payment_id": payment.id,
+                                    "count": 1,
+                                },
+                            },
+                            "fail_callback": {
+                                "do_next": Button.cancel.__name__,
+                                "callback_payload": {},
+                            },
+                        },
                     },
                     {
                         "x": 1,
                         "y": 0,
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
-                        "label": f"Buy 2 (Pay {payment.cost*2})",
+                        "label": "Buy 2",
                         "custom_id": f"{payment.id}-2",
                         "emoji": "✅",
-                        "do_next": Button.make_payment.__name__,
-                        "callback_payload": {"payment_id": payment.id, "multiplier": 2},
+                        "do_next": Button.confirm.__name__,
+                        "callback_payload": {
+                            "success_callback": {
+                                "do_next": Button.make_payment.__name__,
+                                "callback_payload": {
+                                    "payment_id": payment.id,
+                                    "count": 2,
+                                },
+                            },
+                            "fail_callback": {
+                                "do_next": Button.cancel.__name__,
+                                "callback_payload": {},
+                            },
+                        },
                     },
                     {
                         "x": 2,
                         "y": 0,
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
-                        "label": f"Buy 3 (Pay {payment.cost*3})",
+                        "label": "Buy 3",
                         "custom_id": f"{payment.id}-3",
                         "emoji": "✅",
-                        "do_next": Button.make_payment.__name__,
-                        "callback_payload": {"payment_id": payment.id, "multiplier": 3},
+                        "do_next": Button.confirm.__name__,
+                        "callback_payload": {
+                            "success_callback": {
+                                "do_next": Button.make_payment.__name__,
+                                "callback_payload": {
+                                    "payment_id": payment.id,
+                                    "count": 3,
+                                },
+                            },
+                            "fail_callback": {
+                                "do_next": Button.cancel.__name__,
+                                "callback_payload": {},
+                            },
+                        },
+                    },
+                    {
+                        "x": 3,
+                        "y": 0,
+                        "style": discord.ButtonStyle.secondary,
+                        "disabled": False,
+                        "label": "Lock Payment (Control only)",
+                        "custom_id": f"{payment.id}-lock-in",
+                        "do_next": Button.confirm.__name__,
+                        "callback_payload": {
+                            "success_callback": {
+                                "do_next": Button.make_payment.__name__,
+                                "callback_payload": {
+                                    "payment_id": payment.id,
+                                    "count": 3,
+                                },
+                            },
+                            "fail_callback": {
+                                "do_next": Button.cancel.__name__,
+                                "callback_payload": {},
+                            },
+                        },
                     },
                 ]
             ],

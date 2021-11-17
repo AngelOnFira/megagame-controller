@@ -112,10 +112,15 @@ async def on_interaction(interaction: discord.Interaction):
     if interaction.type == discord.InteractionType.application_command:
         data = interaction.data
 
-        # Verify that user is admin
+        # TODO: Verify that user is admin
+
+        if len(data["options"]) == 1:
+            cost = 1
+        else:
+            cost = data["options"][1]["value"]
 
         # Make sure amount is greater than 0
-        if data["options"][1]["value"] == 0:
+        if cost == 0:
             await interaction.response.send_message(
                 content="Cost must be greater than 0", ephemeral=True
             )
@@ -124,7 +129,7 @@ async def on_interaction(interaction: discord.Interaction):
         if data["name"] == PAYMENT:
             payment = await sync_to_async(Payment.objects.create)(
                 action=data["options"][0]["value"],
-                cost=data["options"][1]["value"],
+                cost=cost,
             )
 
             handler = TaskHandler(discord.ui.View(timeout=None), client)
@@ -290,7 +295,7 @@ async def before_my_task():
                     "name": "cost",
                     "description": "Cost of this action, in the 'common' currency",
                     "type": 4,
-                    "required": True,
+                    "required": False,
                 },
             ],
         }

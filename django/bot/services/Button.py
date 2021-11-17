@@ -16,80 +16,6 @@ from .Payment import update_payment_view
 from .TaskHandler import TaskHandler
 from .Trade import update_trade_view
 
-# async def trade_view(client, trade):
-#     view = discord.ui.View(timeout=None)
-
-#     view.add_item(
-#         Button(
-#             client,
-#             0,
-#             0,
-#             {
-#                 "style": discord.ButtonStyle.primary,
-#                 "label": "Adjust trade amounts",
-#                 "row": 0,
-#                 "emoji": "✏️",
-#             },
-#             do_next=Dropdown.adjustment_select_trade_currency.__name__,
-#             callback_payload={"trade_id": trade.id},
-#         )
-#     )
-
-#     # view.add_item(
-#     #     Button(
-#     #         client,
-#     #         0,
-#     #         1,
-#     #         {
-#     #             "style": discord.ButtonStyle.danger,
-#     #             "label": "Cancel trade",
-#     #             "row": 1,
-#     #             "emoji": "❌",
-#     #         },
-#     #         do_next="cancel_trade",
-#     #         callback_payload={"trade_id": trade.id},
-#     #     )
-#     # )
-
-#     view.add_item(
-#         Button(
-#             client,
-#             0,
-#             1,
-#             {
-#                 "style": discord.ButtonStyle.success,
-#                 "label": "Toggle Trade Accept",
-#                 "row": 1,
-#                 "emoji": "✅",
-#             },
-#             do_next=Button.accept_trade.__name__,
-#             callback_payload={"trade_id": trade.id},
-#         )
-#     )
-
-#     show_lock_in = not (
-#         trade.initiating_party_accepted and trade.receiving_party_accepted
-#     )
-
-#     view.add_item(
-#         Button(
-#             client,
-#             0,
-#             1,
-#             {
-#                 "style": discord.ButtonStyle.primary,
-#                 "label": "Lock in trade",
-#                 "row": 1,
-#                 "emoji": "🔒",
-#                 "disabled": show_lock_in,
-#             },
-#             do_next=Button.lock_in_trade.__name__,
-#             callback_payload={"trade_id": trade.id},
-#         )
-#     )
-
-#     return view
-
 
 class Button(discord.ui.Button):
     def __init__(
@@ -260,12 +186,12 @@ class Button(discord.ui.Button):
 
         Payload:
             payment_id
-            multiplier
+            count
         """
         from .Dropdown import Dropdown
 
         payment_id = self.callback_payload["payment_id"]
-        multiplier = self.callback_payload["multiplier"]
+        count = self.callback_payload["count"]
 
         # Get the team of the user that is interacting
         user_id = interaction.user.id
@@ -302,7 +228,7 @@ class Button(discord.ui.Button):
         # Make sure the team has enough money to pay
         if (
             query.megabucks not in query.balance
-            or query.balance[query.megabucks] < query.payment.cost * multiplier
+            or query.balance[query.megabucks] < query.payment.cost * count
         ):
             await interaction.response.send_message(
                 content="You don't have enough Megacredits to pay this payment!",
@@ -314,7 +240,7 @@ class Button(discord.ui.Button):
         @sync_to_async
         def create_transaction(query: PaymentSyncQuery):
             transaction = Transaction.objects.create(
-                amount=query.payment.cost * multiplier,
+                amount=query.payment.cost * count,
                 currency=query.megabucks,
                 from_wallet=query.team.wallet,
                 # Send to the bank
@@ -539,6 +465,64 @@ class Button(discord.ui.Button):
 
         # TODO: Lock down channel
 
+    # When toggle trade accept is pressed
+    async def confirm(self, interaction: discord.Interaction):
+        success_callback = self.callback_payload["success_callback"]
+        fail_callback = self.callback_payload["fail_callback"]
+
+        # Make button
+        handler = TaskHandler(discord.ui.View(timeout=None), self.client)
+        button_messsage = await handler.create_button(
+            {
+                "content": "Are you sure?",
+                "callback_payload": {},
+                "button_rows": [
+                    [
+                        {
+                            "x": 0,
+                            "y": 0,
+                            "style": discord.ButtonStyle.success,
+                            "disabled": False,
+                            "label": "Accept",
+                            "custom_id": "confirm",
+                            "emoji": "✅",
+                            "do_next": Button.accept.__name__,
+                            "callback_payload": success_callback,
+                        },
+                        {
+                            "x": 1,
+                            "y": 0,
+                            "style": discord.ButtonStyle.danger,
+                            "disabled": False,
+                            "label": "Cancel",
+                            "custom_id": "cancel",
+                            "emoji": "❌",
+                            "do_next": Button.cancel.__name__,
+                            "callback_payload": fail_callback,
+                        },
+                    ]
+                ],
+            },
+            interaction,
+        )
+
+    async def accept(self, interaction: discord.Interaction):
+        print(self.callback_payload)
+        self.do_next = self.callback_payload["do_next"]
+        self.callback_payload = self.callback_payload["callback_payload"]
+        await interaction.delete_original_message()
+
+        # TODO: Pass original interaction or something
+
+        await self.callback(interaction)
+
+    async def cancel(self, interaction: discord.Interaction):
+        self.do_next = self.callback_payload["do_next"]
+        self.callback_payload = self.callback_payload["callback_payload"]
+        await interaction.delete_original_message()
+
+        await self.callback(interaction)
+
     async def callback(self, interaction: discord.Interaction):
         # Use to tie the function name to the function
         # Can probably be done better
@@ -550,6 +534,9 @@ class Button(discord.ui.Button):
             self.lock_in_trade.__name__: self.lock_in_trade,
             self.start_trading.__name__: self.start_trading,
             self.make_payment.__name__: self.make_payment,
+            self.confirm.__name__: self.confirm,
+            self.accept.__name__: self.accept,
+            self.cancel.__name__: self.cancel,
         }
 
         await function_lookup[self.do_next](interaction)
