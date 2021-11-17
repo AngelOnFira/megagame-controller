@@ -1,14 +1,11 @@
 from bot.discord_models.models import Guild
-from currencies.models import Wallet
 from responses.models import Response
-from teams.models import Team
 
 from django.db import models
 from django.db.models.signals import post_save
 
 
 class Player(models.Model):
-    wallet = models.OneToOneField(Wallet, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, default="", blank=True, null=True)
 
     team = models.ForeignKey(
@@ -32,9 +29,12 @@ class Player(models.Model):
 def default_team(sender, instance, created, **kwargs):
     # Have to import here to prevent circular imports
     from players.services import CreatePlayer
+    from teams.models import Team
 
     if created:
+        # TODO: set back to null
         team, _ = Team.objects.get_or_create(name="null")
+        team, _ = Team.objects.get_or_create(name="United Kingdom")
         instance.team = team
 
         # TODO: Properly set guild

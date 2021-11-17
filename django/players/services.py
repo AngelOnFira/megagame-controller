@@ -8,7 +8,7 @@ from .models import Player
 
 class CreatePlayer(Service):
     def process(self):
-        wallet = CreateWallet.execute({})
+        # wallet = CreateWallet.execute({})
 
         # initial_transition = CreateTransaction.execute(
         #     {
@@ -18,6 +18,6 @@ class CreatePlayer(Service):
         #     }
         # )
 
-        player = Player.objects.create(wallet=wallet)
+        player = Player.objects.create()
 
         return player

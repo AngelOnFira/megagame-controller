@@ -6,12 +6,13 @@ from asgiref.sync import sync_to_async
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.services.Dropdown import Dropdown
 from bot.users.models import Member
-from currencies.models import Currency, Trade, Transaction
+from currencies.models import Currency, Payment, Trade, Transaction
 from currencies.services import CreateBankEmbed, CreateTrade, CreateTradeEmbed
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
 
+from .Payment import update_payment_view
 from .TaskHandler import TaskHandler
 from .Trade import update_trade_view
 
@@ -259,47 +260,74 @@ class Button(discord.ui.Button):
 
         Payload:
             payment_id
+            multiplier
         """
         from .Dropdown import Dropdown
 
-        trade_id = self.callback_payload["trade_id"]
-        team_id = self.callback_payload["team_id"]
+        payment_id = self.callback_payload["payment_id"]
+        multiplier = self.callback_payload["multiplier"]
+
+        # Get the team of the user that is interacting
+        user_id = interaction.user.id
+
+        # Use a class to get type hints across sync_to_async boundaries
+        class PaymentSyncQuery:
+            payment: Payment
+            team: Team
+            balance: list[Currency]
+            megabucks: Currency
+            player: Player
 
         # Get all currencies that a team has in their bank
         @sync_to_async
-        def get_currencies(team_id):
-            team: Team = Team.objects.get(id=team_id)
+        def get_team(user_id, payment_id) -> PaymentSyncQuery:
+            query = PaymentSyncQuery()
 
-            currencies = team.wallet.get_currencies_available()
+            query.payment = Payment.objects.get(id=payment_id)
 
-            return currencies
+            member: Member = Member.objects.get(discord_id=user_id)
+            team: Team = member.player.team
+            query.team = team
 
-        currencies: list[Currency] = await get_currencies(team_id)
+            query.player = member.player
 
-        # Collect all the currencies
-        currency_options = []
-        for currency in currencies:
-            currency_options.append(
-                discord.SelectOption(
-                    label=currency.name,
-                    value=currency.name,
-                    emoji=emojis.encode(currency.emoji),
-                )
+            query.balance = team.wallet.get_bank_balance()
+
+            query.megabucks = Currency.objects.get(name="Megabucks")
+
+            return query
+
+        query: PaymentSyncQuery = await get_team(user_id, payment_id)
+
+        # Make sure the team has enough money to pay
+        if (
+            query.megabucks not in query.balance
+            or query.balance[query.megabucks] < query.payment.cost * multiplier
+        ):
+            await interaction.response.send_message(
+                content="You don't have enough Megacredits to pay this payment!",
+                ephemeral=True,
+            )
+            return
+
+        # Lock the payment to the transaction
+        @sync_to_async
+        def create_transaction(query: PaymentSyncQuery):
+            transaction = Transaction.objects.create(
+                amount=query.payment.cost * multiplier,
+                currency=query.megabucks,
+                from_wallet=query.team.wallet,
+                # Send to the bank
+                to_wallet=Team.objects.get(name="null").wallet,
+                initiating_player=query.player,
             )
 
-        handler = TaskHandler(discord.ui.View(timeout=None), self.client)
+            query.payment.transactions.add(transaction)
 
-        await handler.create_dropdown_response(
-            interaction=interaction,
-            options=currency_options,
-            do_next=Dropdown.adjustment_select_trade_currency.__name__,
-            callback_payload={
-                "guild_id": interaction.guild.id,
-                "channel_id": interaction.channel_id,
-                "trade_id": trade_id,
-                "placeholder": "Select a currency",
-            },
-        )
+        await create_transaction(query)
+
+        # Update the message
+        await sync_to_async(update_payment_view)(query.payment, interaction)
 
     async def currency_trade_currency_menu(self, interaction: discord.Interaction):
         currencies: Currency = await sync_to_async(list)(Currency.objects.all())

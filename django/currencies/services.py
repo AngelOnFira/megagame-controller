@@ -104,10 +104,60 @@ class CreatePaymentEmbed(Service):
     def process(self):
         payment_id = self.cleaned_data["payment_id"]
 
-        payment = Payment.objects.get(id=payment_id)
+        payment: Payment = Payment.objects.get(id=payment_id)
 
-        embed: discord.Embed = discord.Embed(
-            title=f"Payment", description=f"{payment.action}\nCost: {payment.cost}"
+        description = f"{payment.action}\nCost: {payment.cost}"
+
+        embed: discord.Embed = discord.Embed(title="Payment", description=description)
+
+        # longest_team_name = 0
+        # transaction: Transaction
+        # for transaction in payment.transactions.all():
+        #     if len(transaction.from_wallet.team.name) > longest_team_name:
+        #         longest_team_name = len(transaction.from_wallet.team.name)
+
+        # print(longest_team_name)
+
+        name_string = ""
+        payment_string = ""
+        paid_by_string = ""
+
+        transaction: Transaction
+        for transaction in payment.transactions.all():
+            name_string += f"{emojis.encode(transaction.from_wallet.team.emoji)} {transaction.from_wallet.team.name}\n"
+            payment_string += (
+                "{amount_purchased}x (Paid {paid} {currency_name})\n".format(
+                    amount_purchased=int(transaction.amount / payment.cost),
+                    paid=transaction.amount,
+                    currency_name=transaction.currency.name,
+                )
+            )
+            paid_by_string += (
+                f"<@{transaction.initiating_player.discord_member.discord_id}>\n"
+            )
+
+        if name_string == "":
+            name_string = "-"
+
+        if payment_string == "":
+            payment_string = "-"
+
+        if paid_by_string == "":
+            paid_by_string = "-"
+
+        embed.add_field(
+            name="Team",
+            value=name_string,
+        )
+
+        embed.add_field(
+            name="Payment",
+            value=payment_string,
+        )
+
+        embed.add_field(
+            name="Paid by",
+            value=paid_by_string,
         )
 
         return embed

@@ -45,7 +45,7 @@ class Member(models.Model):
 
     objects = MemberQuerySet.as_manager()
 
-    player = models.OneToOneField(
+    player: Player = models.OneToOneField(
         Player,
         null=True,
         blank=True,

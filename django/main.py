@@ -9,6 +9,7 @@ the bot.
 import asyncio
 import logging
 import os
+import sys
 import time
 from importlib import import_module
 
@@ -49,6 +50,8 @@ use_sentry(
 @client.event
 async def on_ready():
     logger.info("Logged in as %s, id: %s", client.user.name, client.user.id)
+
+    await add_test_commands()
 
     background_task.start()
 
@@ -109,6 +112,15 @@ async def on_interaction(interaction: discord.Interaction):
     if interaction.type == discord.InteractionType.application_command:
         data = interaction.data
 
+        # Verify that user is admin
+
+        # Make sure amount is greater than 0
+        if data["options"][1]["value"] == 0:
+            await interaction.response.send_message(
+                content="Cost must be greater than 0", ephemeral=True
+            )
+            return
+
         if data["name"] == PAYMENT:
             payment = await sync_to_async(Payment.objects.create)(
                 action=data["options"][0]["value"],
@@ -123,6 +135,11 @@ async def on_interaction(interaction: discord.Interaction):
 @tasks.loop(seconds=1.0)
 async def background_task():
     await run_tasks_sync(client)
+
+
+@sync_to_async
+def add_test_commands():
+    pass
 
 
 @background_task.before_loop

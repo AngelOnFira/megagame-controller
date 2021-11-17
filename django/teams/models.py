@@ -26,8 +26,12 @@ class Team(models.Model):
 
     emoji = models.CharField(max_length=30, blank=True, null=True)
 
-    wallet: Wallet = models.ForeignKey(
-        "currencies.Wallet", on_delete=models.CASCADE, null=True, blank=True
+    wallet: Wallet = models.OneToOneField(
+        "currencies.Wallet",
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name="team",
     )
 
     role = models.OneToOneField(
@@ -76,17 +80,6 @@ class Team(models.Model):
             return f"{self.name} {emojis.decode(self.emoji)} ({self.id})"
 
         return f"{self.name} ({self.id})"
-
-    def get_bank_balance(self):
-        transaction_totals = defaultdict(int)
-
-        for credit in self.wallet.credits.filter(state="completed"):
-            transaction_totals[credit.currency.id] -= credit.amount
-
-        for debit in self.wallet.debits.filter(state="completed"):
-            transaction_totals[debit.currency.id] += debit.amount
-
-        return transaction_totals
 
 
 def on_team_creation(sender, instance: Team, created, **kwargs):

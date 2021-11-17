@@ -5,7 +5,7 @@ from actions import watch_the_skies_data
 from bot.accounts.models import User
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
-from currencies.models import Currency, Trade, Transaction, Wallet
+from currencies.models import Currency, Payment, Trade, Transaction, Wallet
 from django_seed import Seed
 from players.models import Player
 from tasks.models import Task, TaskType
@@ -25,15 +25,16 @@ class Command(BaseCommand):
             return
 
         # LoggedMessage.objects.all().delete()
-        Player.objects.all().delete()
         Transaction.objects.all().delete()
+        Wallet.objects.all().delete()
+        Player.objects.all().delete()
         Trade.objects.all().delete()  # requires transaction
         Team.objects.all().delete()  # requires trade
         Role.objects.all().delete()  # requires team
         Member.objects.all().delete()
         Task.objects.all().delete()
         Currency.objects.all().delete()
-        Wallet.objects.all().delete()
+        Payment.objects.all().delete()
 
         # Discord items
         Category.objects.all().delete()
@@ -81,8 +82,8 @@ class Command(BaseCommand):
             currency_lookup[currency.name] = currency
 
         for i, (team_name, team) in enumerate(watch_the_skies_data["teams"].items()):
-            # if i > 1:
-            #     break
+            if i > 1:
+                break
 
             wallet = Wallet.objects.create(
                 name=f"{team_name}'s wallet",

@@ -3,6 +3,7 @@ from locale import currency
 from operator import truediv
 
 from django_fsm import FSMField, transition
+from players.models import Player
 
 from django.db import models, transaction
 from django.utils import timezone
@@ -54,6 +55,15 @@ class Transaction(models.Model):
         on_delete=models.PROTECT,
         default=None,
         related_name="debits",
+        null=True,
+        blank=True,
+    )
+
+    initiating_player = models.ForeignKey(
+        Player,
+        on_delete=models.PROTECT,
+        default=None,
+        related_name="transaction",
         null=True,
         blank=True,
     )
@@ -253,5 +263,6 @@ class Payment(models.Model):
     action = models.TextField(default="")
     cost = models.IntegerField(default=0)
 
-    embed_message = models.BigIntegerField(null=True, blank=True)
+    embed_id = models.BigIntegerField(null=True, blank=True)
+    channel_id = models.BigIntegerField(null=True, blank=True)
     transactions = models.ManyToManyField(Transaction)
