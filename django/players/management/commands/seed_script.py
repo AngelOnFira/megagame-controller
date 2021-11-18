@@ -45,6 +45,28 @@ class Command(BaseCommand):
         if len(User.objects.filter(username="f")) == 0:
             User.objects.create_superuser("f", "f@f.com", "password")
 
+        # Create a category for the admin game channels
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CATEGORY,
+                "payload": {
+                    "category_name": "admin",
+                    "guild_id": guild.discord_id,
+                },
+            }
+        )
+
+        # Create a category for the general game channels
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CATEGORY,
+                "payload": {
+                    "category_name": "general",
+                    "guild_id": guild.discord_id,
+                },
+            }
+        )
+
         # Create a category for the trades
         QueueTask.execute(
             {
@@ -98,15 +120,6 @@ class Command(BaseCommand):
                 guild=guild,
             )
 
-            # Pay each country their income
-            Transaction.objects.create(
-                amount=team["income_track"][5],
-                currency=currency_lookup["Megabucks"],
-                from_wallet=bank_wallet,
-                to_wallet=Wallet.objects.get(id=team_wallet_id),
-                state="completed",
-            )
-
             # Set up each country's initial currencies
             for currency_name, currency_amount in team["initial_currencies"]:
                 Transaction.objects.create(
@@ -116,5 +129,14 @@ class Command(BaseCommand):
                     to_wallet=Wallet.objects.get(id=team_wallet_id),
                     state="completed",
                 )
+
+            # Pay each country their income
+            Transaction.objects.create(
+                amount=team["income_track"][5],
+                currency=currency_lookup["Megabucks"],
+                from_wallet=bank_wallet,
+                to_wallet=Wallet.objects.get(id=team_wallet_id),
+                state="completed",
+            )
 
         print("Seeding Complete")

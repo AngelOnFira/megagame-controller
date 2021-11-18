@@ -3,6 +3,7 @@ from collections import defaultdict
 
 import discord
 import emojis
+from actions import watch_the_skies_data
 from asgiref.sync import sync_to_async
 from bot.discord_models.models import Channel, Guild, Role
 from currencies.models import Wallet
@@ -89,6 +90,18 @@ class Team(models.Model):
 
         return f"{self.name} ({self.id})"
 
+    def get_income_track(self):
+        return watch_the_skies_data["teams"][self.name]["income_track"]
+
+    def get_income(self):
+        from currencies.models import Currency
+
+        return self.get_income_track()[  # look on the income track
+            self.wallet.get_bank_balance()[
+                Currency.objects.get(name="Public Relations")  # get the PR of this team
+            ]
+        ]
+
 
 def on_team_creation(sender, instance: Team, created, **kwargs):
     from currencies.services import CreateTrade
@@ -129,25 +142,25 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
-        # Create an admin channel for the team
-        admin_channel = Channel.objects.create(guild=instance.guild, name="admin")
-        instance.admin_channel = admin_channel
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_CHANNEL,
-                "payload": {
-                    "team_id": instance.id,
-                    "channel_bind_model_id": admin_channel.id,
-                },
-            }
-        )
+        # # Create an admin channel for the team
+        # admin_channel = Channel.objects.create(guild=instance.guild, name="admin")
+        # instance.admin_channel = admin_channel
+        # QueueTask.execute(
+        #     {
+        #         "task_type": TaskType.CREATE_CHANNEL,
+        #         "payload": {
+        #             "team_id": instance.id,
+        #             "channel_bind_model_id": admin_channel.id,
+        #         },
+        #     }
+        # )
 
         # Create a general channel for the team
         general_channel = Channel.objects.create(guild=instance.guild, name="general")
         instance.general_channel = general_channel
         QueueTask.execute(
             {
-                "task_type": TaskType.CREATE_CHANNEL,
+                "task_type": TaskType.CREATE_TEAM_CHANNEL,
                 "payload": {
                     "team_id": instance.id,
                     "channel_bind_model_id": general_channel.id,
@@ -160,7 +173,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
         instance.trade_channel = trade_channel
         QueueTask.execute(
             {
-                "task_type": TaskType.CREATE_CHANNEL,
+                "task_type": TaskType.CREATE_TEAM_CHANNEL,
                 "payload": {
                     "team_id": instance.id,
                     "channel_bind_model_id": trade_channel.id,
@@ -173,7 +186,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
         instance.menu_channel = menu_channel
         QueueTask.execute(
             {
-                "task_type": TaskType.CREATE_CHANNEL,
+                "task_type": TaskType.CREATE_TEAM_CHANNEL,
                 "payload": {
                     "team_id": instance.id,
                     "channel_bind_model_id": menu_channel.id,

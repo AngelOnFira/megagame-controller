@@ -13,9 +13,13 @@ class TaskType(models.TextChoices):
         "CCA",
         _("Create Category"),
     )
-    CREATE_CHANNEL = (
+    CREATE_TEAM_CHANNEL = (
         "CCH",
-        _("Create Channel"),
+        _("Create Team Channel"),
+    )
+    CREATE_CATEGORY_CHANNEL = (
+        "CCC",
+        _("Create Category Channel"),
     )
     CREATE_DROPDOWN = (
         "CDR",

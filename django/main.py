@@ -11,10 +11,12 @@ import logging
 import os
 import sys
 import time
+from distutils.log import info
 from importlib import import_module
 
 import discord
 import emojis
+import requests
 import sentry_sdk
 from aiohttp import payload
 from asgiref.sync import async_to_sync, sync_to_async
@@ -35,6 +37,7 @@ intents.members = True
 client = discord.Client(intents=intents)
 
 PAYMENT = "payment"
+TURN = "turn"
 
 # TODO: Add this to env vars
 use_sentry(
@@ -80,8 +83,11 @@ async def run_tasks_sync(client: discord.Client):
         elif task.task_type == TaskType.CREATE_CATEGORY:
             await handler.create_category(payload)
 
-        elif task.task_type == TaskType.CREATE_CHANNEL:
-            await handler.create_channel(payload)
+        elif task.task_type == TaskType.CREATE_TEAM_CHANNEL:
+            await handler.create_team_channel(payload)
+
+        elif task.task_type == TaskType.CREATE_CATEGORY_CHANNEL:
+            await handler.create_category_channel(payload)
 
         # elif task.task_type == TaskType.CREATE_DROPDOWN:
         #     await handler.create_dropdown(payload)
@@ -112,21 +118,27 @@ async def on_interaction(interaction: discord.Interaction):
     if interaction.type == discord.InteractionType.application_command:
         data = interaction.data
 
-        # TODO: Verify that user is admin
-
-        if len(data["options"]) == 1:
-            cost = 1
-        else:
-            cost = data["options"][1]["value"]
-
-        # Make sure amount is greater than 0
-        if cost == 0:
+        # Verify that user is admin
+        if "admin" not in [role.name for role in interaction.user.roles]:
             await interaction.response.send_message(
-                content="Cost must be greater than 0", ephemeral=True
+                "❗ You are not an admin.",
+                ephemeral=True,
             )
             return
 
         if data["name"] == PAYMENT:
+            if len(data["options"]) == 1:
+                cost = 1
+            else:
+                cost = data["options"][1]["value"]
+
+            # Make sure amount is greater than 0
+            if cost == 0:
+                await interaction.response.send_message(
+                    content="Cost must be greater than 0", ephemeral=True
+                )
+                return
+
             payment = await sync_to_async(Payment.objects.create)(
                 action=data["options"][0]["value"],
                 cost=cost,
@@ -134,6 +146,32 @@ async def on_interaction(interaction: discord.Interaction):
 
             handler = TaskHandler(discord.ui.View(timeout=None), client)
             await sync_to_async(create_payment_view)(handler, payment, interaction)
+
+        elif data["name"] == TURN:
+            info(f"Turn: {data['options'][0]['value']}")
+            # TODO: send announcement
+
+            from teams.services import GlobalTurnChange
+
+            advance = True
+
+            if data["options"][0]["value"] == "turn_back":
+                advance = False
+
+            await sync_to_async(GlobalTurnChange.execute)(
+                {
+                    "advance": advance,
+                }
+            )
+
+            if advance:
+                await interaction.response.send_message(
+                    content="Advancing a turn", ephemeral=True
+                )
+            else:
+                await interaction.response.send_message(
+                    content="Going back a turn", ephemeral=True
+                )
 
 
 # Check for new tasks once a second
@@ -275,37 +313,56 @@ async def before_my_task():
         #         }
         #     )
 
-        import requests
+        def create_command(json):
+            url = "https://discord.com/api/v8/applications/881015675236270121/guilds/855215558994821120/commands"
+            headers = {
+                "Authorization": "Bot ODgxMDE1Njc1MjM2MjcwMTIx.YSmryQ.BqFwf7vhSHrBjuA0J6F5cXkzMwg"
+            }
+            r = requests.post(url, headers=headers, json=json)
 
-        url = "https://discord.com/api/v8/applications/881015675236270121/guilds/855215558994821120/commands"
+        # Payment command
+        create_command(
+            {
+                "name": PAYMENT,
+                "type": 1,
+                "description": "Create a payment that teams can react to",
+                "options": [
+                    {
+                        "name": "action",
+                        "description": "The string that will be show as what players are purchsing",
+                        "type": 3,
+                        "required": True,
+                    },
+                    {
+                        "name": "cost",
+                        "description": "Cost of this action, in the 'common' currency",
+                        "type": 4,
+                        "required": False,
+                    },
+                ],
+            }
+        )
 
-        # This is an example CHAT_INPUT or Slash Command, with a type of 1
-        json = {
-            "name": PAYMENT,
-            "type": 1,
-            "description": "Create a payment that teams can react to",
-            "options": [
-                {
-                    "name": "action",
-                    "description": "The string that will be show as what players are purchsing",
-                    "type": 3,
-                    "required": True,
-                },
-                {
-                    "name": "cost",
-                    "description": "Cost of this action, in the 'common' currency",
-                    "type": 4,
-                    "required": False,
-                },
-            ],
-        }
-
-        # For authorization, you can use either your bot token
-        headers = {
-            "Authorization": "Bot ODgxMDE1Njc1MjM2MjcwMTIx.YSmryQ.BqFwf7vhSHrBjuA0J6F5cXkzMwg"
-        }
-
-        r = requests.post(url, headers=headers, json=json)
+        # Turn advance command
+        create_command(
+            {
+                "name": TURN,
+                "type": 1,
+                "description": "Advance or go back a turn",
+                "options": [
+                    {
+                        "name": "turn",
+                        "description": "Go back or forward a game turn",
+                        "type": 3,
+                        "required": True,
+                        "choices": [
+                            {"name": "Advance", "value": "turn_advance"},
+                            {"name": "Go back", "value": "turn_back"},
+                        ],
+                    },
+                ],
+            }
+        )
 
     await intial_state_check(client)
 

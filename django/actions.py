@@ -21,9 +21,10 @@ watch_the_skies_data = {
             ("Alien Communications System", "📡"),
             ("Alien Computer", "💻"),
         ],
-        "common": [("Megabucks", "💵"), ("Public Relations", "📈")],
+        "common": [("Megabucks", "💵")],
         "admin": [
             ("Public Order", "📰"),
+            ("Public Relations", "📈"),
         ],
         "logistics": [
             # Military cards
@@ -44,8 +45,7 @@ watch_the_skies_data = {
                 ("Nuclear Missile", 1),
                 ("Interceptors", 3),
                 ("Special Agents", 2),
-                ("Dead Alien", 2),
-                ("Alien Entertainment System", 1),
+                ("Public Relations", 5),
             ],
         },
         "United States": {
@@ -57,6 +57,7 @@ watch_the_skies_data = {
                 ("Nuclear Missile", 5),
                 ("Interceptors", 7),
                 ("Special Agents", 4),
+                ("Public Relations", 5),
             ],
         },
         "Brazil": {
@@ -67,6 +68,7 @@ watch_the_skies_data = {
                 ("Navy", 1),
                 ("Interceptors", 3),
                 ("Special Agents", 2),
+                ("Public Relations", 5),
             ],
         },
         "France": {
@@ -78,6 +80,7 @@ watch_the_skies_data = {
                 ("Nuclear Missile", 1),
                 ("Interceptors", 3),
                 ("Special Agents", 2),
+                ("Public Relations", 5),
             ],
         },
         "India": {
@@ -89,6 +92,7 @@ watch_the_skies_data = {
                 ("Nuclear Missile", 1),
                 ("Interceptors", 3),
                 ("Special Agents", 2),
+                ("Public Relations", 5),
             ],
         },
         "Russia": {
@@ -100,6 +104,7 @@ watch_the_skies_data = {
                 ("Nuclear Missile", 3),
                 ("Interceptors", 5),
                 ("Special Agents", 2),
+                ("Public Relations", 5),
             ],
         },
         "China": {
@@ -111,6 +116,7 @@ watch_the_skies_data = {
                 ("Nuclear Missile", 1),
                 ("Interceptors", 4),
                 ("Special Agents", 2),
+                ("Public Relations", 5),
             ],
         },
         "Japan": {
@@ -121,6 +127,7 @@ watch_the_skies_data = {
                 ("Navy", 2),
                 ("Interceptors", 4),
                 ("Special Agents", 2),
+                ("Public Relations", 5),
             ],
         },
     },

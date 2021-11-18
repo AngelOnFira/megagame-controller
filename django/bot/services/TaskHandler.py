@@ -235,7 +235,7 @@ class TaskHandler:
         else:
             await interaction.response.send_message(**params, view=view, ephemeral=True)
 
-    async def create_channel(self, payload: dict):
+    async def create_team_channel(self, payload: dict):
         team_id = payload["team_id"]
         channel_bind_model_id = payload["channel_bind_model_id"]
 
@@ -262,6 +262,23 @@ class TaskHandler:
         channel.discord_id = text_channel.id
 
         await sync_to_async(channel.save)()
+
+    async def create_category_channel(self, payload: dict):
+        guild_id = payload["guild_id"]
+        category_id = payload["category_id"]
+        channel_name = payload["channel_name"]
+
+        guild = self.client.get_guild(guild_id)
+
+        # TODO: Remove fetch needed for cache busting
+        category = await guild.fetch_channel(category_id)
+
+        text_channel = await guild.create_text_channel(
+            channel_name,
+            category=category,
+        )
+
+        return text_channel.id
 
     async def create_role(self, payload: dict):
         team_id = payload["team_id"]
