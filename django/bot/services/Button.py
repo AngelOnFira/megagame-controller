@@ -510,18 +510,19 @@ class Button(discord.ui.Button):
         print(self.callback_payload)
         self.do_next = self.callback_payload["do_next"]
         self.callback_payload = self.callback_payload["callback_payload"]
-        await interaction.delete_original_message()
 
         # TODO: Pass original interaction or something
 
         await self.callback(interaction)
+        print(interaction.message.id)
+        await interaction.message.delete()
 
     async def cancel(self, interaction: discord.Interaction):
         self.do_next = self.callback_payload["do_next"]
         self.callback_payload = self.callback_payload["callback_payload"]
-        await interaction.delete_original_message()
 
         await self.callback(interaction)
+        await interaction.message.delete()
 
     async def callback(self, interaction: discord.Interaction):
         # Use to tie the function name to the function

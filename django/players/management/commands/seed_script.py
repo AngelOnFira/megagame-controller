@@ -25,10 +25,10 @@ class Command(BaseCommand):
             return
 
         # LoggedMessage.objects.all().delete()
+        Trade.objects.all().delete()  # requires transaction
         Transaction.objects.all().delete()
         Wallet.objects.all().delete()
         Player.objects.all().delete()
-        Trade.objects.all().delete()  # requires transaction
         Team.objects.all().delete()  # requires trade
         Role.objects.all().delete()  # requires team
         Member.objects.all().delete()

@@ -42,6 +42,14 @@ class Team(models.Model):
         "discord_models.Category", on_delete=models.CASCADE, null=True, blank=True
     )
 
+    # admin_channel = models.OneToOneField(
+    #     "discord_models.Channel",
+    #     on_delete=models.CASCADE,
+    #     null=True,
+    #     blank=True,
+    #     related_name="team_admin_channel",
+    # )
+
     general_channel = models.OneToOneField(
         "discord_models.Channel",
         on_delete=models.CASCADE,
@@ -121,18 +129,31 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
-        # # Create a general channel for the team
-        # general_channel = Channel.objects.create(guild=instance.guild, name="general")
-        # instance.general_channel = general_channel
-        # QueueTask.execute(
-        #     {
-        #         "task_type": TaskType.CREATE_CHANNEL,
-        #         "payload": {
-        #             "team_id": instance.id,
-        #             "channel_bind_model_id": general_channel.id,
-        #         },
-        #     }
-        # )
+        # Create an admin channel for the team
+        admin_channel = Channel.objects.create(guild=instance.guild, name="admin")
+        instance.admin_channel = admin_channel
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CHANNEL,
+                "payload": {
+                    "team_id": instance.id,
+                    "channel_bind_model_id": admin_channel.id,
+                },
+            }
+        )
+
+        # Create a general channel for the team
+        general_channel = Channel.objects.create(guild=instance.guild, name="general")
+        instance.general_channel = general_channel
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CHANNEL,
+                "payload": {
+                    "team_id": instance.id,
+                    "channel_bind_model_id": general_channel.id,
+                },
+            }
+        )
 
         # Create a trade channel for the team
         trade_channel = Channel.objects.create(guild=instance.guild, name="trade")

@@ -1,11 +1,14 @@
 import json
 import logging
 from code import interact
+from copyreg import pickle
 from distutils.log import debug, info
+from pprint import pprint
 from typing import Tuple
 
 import discord
 import emojis
+import jsonpickle
 from asgiref.sync import sync_to_async
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
@@ -153,6 +156,8 @@ class TaskHandler:
     ):
         from .Button import Button
 
+        print("create button")
+
         button_rows = payload["button_rows"]
 
         view = discord.ui.View(timeout=None)
@@ -204,6 +209,8 @@ class TaskHandler:
             params["embed"] = discord.Embed(**payload["embed"])
         elif "content" in payload:
             params["content"] = payload["content"]
+
+        # pprint(jsonpickle.encode(view))
 
         if interaction is None:
             guild_id = payload["guild_id"]
