@@ -230,7 +230,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "label": "Open Comms",
                     "custom_id": f"{instance.id}-discuss",
                     "emoji": "💬",
-                    "do_next": Button.start_trading.__name__,
+                    "do_next": Button.open_comms.__name__,
                     "callback_payload": {},
                 },
                 {
@@ -238,10 +238,10 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "y": 0,
                     "style": discord.ButtonStyle.primary,
                     "disabled": False,
-                    "label": "Create Treaty",
+                    "label": "Update bank",
                     "custom_id": f"{instance.id}-treaty",
-                    "emoji": "📝",
-                    "do_next": Button.start_trading.__name__,
+                    "emoji": "💰",
+                    "do_next": Button.update_bank.__name__,
                     "callback_payload": {},
                 },
             ]

@@ -25,6 +25,8 @@ watch_the_skies_data = {
         "admin": [
             ("Public Order", "📰"),
             ("Public Relations", "📈"),
+            ("Income bonus", "💸"),
+            # income currency, bonus income
         ],
         "logistics": [
             # Military cards

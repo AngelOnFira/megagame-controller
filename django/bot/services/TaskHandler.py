@@ -41,6 +41,7 @@ class TaskHandler:
         self,
         interaction: discord.Interaction,
         options: list[discord.SelectOption],
+        max_values: int,
         do_next: str,
         callback_payload: dict,
     ):
@@ -55,7 +56,7 @@ class TaskHandler:
                 {
                     "placeholder": callback_payload["placeholder"],
                     "min_values": 1,
-                    "max_values": 1,
+                    "max_values": min(max_values, len(options)),
                     "options": options,
                 },
                 do_next,

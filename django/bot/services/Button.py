@@ -350,6 +350,7 @@ class Button(discord.ui.Button):
         dropdown_message = await handler.create_dropdown_response(
             interaction=interaction,
             options=options,
+            max_values=1,
             do_next=Dropdown.set_up_trade_prompt.__name__,
             callback_payload={
                 "trade_id": trade.id,
@@ -524,6 +525,46 @@ class Button(discord.ui.Button):
         await self.callback(interaction)
         await interaction.message.delete()
 
+    async def open_comms(self, interaction: discord.Interaction):
+        @sync_to_async
+        def get_sender_team(interaction):
+            from bot.users.models import Member
+
+            interacting_team = Member.objects.get(
+                discord_id=interaction.user.id
+            ).player.team
+
+            options = []
+            for team in Team.objects.all():
+                if not team.emoji or team.id == interacting_team.id:
+                    continue
+
+                options.append(
+                    discord.SelectOption(
+                        label=team.name,
+                        description="",
+                        emoji=emojis.encode(team.emoji),
+                    )
+                )
+
+            return options
+
+        (options) = await get_sender_team(interaction)
+
+        handler = TaskHandler(discord.ui.View(timeout=None), self.client)
+        dropdown_message = await handler.create_dropdown_response(
+            interaction=interaction,
+            options=options,
+            max_values=25,
+            do_next=Dropdown.set_up_trade_prompt.__name__,
+            callback_payload={
+                "placeholder": "Which countries do you want contact?",
+            },
+        )
+
+    async def update_bank(self, interaction: discord.Interaction):
+        pass
+
     async def callback(self, interaction: discord.Interaction):
         # Use to tie the function name to the function
         # Can probably be done better
@@ -538,6 +579,8 @@ class Button(discord.ui.Button):
             self.confirm.__name__: self.confirm,
             self.accept.__name__: self.accept,
             self.cancel.__name__: self.cancel,
+            self.open_comms.__name__: self.open_comms,
+            self.update_bank.__name__: self.update_bank,
         }
 
         await function_lookup[self.do_next](interaction)

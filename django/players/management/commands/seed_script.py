@@ -104,7 +104,7 @@ class Command(BaseCommand):
             currency_lookup[currency.name] = currency
 
         for i, (team_name, team) in enumerate(watch_the_skies_data["teams"].items()):
-            if i > 1:
+            if i > 2:
                 break
 
             wallet = Wallet.objects.create(
