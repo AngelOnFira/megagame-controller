@@ -1,6 +1,6 @@
-from currencies.models import Currency, Transaction, Wallet
 from service_objects.services import Service
 
+from currencies.models import Currency, Transaction, Wallet
 from django import forms
 
 from .models import Team

@@ -3,6 +3,7 @@ from os import sync
 import discord
 import emojis
 from asgiref.sync import sync_to_async
+
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.services.Dropdown import Dropdown
 from bot.users.models import Member
@@ -14,7 +15,7 @@ from teams.models import Team
 
 from .Payment import update_payment_view
 from .TaskHandler import TaskHandler
-from .Trade import update_trade_view
+from .Trade import TradeView
 
 
 class Button(discord.ui.Button):
@@ -167,6 +168,7 @@ class Button(discord.ui.Button):
         await handler.create_dropdown_response(
             interaction=interaction,
             options=currency_options,
+            max_values=1,
             do_next=Dropdown.adjustment_select_trade_currency.__name__,
             callback_payload={
                 "guild_id": interaction.guild.id,
@@ -370,13 +372,16 @@ class Button(discord.ui.Button):
         await sync_to_async(trade.swap_views)()
 
         # Delete the current thread
-        await interaction.channel.delete()
+        # await interaction.channel.delete()
 
         await sync_to_async(trade.save)()
 
         # pass off rest to trade function
         handler = TaskHandler(discord.ui.View(timeout=None), self.client)
-        await sync_to_async(update_trade_view)(handler, trade, interaction)
+        trade_view: TradeView = await sync_to_async(TradeView)(
+            trade, interaction, handler, self.client
+        )
+        await sync_to_async(trade_view.update_trade_view)()
 
     async def lock_in_trade(self, interaction: discord.Interaction):
         # get the trade id

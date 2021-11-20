@@ -2,6 +2,7 @@ import logging
 
 import discord
 from asgiref.sync import async_to_sync, sync_to_async
+
 from bot.discord_models.models import Channel
 from bot.services.TaskHandler import TaskHandler
 from currencies.models import Payment, Trade
@@ -28,7 +29,7 @@ def create_payment_view(
         {
             "guild_id": interaction.guild.id,
             "payment_id": payment.id,
-            "channel_id": interaction.channel_id,
+            "channel_discord_id": interaction.channel_id,
             "callback_payload": {},
             "button_rows": [
                 [

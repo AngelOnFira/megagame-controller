@@ -10,6 +10,7 @@ import discord
 import emojis
 import jsonpickle
 from asgiref.sync import sync_to_async
+
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
@@ -156,43 +157,11 @@ class TaskHandler:
         self, payload: dict, interaction: discord.Interaction = None
     ):
         from .Button import Button
-
-        print("create button")
+        from .utils import create_button_view
 
         button_rows = payload["button_rows"]
 
-        view = discord.ui.View(timeout=None)
-
-        for row in button_rows:
-            for button in row:
-                options_dict = {
-                    "style": button["style"][1],
-                    "label": button["label"],
-                    "row": button["y"],
-                }
-
-                if "emoji" in button:
-                    options_dict["emoji"] = button["emoji"]
-
-                if "disabled" in button:
-                    options_dict["disabled"] = button["disabled"]
-
-                if "custom_id" in button:
-                    options_dict["custom_id"] = button["custom_id"]
-
-                if button["do_next"] == "":
-                    logger.error(f"Button {button['label']} has no do_next")
-
-                button = Button(
-                    client=self.client,
-                    x=button["x"],
-                    y=button["y"],
-                    options=options_dict,
-                    do_next=button["do_next"],
-                    callback_payload=button["callback_payload"],
-                )
-
-                view.add_item(button)
+        view = await create_button_view(self.client, button_rows)
 
         params = {}
 
@@ -215,8 +184,8 @@ class TaskHandler:
 
         if interaction is None:
             guild_id = payload["guild_id"]
-            if "channel_id" in payload:
-                channel_id = payload["channel_id"]
+            if "channel_discord_id" in payload:
+                channel_discord_id = payload["channel_discord_id"]
             elif "team_id" in payload:
                 team_id = payload["team_id"]
 
@@ -224,11 +193,13 @@ class TaskHandler:
                 def get_channel_id(team_id):
                     return Team.objects.get(id=team_id).menu_channel.discord_id
 
-                channel_id = await get_channel_id(team_id)
+                channel_discord_id = await get_channel_id(team_id)
             else:
-                logger.error("No channel_id or team_id")
+                logger.error("No channel_discord_id or team_id")
 
-            channel = self.client.get_guild(guild_id).get_channel_or_thread(channel_id)
+            channel = self.client.get_guild(guild_id).get_channel_or_thread(
+                channel_discord_id
+            )
 
             button_message = await channel.send(**params, view=view)
             return button_message

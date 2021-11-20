@@ -3,11 +3,11 @@ from locale import currency
 from operator import truediv
 
 from django_fsm import FSMField, transition
-from players.models import Player
 
 from django.db import models, transaction
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
+from players.models import Player
 
 
 class CurrencyType(models.TextChoices):
@@ -123,12 +123,20 @@ class Trade(models.Model):
 
     locked_in = models.BooleanField(default=False)
 
-    current_discord_trade_thread = models.ForeignKey(
+    initiating_party_discord_trade_thread = models.ForeignKey(
         "discord_models.Channel",
         on_delete=models.PROTECT,
         null=True,
         blank=True,
-        related_name="current_discord_trade_thread",
+        related_name="initiating_discord_trade_thread",
+    )
+
+    receiving_party_discord_trade_thread = models.ForeignKey(
+        "discord_models.Channel",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="receiving_discord_trade_thread",
     )
 
     discord_guild = models.ForeignKey(

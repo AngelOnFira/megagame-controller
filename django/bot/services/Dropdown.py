@@ -6,6 +6,7 @@ from typing import Tuple
 import discord
 import emojis
 from asgiref.sync import sync_to_async
+
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
@@ -15,7 +16,7 @@ from responses.models import Response
 from teams.models import Team
 
 from .TaskHandler import TaskHandler
-from .Trade import update_trade_view
+from .Trade import TradeView
 
 logger = logging.getLogger("bot")
 
@@ -61,12 +62,15 @@ class Dropdown(discord.ui.Select):
         # Create handler to call creation methods directly
         handler = TaskHandler(view=discord.ui.View(timeout=None), client=self.client)
 
-        await sync_to_async(update_trade_view)(handler, trade, interaction)
+        trade_view: TradeView = await sync_to_async(TradeView)(
+            trade, interaction, handler, self.client
+        )
+        await sync_to_async(trade_view.create_trade_view)()
 
         # TODO: Fix this
         @sync_to_async
-        def get_thread_id(trade):
-            return trade.current_discord_trade_thread.discord_id
+        def get_thread_id(trade: Trade):
+            return trade.initiating_party_discord_trade_thread.discord_id
 
         # Update this copy of trade
         await sync_to_async(trade.refresh_from_db)()

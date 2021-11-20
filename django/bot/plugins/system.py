@@ -6,10 +6,10 @@ import re
 from io import StringIO
 
 import psutil
+
 from bot.plugins.base import BasePlugin
 from bot.plugins.commands import command
 from bot.users.decorators import bot_admin_required
-
 from django.conf import settings
 from django.core.management import call_command
 from django.template.defaultfilters import filesizeformat

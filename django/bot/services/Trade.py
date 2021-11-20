@@ -1,95 +1,70 @@
 import logging
+from asyncio import Task
 
 import discord
 from asgiref.sync import async_to_sync, sync_to_async
-from bot.discord_models.models import Channel
+
+from bot.discord_models.models import Channel, Role
 from bot.services.TaskHandler import TaskHandler
 from currencies.models import Trade
+from currencies.services import CreateTradeEmbed
 from teams.models import Team
 
 logger = logging.getLogger("bot")
 
 
-def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
-    if trade.state in [
-        "initiating_party_view",
-        "receiving_party_view",
-    ]:
+class TradeView:
+    trade: Trade = None
+    interaction: discord.Interaction = None
+    handler: TaskHandler = None
+    client: discord.Client = None
+
+    party: Team = None
+    other_party: Team = None
+
+    party_discord_role: discord.Role
+    other_party_discord_role: discord.Role
+
+    def __init__(self, trade, interaction, handler, client):
+        self.trade: Trade = trade
+        self.interaction: discord.Interaction = interaction
+        self.handler: TaskHandler = handler
+        self.client: discord.Client = client
+
         # Alternate the main team
         if trade.state == "initiating_party_view":
-            party_name = trade.initiating_party.name
-            party_id = trade.initiating_party.id
-            other_party_name = trade.receiving_party.name
-            party_trade_channel_id = trade.initiating_party.trade_channel.id
-            party_role_id = trade.initiating_party.role.discord_id
-            other_party_role_id = trade.receiving_party.role.discord_id
+            self.party = self.trade.initiating_party
+            self.other_party = self.trade.receiving_party
 
         elif trade.state == "receiving_party_view":
-            party_name = trade.receiving_party.name
-            party_id = trade.receiving_party.id
-            other_party_name = trade.initiating_party.name
-            party_trade_channel_id = trade.receiving_party.trade_channel.id
-            party_role_id = trade.receiving_party.role.discord_id
-            other_party_role_id = trade.initiating_party.role.discord_id
+            self.party = self.trade.receiving_party
+            self.other_party = self.trade.initiating_party
 
-        trade.save()
+        self.party_discord_role: discord.Role = self.interaction.guild.get_role(
+            self.party.role.discord_id
+        )
 
-        everyone_role = interaction.guild.default_role
-        party_discord_role: discord.Role = interaction.guild.get_role(party_role_id)
-
-        if party_discord_role is None:
-            async_to_sync(
-                interaction.response.send_message(
-                    content="Could not find current party role",
-                    ephemeral=True,
-                )
+        if self.party_discord_role is None:
+            async_to_sync(self.interaction.response.send_message)(
+                content="Could not find current party role",
+                ephemeral=True,
             )
 
             return
 
-        other_party_discord_role: discord.Role = interaction.guild.get_role(
-            other_party_role_id
+        self.other_party_discord_role: discord.Role = self.interaction.guild.get_role(
+            self.other_party.role.discord_id
         )
 
-        if other_party_discord_role is None:
-            async_to_sync(
-                interaction.response.send_message(
-                    content="Could not find other party role",
-                    ephemeral=True,
-                )
+        if self.other_party_discord_role is None:
+            async_to_sync(interaction.response.send_message)(
+                content="Could not find other party role",
+                ephemeral=True,
             )
 
             return
 
-        # overwrites = {
-        #     everyone_role: discord.PermissionOverwrite(view_channel=False),
-        #     initiating_party_discord_role: discord.PermissionOverwrite(
-        #         view_channel=True
-        #     ),
-        #     receiving_party_discord_role: discord.PermissionOverwrite(
-        #         view_channel=True
-        #     ),
-        # }
-
-        # Create the threads
-        thread_name = f"Trade with {other_party_name}"
-        trade_thread = async_to_sync(handler.create_thread)(
-            {
-                "channel_id": party_trade_channel_id,  # initiating party trade channel
-                "message": f"{party_discord_role.mention}, your trade with {other_party_name} has been created",  # ping that team
-                "name": thread_name,  # trade with other team
-            }
-        )
-
-        # create channel for trade
-        trade.current_discord_trade_thread, _ = Channel.objects.get_or_create(
-            discord_id=trade_thread.id,
-            guild=trade.discord_guild,
-            name=trade_thread.name,
-        )
-
-        trade.save()
-
+    def active_trade_buttons(self):
         from .Button import Button
 
         button_rows = [
@@ -100,20 +75,20 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
                     "style": discord.ButtonStyle.primary,
                     "disabled": False,
                     "label": "Adjust trade amounts",
-                    "custom_id": f"{trade.id}",
+                    "custom_id": f"{self.trade.id}",
                     "emoji": "✏️",
                     "do_next": Button.currency_trade_adjustment_menu.__name__,
                     "callback_payload": {
-                        "trade_id": trade.id,
-                        "team_id": party_id,
+                        "trade_id": self.trade.id,
+                        "team_id": self.party.id,
                     },
                 }
             ]
         ]
 
         if (
-            trade.initiating_party_accepted == False
-            and trade.receiving_party_accepted == False
+            self.trade.initiating_party_accepted == False
+            and self.trade.receiving_party_accepted == False
         ):
             button_rows[0].append(
                 {
@@ -121,15 +96,15 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
                     "y": 1,
                     "style": discord.ButtonStyle.success,
                     "disabled": False,
-                    "label": f"Send to {other_party_name}",
+                    "label": f"Send to {self.other_party.name}",
                     "emoji": "✅",
                     "do_next": Button.accept_trade.__name__,
-                    "callback_payload": {"trade_id": trade.id},
+                    "callback_payload": {"trade_id": self.trade.id},
                 },
             )
         elif (
-            trade.initiating_party_accepted == True
-            and trade.receiving_party_accepted == False
+            self.trade.initiating_party_accepted == True
+            and self.trade.receiving_party_accepted == False
         ):
             button_rows[0].append(
                 {
@@ -137,15 +112,15 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
                     "y": 1,
                     "style": discord.ButtonStyle.success,
                     "disabled": False,
-                    "label": f"Return to {other_party_name}",
+                    "label": f"Return to {self.other_party.name}",
                     "emoji": "✅",
                     "do_next": Button.accept_trade.__name__,
-                    "callback_payload": {"trade_id": trade.id},
+                    "callback_payload": {"trade_id": self.trade.id},
                 },
             )
         elif (
-            trade.initiating_party_accepted == True
-            and trade.receiving_party_accepted == True
+            self.trade.initiating_party_accepted == True
+            and self.trade.receiving_party_accepted == True
         ):
             button_rows[0].append(
                 {
@@ -156,9 +131,11 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
                     "label": "Lock in trade",
                     "emoji": "🔒",
                     "do_next": Button.lock_in_trade.__name__,
-                    "callback_payload": {"trade_id": trade.id},
+                    "callback_payload": {"trade_id": self.trade.id},
                 },
             )
+        else:
+            logger.debug("Trade not in correct state")
 
         button_rows[0].append(
             {
@@ -169,24 +146,127 @@ def update_trade_view(handler: TaskHandler, trade: Trade, interaction=None):
                 "label": "Cancel trade",
                 "emoji": "❌",
                 "do_next": "cancel_trade",
-                "callback_payload": {"trade_id": trade.id},
+                "callback_payload": {"trade_id": self.trade.id},
+            }
+        )
+        self.trade.save()
+
+        return button_rows
+
+    def waiting_trade_buttons(self):
+        from .Button import Button
+
+        button_rows = [
+            [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "style": discord.ButtonStyle.danger,
+                    "disabled": False,
+                    "label": "Cancel Trade",
+                    "custom_id": f"{self.trade.id}",
+                    "emoji": "❌",
+                    "do_next": Button.currency_trade_adjustment_menu.__name__,
+                    "callback_payload": {
+                        "trade_id": self.trade.id,
+                        "team_id": self.party.id,
+                    },
+                }
+            ]
+        ]
+
+        return button_rows
+
+    def create_trade_view(self):
+        # overwrites = {
+        #     self.everyone_role: discord.PermissionOverwrite(send_messages=False),
+        # }
+
+        # Create initiating team thread
+        thread_name = f"Trade with {self.other_party.name}"
+        initiating_trade_thread = async_to_sync(self.handler.create_thread)(
+            {
+                "channel_id": self.party.trade_channel.id,  # initiating party trade channel
+                "message": f"{self.party_discord_role.mention}, your trade with {self.other_party.name} has been created",  # ping that team
+                "name": thread_name,  # trade with other team
             }
         )
 
-        button_messsage = async_to_sync(handler.create_button)(
+        # Create initiating channel for trade
+        (
+            self.trade.initiating_party_discord_trade_thread,
+            _,
+        ) = Channel.objects.get_or_create(
+            discord_id=initiating_trade_thread.id,
+            guild=self.trade.discord_guild,
+            name=initiating_trade_thread.name,
+        )
+
+        button_rows = self.active_trade_buttons()
+
+        async_to_sync(self.handler.create_button)(
             {
-                "guild_id": interaction.guild.id,
-                "trade_id": trade.id,
-                "channel_id": trade.current_discord_trade_thread.discord_id,
+                "guild_id": self.interaction.guild.id,
+                "channel_discord_id": self.trade.initiating_party_discord_trade_thread.discord_id,
+                "trade_id": self.trade.id,
                 "callback_payload": {},
                 "button_rows": button_rows,
             },
         )
-        trade.embed_id = button_messsage.id
 
-        trade.save()
-    else:
-        logger.debug("Trade not in correct state")
+        # Create receiving team thread
+        thread_name = f"Trade with {self.party.name}"
+        receiving_trade_thread = async_to_sync(self.handler.create_thread)(
+            {
+                "channel_id": self.other_party.trade_channel.id,  # receiving party trade channel
+                "message": f"{self.other_party_discord_role.mention}, your trade with {self.party.name} has been created",  # ping that team
+                "name": thread_name,  # trade with other team
+            }
+        )
+
+        # Create receiving channel for trade
+        (
+            self.trade.receiving_party_discord_trade_thread,
+            _,
+        ) = Channel.objects.get_or_create(
+            discord_id=receiving_trade_thread.id,
+            guild=self.trade.discord_guild,
+            name=receiving_trade_thread.name,
+        )
+
+        button_rows = self.waiting_trade_buttons()
+
+        async_to_sync(self.handler.create_button)(
+            {
+                "guild_id": self.interaction.guild.id,
+                "channel_discord_id": self.trade.receiving_party_discord_trade_thread.discord_id,
+                "callback_payload": {},
+                "button_rows": button_rows,
+                "content": f"Waiting for {self.other_party.name} to accept trade",
+            },
+        )
+
+        self.trade.save()
+
+        return self.active_trade_buttons()
+
+    def update_trade_view(self):
+        # get both messages
+        # get both channels
+
+        current_party_channel = self.client.get_channel(
+            self.party.trade_channel.discord_id
+        )
+        current_party_message: discord.Message = current_party_channel.fetch_message()
+        current_embed = self.active_trade_buttons()
+        async_to_sync(current_party_message.edit)(embed=current_embed)
+
+        receiving_channel = self.client.get_channel(
+            self.receiving_party_discord_trade_thread.discord_id
+        )
+        receiving_message: discord.Message = receiving_channel.fetch_message()
+        receiving_embed = self.waiting_trade_buttons()
+        async_to_sync(receiving_message.edit)(embed=receiving_embed)
 
     # elif trade.state == "initiating_party_accepted":
     #     interacting_team: Team = trade.initiating_party

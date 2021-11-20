@@ -4,11 +4,4 @@
   "python.testing.pytestArgs": ["django"],
   "python.testing.unittestEnabled": false,
   "python.testing.pytestEnabled": true,
-  "python.analysis.diagnosticSeverityOverrides": {
-    "reportGeneralTypeIssues": "none",
-    "reportOptionalMemberAccess": "none",
-    "reportUnboundVariable": "none",
-    "reportOptionalSubscript": "none",
-    "reportSelfClsParameterName": "none"
-  }
 }

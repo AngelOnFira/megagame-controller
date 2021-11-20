@@ -1,8 +1,7 @@
 from bot.discord_models.models import Guild
-from responses.models import Response
-
 from django.db import models
 from django.db.models.signals import post_save
+from responses.models import Response
 
 
 class Player(models.Model):
