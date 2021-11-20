@@ -560,7 +560,7 @@ class Button(discord.ui.Button):
         dropdown_message = await handler.create_dropdown_response(
             interaction=interaction,
             options=options,
-            max_values=25,
+            max_values=4,
             do_next=Dropdown.set_up_trade_prompt.__name__,
             callback_payload={
                 "placeholder": "Which countries do you want contact?",

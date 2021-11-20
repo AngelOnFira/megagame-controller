@@ -147,7 +147,8 @@ class Trade(models.Model):
     # case someone changes a team name
     team_lookup = models.JSONField(default=dict, blank=True, null=True)
 
-    embed_id = models.BigIntegerField(unique=True, null=True)
+    initiating_embed_id = models.BigIntegerField(unique=True, null=True)
+    receiving_embed_id = models.BigIntegerField(unique=True, null=True)
 
     state = FSMField(default="initiating_party_view")
 

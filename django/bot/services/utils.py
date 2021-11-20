@@ -2,12 +2,12 @@ import logging
 
 import discord
 
-from .Button import Button
-
 logger = logging.getLogger("bot")
 
 
-async def create_button_view(client, button_rows):
+async def create_button_view(client, button_rows) -> discord.ui.View:
+    from .Button import Button
+
     view = discord.ui.View(timeout=None)
 
     for row in button_rows:

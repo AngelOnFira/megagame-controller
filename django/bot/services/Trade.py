@@ -8,7 +8,10 @@ from bot.discord_models.models import Channel, Role
 from bot.services.TaskHandler import TaskHandler
 from currencies.models import Trade
 from currencies.services import CreateTradeEmbed
+from django import views
 from teams.models import Team
+
+from .utils import create_button_view
 
 logger = logging.getLogger("bot")
 
@@ -36,9 +39,21 @@ class TradeView:
             self.party = self.trade.initiating_party
             self.other_party = self.trade.receiving_party
 
+            self.party_embed = self.trade.initiating_embed_id
+            self.other_party_embed = self.trade.receiving_embed_id
+
+            self.party_thread = self.trade.initiating_party_discord_trade_thread
+            self.other_party_thread = self.trade.receiving_party_discord_trade_thread
+
         elif trade.state == "receiving_party_view":
             self.party = self.trade.receiving_party
             self.other_party = self.trade.initiating_party
+
+            self.party_embed = self.trade.receiving_embed_id
+            self.other_party_embed = self.trade.initiating_embed_id
+
+            self.party_thread = self.trade.receiving_party_discord_trade_thread
+            self.other_party_thread = self.trade.initiating_party_discord_trade_thread
 
         self.party_discord_role: discord.Role = self.interaction.guild.get_role(
             self.party.role.discord_id
@@ -204,7 +219,7 @@ class TradeView:
 
         button_rows = self.active_trade_buttons()
 
-        async_to_sync(self.handler.create_button)(
+        initiating_button = async_to_sync(self.handler.create_button)(
             {
                 "guild_id": self.interaction.guild.id,
                 "channel_discord_id": self.trade.initiating_party_discord_trade_thread.discord_id,
@@ -213,6 +228,7 @@ class TradeView:
                 "button_rows": button_rows,
             },
         )
+        self.trade.initiating_embed_id = initiating_button.id
 
         # Create receiving team thread
         thread_name = f"Trade with {self.party.name}"
@@ -236,7 +252,7 @@ class TradeView:
 
         button_rows = self.waiting_trade_buttons()
 
-        async_to_sync(self.handler.create_button)(
+        receiving_button = async_to_sync(self.handler.create_button)(
             {
                 "guild_id": self.interaction.guild.id,
                 "channel_discord_id": self.trade.receiving_party_discord_trade_thread.discord_id,
@@ -245,28 +261,36 @@ class TradeView:
                 "content": f"Waiting for {self.other_party.name} to accept trade",
             },
         )
+        self.trade.receiving_embed_id = receiving_button.id
 
         self.trade.save()
 
-        return self.active_trade_buttons()
-
     def update_trade_view(self):
-        # get both messages
-        # get both channels
-
-        current_party_channel = self.client.get_channel(
-            self.party.trade_channel.discord_id
+        # Current party
+        current_party_discord_channel = self.client.get_channel(
+            self.party_thread.discord_id
         )
-        current_party_message: discord.Message = current_party_channel.fetch_message()
-        current_embed = self.active_trade_buttons()
-        async_to_sync(current_party_message.edit)(embed=current_embed)
-
-        receiving_channel = self.client.get_channel(
-            self.receiving_party_discord_trade_thread.discord_id
+        current_party_message: discord.Message = async_to_sync(
+            current_party_discord_channel.fetch_message
+        )(self.party_embed)
+        current_updated_view = async_to_sync(create_button_view)(
+            self.client, self.active_trade_buttons()
         )
-        receiving_message: discord.Message = receiving_channel.fetch_message()
-        receiving_embed = self.waiting_trade_buttons()
-        async_to_sync(receiving_message.edit)(embed=receiving_embed)
+        print(current_updated_view)
+        print(current_party_message)
+        async_to_sync(current_party_message.edit)(view=current_updated_view)
+
+        # Other party
+        receiving_channel = self.client.get_channel(self.other_party_thread.discord_id)
+        receiving_message: discord.Message = async_to_sync(
+            receiving_channel.fetch_message
+        )(self.other_party_embed)
+        receiving_updated_view = async_to_sync(create_button_view)(
+            self.client, self.waiting_trade_buttons()
+        )
+        print(receiving_updated_view)
+        print(receiving_message)
+        async_to_sync(receiving_message.edit)(view=receiving_updated_view)
 
     # elif trade.state == "initiating_party_accepted":
     #     interacting_team: Team = trade.initiating_party
