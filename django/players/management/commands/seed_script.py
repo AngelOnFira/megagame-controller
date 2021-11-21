@@ -72,7 +72,7 @@ class Command(BaseCommand):
             {
                 "task_type": TaskType.CREATE_CATEGORY,
                 "payload": {
-                    "category_name": "trades",
+                    "category_name": "comms",
                     "guild_id": guild.discord_id,
                 },
             }
@@ -104,8 +104,8 @@ class Command(BaseCommand):
             currency_lookup[currency.name] = currency
 
         for i, (team_name, team) in enumerate(watch_the_skies_data["teams"].items()):
-            if i > 1:
-                break
+            # if i > 1:
+            #     break
 
             wallet = Wallet.objects.create(
                 name=f"{team_name}'s wallet",
@@ -115,6 +115,7 @@ class Command(BaseCommand):
 
             Team.objects.create(
                 name=team_name,
+                abreviation=team["abreviation"],
                 emoji=emojis.decode(team["flag"]),
                 wallet=Wallet.objects.get(id=team_wallet_id),
                 guild=guild,

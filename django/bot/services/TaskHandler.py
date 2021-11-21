@@ -48,9 +48,6 @@ class TaskHandler:
     ):
         from .Dropdown import Dropdown
 
-        debug("Options", options)
-        debug("Callbackpayload", callback_payload)
-
         self.view.add_item(
             Dropdown(
                 self.client,

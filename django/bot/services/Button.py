@@ -539,12 +539,12 @@ class Button(discord.ui.Button):
                 discord_id=interaction.user.id
             ).player.team
 
-            options = []
+            team_options = []
             for team in Team.objects.all():
                 if not team.emoji or team.id == interacting_team.id:
                     continue
 
-                options.append(
+                team_options.append(
                     discord.SelectOption(
                         label=team.name,
                         description="",
@@ -552,18 +552,19 @@ class Button(discord.ui.Button):
                     )
                 )
 
-            return options
+            return team_options, interacting_team
 
-        (options) = await get_sender_team(interaction)
+        (team_options, interacting_team) = await get_sender_team(interaction)
 
         handler = TaskHandler(discord.ui.View(timeout=None), self.client)
         dropdown_message = await handler.create_dropdown_response(
             interaction=interaction,
-            options=options,
-            max_values=4,
-            do_next=Dropdown.set_up_trade_prompt.__name__,
+            options=team_options,
+            max_values=3,
+            do_next=Dropdown.open_comms_channel.__name__,
             callback_payload={
                 "placeholder": "Which countries do you want contact?",
+                "interacting_team": interacting_team.id,
             },
         )
 

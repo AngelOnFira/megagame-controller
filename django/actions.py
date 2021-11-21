@@ -39,6 +39,7 @@ watch_the_skies_data = {
     },
     "teams": {
         "United Kingdom": {
+            "abreviation": "UK",
             "income_track": [-1, 2, 4, 6, 8, 10, 12, 14, 16],
             "flag": "🇬🇧",
             "initial_currencies": [
@@ -51,6 +52,7 @@ watch_the_skies_data = {
             ],
         },
         "United States": {
+            "abreviation": "US",
             "income_track": [-1, 2, 4, 6, 8, 11, 14, 17, 20],
             "flag": "🇺🇸",
             "initial_currencies": [
@@ -63,6 +65,7 @@ watch_the_skies_data = {
             ],
         },
         "Brazil": {
+            "abreviation": "BR",
             "income_track": [-1, 2, 3, 4, 6, 8, 10, 12, 14],
             "flag": "🇧🇷",
             "initial_currencies": [
@@ -74,6 +77,7 @@ watch_the_skies_data = {
             ],
         },
         "France": {
+            "abreviation": "FR",
             "income_track": [-1, 2, 4, 6, 8, 10, 12, 14, 16],
             "flag": "🇫🇷",
             "initial_currencies": [
@@ -86,6 +90,7 @@ watch_the_skies_data = {
             ],
         },
         "India": {
+            "abreviation": "IN",
             "income_track": [-1, 2, 3, 5, 7, 9, 11, 13, 15],
             "flag": "🇮🇳",
             "initial_currencies": [
@@ -98,6 +103,7 @@ watch_the_skies_data = {
             ],
         },
         "Russia": {
+            "abreviation": "RU",
             "income_track": [-1, 2, 3, 4, 6, 8, 10, 12, 14],
             "flag": "🇷🇺",
             "initial_currencies": [
@@ -110,6 +116,7 @@ watch_the_skies_data = {
             ],
         },
         "China": {
+            "abreviation": "CN",
             "income_track": [-1, 2, 4, 6, 8, 10, 12, 15, 18],
             "flag": "🇨🇳",
             "initial_currencies": [
@@ -122,6 +129,7 @@ watch_the_skies_data = {
             ],
         },
         "Japan": {
+            "abreviation": "JP",
             "income_track": [-1, 2, 4, 6, 8, 10, 12, 14, 16],
             "flag": "🇯🇵",
             "initial_currencies": [

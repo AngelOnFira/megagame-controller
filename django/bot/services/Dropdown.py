@@ -38,10 +38,6 @@ class Dropdown(discord.ui.Select):
         # Figure out what part of the trade we are on
         #
 
-        # trade_category = list(
-        #     filter(lambda x: x.name.lower() == "trades", interaction.guild.categories)
-        # )
-
         # if len(trade_category) > 1:
         #     logger.warning("There is more than one trade category!")
 
@@ -149,10 +145,97 @@ class Dropdown(discord.ui.Select):
             ephemeral=True,
         )
 
+    async def open_comms_channel(self, interaction: discord.Interaction):
+        """Open a comms channel for multiple teams
+
+        Args:
+            interaction (discord.Interaction)
+
+        Payload:
+            interacting_team
+        """
+
+        # Get the interacting team
+        interacting_team_id = self.callback_payload["interacting_team"]
+        interacting_team = await sync_to_async(Team.objects.get)(id=interacting_team_id)
+
+        @sync_to_async
+        def get_interacting_team_role(team: Team):
+            return team.role
+
+        interacting_team_role = await get_interacting_team_role(interacting_team)
+
+        channel_name = f"{interacting_team.abreviation}"
+
+        channel_message_description = f"--> <@&{interacting_team_role.discord_id}>\n"
+
+        overwrites = {
+            interaction.guild.default_role: discord.PermissionOverwrite(
+                read_messages=False
+            ),
+        }
+
+        # Add overwrite for the interacting team
+        overwrites[
+            interaction.guild.get_role(interacting_team_role.discord_id)
+        ] = discord.PermissionOverwrite(read_messages=True)
+
+        @sync_to_async
+        def get_team(values):
+            teams = list(Team.objects.filter(name__in=values))
+            roles = [team.role for team in teams]
+
+            return (teams, roles)
+
+        teams_roles = await get_team(self.values)
+
+        # Add overwrites for all other teams
+        for team, role in zip(teams_roles[0], teams_roles[1]):
+            overwrites[
+                interaction.guild.get_role(role.discord_id)
+            ] = discord.PermissionOverwrite(read_messages=True)
+
+            channel_name += f"-{team.abreviation}"
+            channel_message_description += f"--> <@&{role.discord_id}>\n"
+
+        # Create channel with overrides in category
+        comms_category = list(
+            filter(lambda x: x.name.lower() == "comms", interaction.guild.categories)
+        )
+
+        if len(comms_category) > 1:
+            logger.warning("There is more than one comms category!")
+
+        if len(comms_category) == 0:
+            logger.error("No comms category!")
+
+            await interaction.response.send_message(
+                content=f"Error creating the comms channel, could not find category",
+                ephemeral=True,
+            )
+
+            return
+
+        comms_category = comms_category[0]
+
+        comms_channel = await interaction.guild.create_text_channel(
+            name=channel_name,
+            category=comms_category,
+            overwrites=overwrites,
+        )
+
+        channel_embed: discord.Embed = discord.Embed(
+            title=f"This channel was opened for delegates of:",
+            description=channel_message_description,
+        )
+
+        await comms_channel.send(embed=channel_embed)
+
     async def callback(self, interaction: discord.Interaction):
         function_lookup = {
             self.set_up_trade_prompt.__name__: self.set_up_trade_prompt,
             self.adjustment_select_trade_currency.__name__: self.adjustment_select_trade_currency,
+            self.open_comms_channel.__name__: self.open_comms_channel,
         }
 
         await function_lookup[self.do_next](interaction)

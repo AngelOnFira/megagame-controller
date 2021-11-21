@@ -17,6 +17,8 @@ from tasks.services import QueueTask
 # Create your models here.
 class Team(models.Model):
     name = models.CharField(max_length=100, unique=True)
+    abreviation = models.CharField(max_length=2, null=True, blank=True)
+
     description = models.TextField(blank=True)
     guild = models.ForeignKey(
         "discord_models.Guild", on_delete=models.CASCADE, null=True
