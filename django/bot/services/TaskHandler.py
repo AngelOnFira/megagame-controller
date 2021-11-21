@@ -62,9 +62,11 @@ class TaskHandler:
             )
         )
 
-        await interaction.response.send_message(
+        message = await interaction.response.send_message(
             content="_🔽_", view=self.view, ephemeral=True
         )
+
+        self.client.add_view(self.view, message_id=message.id)
 
     async def create_dropdown(self, payload: dict, interaction: discord.Interaction):
         from .Dropdown import Dropdown
@@ -97,7 +99,9 @@ class TaskHandler:
 
         embedVar = discord.Embed(title=" ads", description=" d", color=0x00FF00)
 
-        await channel.send(embed=embedVar, view=self.view)
+        message = await channel.send(embed=embedVar, view=self.view)
+
+        self.client.add_view(self.view, message_id=message.id)
 
     async def create_category(self, payload: dict):
         guild_id = payload["guild_id"]
@@ -199,10 +203,16 @@ class TaskHandler:
             )
 
             button_message = await channel.send(**params, view=view)
+            self.client.add_view(self.view, message_id=button_message.id)
+
             return button_message
 
         else:
-            await interaction.response.send_message(**params, view=view, ephemeral=True)
+            message = await interaction.response.send_message(
+                **params, view=view, ephemeral=True
+            )
+
+            self.client.add_view(self.view, message_id=message.id)
 
     async def create_team_channel(self, payload: dict):
         team_id = payload["team_id"]
@@ -231,6 +241,28 @@ class TaskHandler:
         channel.discord_id = text_channel.id
 
         await sync_to_async(channel.save)()
+
+    async def create_team_voice_channel(self, payload: dict):
+        team_id = payload["team_id"]
+        name = payload["name"]
+
+        @sync_to_async
+        def get_team(team_id):
+            team = Team.objects.get(id=team_id)
+
+            return team.category, team.guild
+
+        team_category, team_guild = await get_team(team_id)
+
+        guild = self.client.get_guild(team_guild.discord_id)
+
+        # TODO: Remove fetch needed for cache busting
+        category = await guild.fetch_channel(team_category.discord_id)
+
+        text_channel = await guild.create_voice_channel(
+            name,
+            category=category,
+        )
 
     async def create_category_channel(self, payload: dict):
         guild_id = payload["guild_id"]

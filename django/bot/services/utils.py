@@ -1,4 +1,5 @@
 import logging
+import uuid
 
 import discord
 
@@ -24,8 +25,9 @@ async def create_button_view(client, button_rows) -> discord.ui.View:
             if "disabled" in button:
                 options_dict["disabled"] = button["disabled"]
 
-            if "custom_id" in button:
-                options_dict["custom_id"] = button["custom_id"]
+            # if "custom_id" in button:
+            #     options_dict["custom_id"] = button["custom_id"]
+            options_dict["custom_id"] = str(uuid.uuid1())
 
             if button["do_next"] == "":
                 logger.error(f"Button {button['label']} has no do_next")

@@ -118,6 +118,7 @@ class Trade(models.Model):
 
     transactions = models.ManyToManyField(Transaction)
 
+    first_iteration = models.BooleanField(default=True)
     initiating_party_accepted = models.BooleanField(default=False)
     receiving_party_accepted = models.BooleanField(default=False)
 
@@ -174,6 +175,9 @@ class Trade(models.Model):
         field=state, source="receiving_party_view", target="initiating_party_view"
     )
     def pass_to_initiating(self):
+        if self.first_iteration:
+            self.first_iteration = False
+            return
         self.receiving_party_accepted = True
 
     @transaction.atomic
@@ -181,6 +185,9 @@ class Trade(models.Model):
         field=state, source="initiating_party_view", target="receiving_party_view"
     )
     def pass_to_receiving(self):
+        if self.first_iteration:
+            self.first_iteration = False
+            return
         self.initiating_party_accepted = True
 
     def swap_views(self):
@@ -196,7 +203,9 @@ class Trade(models.Model):
         target="completed",
     )
     def complete(self):
-        initiating_party_balance: dict(int) = self.initiating_party.get_bank_balance()
+        initiating_party_balance: dict(
+            int
+        ) = self.initiating_party.wallet.get_bank_balance()
 
         for transaction in Transaction.objects.filter(
             trade=self, from_wallet=self.initiating_party.wallet, state="new"
@@ -209,7 +218,7 @@ class Trade(models.Model):
 
         receiving_party_balance: defaultdict(
             int
-        ) = self.receiving_party.get_bank_balance()
+        ) = self.receiving_party.wallet.get_bank_balance()
 
         for transaction in Transaction.objects.filter(
             trade=self, from_wallet=self.receiving_party.wallet, state="new"

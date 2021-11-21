@@ -115,15 +115,12 @@ class Button(discord.ui.Button):
 
         await sync_to_async(trade.save)()
 
-        embed = await sync_to_async(CreateTradeEmbed.execute)({"trade_id": trade_id})
-
-        message: discord.Message = await interaction.channel.fetch_message(
-            trade.embed_id
+        handler = TaskHandler(discord.ui.View(timeout=None), self.client)
+        trade_view = await sync_to_async(TradeView)(
+            trade, interaction, handler, self.client
         )
 
-        # view = await trade_view(self.client, trade)
-
-        await message.edit(embed=embed)
+        await sync_to_async(trade_view.update_trade_view)()
 
     async def currency_trade_adjustment_menu(self, interaction: discord.Interaction):
         """When the "Adjust Trade Amounts" is clicked
@@ -414,7 +411,7 @@ class Button(discord.ui.Button):
 
         trade: Trade = await sync_to_async(Trade.objects.get)(id=trade_id)
 
-        # update trade state
+        # Update trade state
         await sync_to_async(trade.swap_views)()
 
         # Delete the current thread
@@ -528,7 +525,7 @@ class Button(discord.ui.Button):
                             "style": discord.ButtonStyle.success,
                             "disabled": False,
                             "label": "Accept",
-                            "custom_id": "confirm",
+                            # "custom_id": "confirm",
                             "emoji": "✅",
                             "do_next": Button.accept.__name__,
                             "callback_payload": success_callback,
@@ -539,7 +536,7 @@ class Button(discord.ui.Button):
                             "style": discord.ButtonStyle.danger,
                             "disabled": False,
                             "label": "Cancel",
-                            "custom_id": "cancel",
+                            # "custom_id": "cancel",
                             "emoji": "❌",
                             "do_next": Button.cancel.__name__,
                             "callback_payload": fail_callback,

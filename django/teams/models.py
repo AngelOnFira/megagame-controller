@@ -170,15 +170,15 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
         #     }
         # )
 
-        # Create a general channel for the team
-        general_channel = Channel.objects.create(guild=instance.guild, name="general")
-        instance.general_channel = general_channel
+        # Create a menu channel for the team
+        menu_channel = Channel.objects.create(guild=instance.guild, name="menu")
+        instance.menu_channel = menu_channel
         QueueTask.execute(
             {
                 "task_type": TaskType.CREATE_TEAM_CHANNEL,
                 "payload": {
                     "team_id": instance.id,
-                    "channel_bind_model_id": general_channel.id,
+                    "channel_bind_model_id": menu_channel.id,
                 },
             }
         )
@@ -196,15 +196,28 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
-        # Create a menu channel for the team
-        menu_channel = Channel.objects.create(guild=instance.guild, name="menu")
-        instance.menu_channel = menu_channel
+        # Create a general channel for the team
+        general_channel = Channel.objects.create(guild=instance.guild, name="general")
+        instance.general_channel = general_channel
         QueueTask.execute(
             {
                 "task_type": TaskType.CREATE_TEAM_CHANNEL,
                 "payload": {
                     "team_id": instance.id,
-                    "channel_bind_model_id": menu_channel.id,
+                    "channel_bind_model_id": general_channel.id,
+                },
+            }
+        )
+
+        # Create voice channels for the team
+        general_channel = Channel.objects.create(guild=instance.guild, name="general")
+        instance.general_channel = general_channel
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_TEAM_VOICE_CHANNEL,
+                "payload": {
+                    "team_id": instance.id,
+                    "name": "general",
                 },
             }
         )
@@ -232,7 +245,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "style": discord.ButtonStyle.primary,
                     "disabled": False,
                     "label": "Start trade",
-                    "custom_id": f"{instance.id}",
+                    # "custom_id": f"{instance.id}",
                     "emoji": "💱",
                     "do_next": Button.start_trading.__name__,
                     "callback_payload": {},
@@ -243,7 +256,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "style": discord.ButtonStyle.primary,
                     "disabled": False,
                     "label": "Open Comms",
-                    "custom_id": f"{instance.id}-discuss",
+                    # "custom_id": f"{instance.id}-discuss",
                     "emoji": "💬",
                     "do_next": Button.open_comms.__name__,
                     "callback_payload": {
@@ -256,7 +269,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "style": discord.ButtonStyle.primary,
                     "disabled": False,
                     "label": "Update bank",
-                    "custom_id": f"{instance.id}-treaty",
+                    # "custom_id": f"{instance.id}-treaty",
                     "emoji": "💰",
                     "do_next": Button.update_bank.__name__,
                     "callback_payload": {

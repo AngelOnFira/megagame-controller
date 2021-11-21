@@ -11,7 +11,7 @@ import logging
 import os
 import sys
 import time
-from distutils.log import info
+from distutils.log import debug, info
 from importlib import import_module
 from json import JSONDecoder
 
@@ -87,6 +87,9 @@ async def run_tasks_sync(client: discord.Client):
 
         elif task.task_type == TaskType.CREATE_TEAM_CHANNEL:
             await handler.create_team_channel(payload)
+
+        elif task.task_type == TaskType.CREATE_TEAM_VOICE_CHANNEL:
+            await handler.create_team_voice_channel(payload)
 
         elif task.task_type == TaskType.CREATE_CATEGORY_CHANNEL:
             await handler.create_category_channel(payload)
@@ -274,7 +277,10 @@ async def before_my_task():
         for channel in guild.channels:
             if (
                 not channel.name.startswith("test-")
-                and isinstance(channel, discord.TextChannel)
+                and (
+                    isinstance(channel, discord.TextChannel)
+                    or isinstance(channel, discord.VoiceChannel)
+                )
                 and channel.id not in channel_ids
             ):
                 await channel.delete()
@@ -370,6 +376,8 @@ async def before_my_task():
             r = requests.post(url, headers=headers, json=json)
 
             text = JSONDecoder().decode(r.text)
+
+            debug(text["id"] if "id" in text else "No id")
 
             # Set permissions
             url = "https://discord.com/api/v8/applications/{}/guilds/{}/commands/{}/permissions".format(

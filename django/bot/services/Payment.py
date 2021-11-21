@@ -39,7 +39,7 @@ def create_payment_view(
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
                         "label": "Buy 1",
-                        "custom_id": f"{payment.id}-1",
+                        # "custom_id": f"{payment.id}-1",
                         "emoji": "✅",
                         "do_next": Button.confirm.__name__,
                         "callback_payload": {
@@ -62,7 +62,7 @@ def create_payment_view(
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
                         "label": "Buy 2",
-                        "custom_id": f"{payment.id}-2",
+                        # "custom_id": f"{payment.id}-2",
                         "emoji": "✅",
                         "do_next": Button.confirm.__name__,
                         "callback_payload": {
@@ -85,7 +85,7 @@ def create_payment_view(
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
                         "label": "Buy 3",
-                        "custom_id": f"{payment.id}-3",
+                        # "custom_id": f"{payment.id}-3",
                         "emoji": "✅",
                         "do_next": Button.confirm.__name__,
                         "callback_payload": {
@@ -108,7 +108,7 @@ def create_payment_view(
                         "style": discord.ButtonStyle.secondary,
                         "disabled": False,
                         "label": "Lock Payment (Control only)",
-                        "custom_id": f"{payment.id}-lock-in",
+                        # "custom_id": f"{payment.id}-lock-in",
                         "do_next": Button.confirm.__name__,
                         "callback_payload": {
                             "success_callback": {

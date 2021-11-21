@@ -17,6 +17,10 @@ class TaskType(models.TextChoices):
         "CCH",
         _("Create Team Channel"),
     )
+    CREATE_TEAM_VOICE_CHANNEL = (
+        "CVH",
+        _("Create Team Voice Channel"),
+    )
     CREATE_CATEGORY_CHANNEL = (
         "CCC",
         _("Create Category Channel"),

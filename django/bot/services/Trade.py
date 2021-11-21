@@ -8,7 +8,6 @@ from bot.discord_models.models import Channel, Role
 from bot.services.TaskHandler import TaskHandler
 from currencies.models import Trade
 from currencies.services import CreateTradeEmbed
-from django import views
 from teams.models import Team
 
 from .utils import create_button_view
@@ -79,7 +78,7 @@ class TradeView:
 
             return
 
-    def active_trade_buttons(self):
+    def trade_buttons(self, active):
         from .Button import Button
 
         button_rows = [
@@ -88,9 +87,9 @@ class TradeView:
                     "x": 0,
                     "y": 0,
                     "style": discord.ButtonStyle.primary,
-                    "disabled": False,
+                    "disabled": not active,
                     "label": "Adjust trade amounts",
-                    "custom_id": f"{self.trade.id}",
+                    # "custom_id": f"{self.trade.id}",
                     "emoji": "✏️",
                     "do_next": Button.currency_trade_adjustment_menu.__name__,
                     "callback_payload": {
@@ -101,6 +100,7 @@ class TradeView:
             ]
         ]
 
+        # If neither have accepted
         if (
             self.trade.initiating_party_accepted == False
             and self.trade.receiving_party_accepted == False
@@ -110,24 +110,8 @@ class TradeView:
                     "x": 0,
                     "y": 1,
                     "style": discord.ButtonStyle.success,
-                    "disabled": False,
+                    "disabled": not active,
                     "label": f"Send to {self.other_party.name}",
-                    "emoji": "✅",
-                    "do_next": Button.accept_trade.__name__,
-                    "callback_payload": {"trade_id": self.trade.id},
-                },
-            )
-        elif (
-            self.trade.initiating_party_accepted == True
-            and self.trade.receiving_party_accepted == False
-        ):
-            button_rows[0].append(
-                {
-                    "x": 0,
-                    "y": 1,
-                    "style": discord.ButtonStyle.success,
-                    "disabled": False,
-                    "label": f"Return to {self.other_party.name}",
                     "emoji": "✅",
                     "do_next": Button.accept_trade.__name__,
                     "callback_payload": {"trade_id": self.trade.id},
@@ -142,15 +126,27 @@ class TradeView:
                     "x": 0,
                     "y": 1,
                     "style": discord.ButtonStyle.primary,
-                    "disabled": False,
+                    "disabled": not active,
                     "label": "Lock in trade",
                     "emoji": "🔒",
                     "do_next": Button.lock_in_trade.__name__,
                     "callback_payload": {"trade_id": self.trade.id},
                 },
             )
+        # If only one has confirmed
         else:
-            logger.debug("Trade not in correct state")
+            button_rows[0].append(
+                {
+                    "x": 0,
+                    "y": 1,
+                    "style": discord.ButtonStyle.success,
+                    "disabled": not active,
+                    "label": f"Return to {self.other_party.name}",
+                    "emoji": "✅",
+                    "do_next": Button.accept_trade.__name__,
+                    "callback_payload": {"trade_id": self.trade.id},
+                },
+            )
 
         button_rows[0].append(
             {
@@ -165,30 +161,6 @@ class TradeView:
             }
         )
         self.trade.save()
-
-        return button_rows
-
-    def waiting_trade_buttons(self):
-        from .Button import Button
-
-        button_rows = [
-            [
-                {
-                    "x": 0,
-                    "y": 0,
-                    "style": discord.ButtonStyle.danger,
-                    "disabled": False,
-                    "label": "Cancel Trade",
-                    "custom_id": f"{self.trade.id}",
-                    "emoji": "❌",
-                    "do_next": Button.currency_trade_adjustment_menu.__name__,
-                    "callback_payload": {
-                        "trade_id": self.trade.id,
-                        "team_id": self.party.id,
-                    },
-                }
-            ]
-        ]
 
         return button_rows
 
@@ -217,7 +189,7 @@ class TradeView:
             name=initiating_trade_thread.name,
         )
 
-        button_rows = self.active_trade_buttons()
+        button_rows = self.trade_buttons(True)
 
         initiating_button = async_to_sync(self.handler.create_button)(
             {
@@ -250,7 +222,7 @@ class TradeView:
             name=receiving_trade_thread.name,
         )
 
-        button_rows = self.waiting_trade_buttons()
+        button_rows = self.trade_buttons(False)
 
         receiving_button = async_to_sync(self.handler.create_button)(
             {
@@ -258,7 +230,10 @@ class TradeView:
                 "channel_discord_id": self.trade.receiving_party_discord_trade_thread.discord_id,
                 "callback_payload": {},
                 "button_rows": button_rows,
-                "content": f"Waiting for {self.other_party.name} to accept trade",
+                "embed": {
+                    "title": "Trade in progress",
+                    "description": f"Waiting for {self.other_party.name} to send the offer.",
+                },
             },
         )
         self.trade.receiving_embed_id = receiving_button.id
@@ -274,11 +249,16 @@ class TradeView:
             current_party_discord_channel.fetch_message
         )(self.party_embed)
         current_updated_view = async_to_sync(create_button_view)(
-            self.client, self.active_trade_buttons()
+            self.client, self.trade_buttons(True)
         )
-        print(current_updated_view)
-        print(current_party_message)
-        async_to_sync(current_party_message.edit)(view=current_updated_view)
+        embed = CreateTradeEmbed.execute(
+            {
+                "trade_id": self.trade.id,
+            }
+        )
+        async_to_sync(current_party_message.edit)(
+            view=current_updated_view, embed=embed
+        )
 
         # Other party
         receiving_channel = self.client.get_channel(self.other_party_thread.discord_id)
@@ -286,11 +266,13 @@ class TradeView:
             receiving_channel.fetch_message
         )(self.other_party_embed)
         receiving_updated_view = async_to_sync(create_button_view)(
-            self.client, self.waiting_trade_buttons()
+            self.client, self.trade_buttons(False)
         )
-        print(receiving_updated_view)
-        print(receiving_message)
-        async_to_sync(receiving_message.edit)(view=receiving_updated_view)
+        embed: discord.Embed = discord.Embed(
+            title="Trade in progress",
+            description=f"Waiting for {self.other_party.name} to send the offer.",
+        )
+        async_to_sync(receiving_message.edit)(view=receiving_updated_view, embed=embed)
 
     # elif trade.state == "initiating_party_accepted":
     #     interacting_team: Team = trade.initiating_party

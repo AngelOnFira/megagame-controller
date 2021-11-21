@@ -29,6 +29,7 @@ discord-sentry-reporting = "^2.0.4"
 django-schema-graph = "^1.2.0"
 ipykernel = "^6.4.2"
 jsonpickle = "^2.0.0"
+django-environ = "^0.8.1"
 
 [tool.poetry.dev-dependencies]
 black = "^21.5b1"

@@ -85,9 +85,8 @@ class CreateTradeEmbed(Service):
         )
 
         description = """
-            *Once both teams have accepted, either team
-            can lock in the trade. Any changes to the
-            amounts will turn off accepted for both teams*
+            *Once both teams have passed without
+            changes, the trade can be locked in.*
             """
 
         embed.add_field(
