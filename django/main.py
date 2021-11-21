@@ -180,6 +180,7 @@ async def on_interaction(interaction: discord.Interaction):
 
         elif data["name"] == ADJUST_CURRENCY:
             from currencies.services import CreateCompletedTransaction
+            from teams.models import Team
 
             if "currency" not in data_dict and "currency_custom" not in data_dict:
                 await interaction.response.send_message(
@@ -202,6 +203,9 @@ async def on_interaction(interaction: discord.Interaction):
                     "amount": data_dict["amount"],
                 }
             )
+
+            team = await sync_to_async(Team.objects.get)(name=data_dict["team"])
+            await sync_to_async(team.update_bank_embed)(client)
 
             await interaction.response.send_message(content=response, ephemeral=True)
 

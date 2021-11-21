@@ -3,7 +3,7 @@ from collections import defaultdict
 
 import discord
 import emojis
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync
 
 from actions import watch_the_stars_data
 from bot.discord_models.models import Channel, Guild, Role
@@ -103,6 +103,19 @@ class Team(models.Model):
                 Currency.objects.get(name="Public Relations")  # get the PR of this team
             ]
         ]
+
+    def update_bank_embed(self, client: discord.Client):
+        from currencies.services import CreateBankEmbed
+
+        embed: discord.Embed = CreateBankEmbed.execute({"team_id": self.id})
+
+        guild: discord.Guild = client.get_guild(self.guild.discord_id)
+        channel: discord.TextChannel = guild.get_channel(self.menu_channel.discord_id)
+        message: discord.Message = async_to_sync(channel.fetch_message)(
+            self.bank_embed_id
+        )
+
+        async_to_sync(message.edit)(embed=embed)
 
 
 def on_team_creation(sender, instance: Team, created, **kwargs):
@@ -233,7 +246,9 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "custom_id": f"{instance.id}-discuss",
                     "emoji": "💬",
                     "do_next": Button.open_comms.__name__,
-                    "callback_payload": {},
+                    "callback_payload": {
+                        "team_id": instance.id,
+                    },
                 },
                 {
                     "x": 2,
@@ -244,7 +259,9 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                     "custom_id": f"{instance.id}-treaty",
                     "emoji": "💰",
                     "do_next": Button.update_bank.__name__,
-                    "callback_payload": {},
+                    "callback_payload": {
+                        "team_id": instance.id,
+                    },
                 },
             ]
         ]

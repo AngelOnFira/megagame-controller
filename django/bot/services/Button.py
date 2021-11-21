@@ -497,21 +497,13 @@ class Button(discord.ui.Button):
         )
         await initiating_message.edit(embed=initiating_embed)
 
-        # Change the embed on the menu channel for the receiving party
-        menu_channel_receiving = interaction.guild.get_channel(
-            menu_channel_receiving_id
-        )
-        receiving_message: discord.Message = await (
-            menu_channel_receiving.fetch_message(bank_receiving_embed_id)
-        )
-        receiving_embed = await sync_to_async(CreateBankEmbed.execute)(
-            {"team_id": receiving_team_id}
-        )
-        await receiving_message.edit(embed=receiving_embed)
+        # Change the embeds on the menu channels
+        @sync_to_async
+        def update_embeds(trade: Trade, client: discord.Client):
+            trade.initiating_party.update_bank_embed()
+            trade.receiving_party.update_bank_embed()
 
-        # await interaction.response.send_message(
-        #     content="This trade is complete, and this channel will lock itself"
-        # )
+        await update_embeds(trade, self.client)
 
         await interaction.channel.delete()
 
@@ -577,13 +569,13 @@ class Button(discord.ui.Button):
         await interaction.message.delete()
 
     async def open_comms(self, interaction: discord.Interaction):
-        @sync_to_async
-        def get_sender_team(interaction):
-            from bot.users.models import Member
+        team_id = self.callback_payload["team_id"]
 
-            interacting_team = Member.objects.get(
-                discord_id=interaction.user.id
-            ).player.team
+        @sync_to_async
+        def get_sender_team(interaction, team_id):
+            from teams.models import Team
+
+            interacting_team = Team.objects.get(id=team_id)
 
             team_options = []
             for team in Team.objects.all():
@@ -600,10 +592,10 @@ class Button(discord.ui.Button):
 
             return team_options, interacting_team
 
-        (team_options, interacting_team) = await get_sender_team(interaction)
+        (team_options, interacting_team) = await get_sender_team(interaction, team_id)
 
         handler = TaskHandler(discord.ui.View(timeout=None), self.client)
-        dropdown_message = await handler.create_dropdown_response(
+        await handler.create_dropdown_response(
             interaction=interaction,
             options=team_options,
             max_values=3,
@@ -615,7 +607,13 @@ class Button(discord.ui.Button):
         )
 
     async def update_bank(self, interaction: discord.Interaction):
-        pass
+        from teams.models import Team
+
+        team_id = self.callback_payload["team_id"]
+
+        team: Team = await sync_to_async(Team.objects.get)(id=team_id)
+
+        await sync_to_async(team.update_bank_embed)(self.client)
 
     async def callback(self, interaction: discord.Interaction):
         # Use to tie the function name to the function
