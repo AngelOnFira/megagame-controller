@@ -8,8 +8,12 @@ from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.services.Dropdown import Dropdown
 from bot.users.models import Member
 from currencies.models import Currency, Payment, Trade, Transaction
-from currencies.services import (CreateBankEmbed, CreateTrade,
-                                 CreateTradeEmbed, LockPayment)
+from currencies.services import (
+    CreateBankEmbed,
+    CreateTrade,
+    CreateTradeEmbed,
+    LockPayment,
+)
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
@@ -513,9 +517,11 @@ class Button(discord.ui.Button):
 
         # Make button
         handler = TaskHandler(discord.ui.View(timeout=None), self.client)
-        button_messsage = await handler.create_button(
+        button_message = await handler.create_button(
             {
                 "content": "Are you sure?",
+                # "guild_id": interaction.guild.id,
+                # "channel_discord_id": interaction.channel.id,
                 "callback_payload": {},
                 "button_rows": [
                     [
@@ -547,6 +553,8 @@ class Button(discord.ui.Button):
             interaction,
         )
 
+        print(f"id {button_message.id}")
+
     async def accept(self, interaction: discord.Interaction):
         print(self.callback_payload)
         self.do_next = self.callback_payload["do_next"]
@@ -556,14 +564,14 @@ class Button(discord.ui.Button):
 
         await self.callback(interaction)
         print(interaction.message.id)
-        await interaction.message.delete()
+        await interaction.delete_original_message()
 
     async def cancel(self, interaction: discord.Interaction):
         self.do_next = self.callback_payload["do_next"]
         self.callback_payload = self.callback_payload["callback_payload"]
 
         await self.callback(interaction)
-        await interaction.message.delete()
+        await interaction.message.delete_original_message()
 
     async def open_comms(self, interaction: discord.Interaction):
         team_id = self.callback_payload["team_id"]

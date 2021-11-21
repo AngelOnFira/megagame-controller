@@ -20,7 +20,7 @@ watch_the_stars_data = {
             ("Gengar", "🔠"),
             ("Cubone", "🔡"),
         ],
-        "common": [("Pokemon Dollars", "💵")],
+        "common": [("Megabucks", "💵")],
         "admin": [
             ("Public Order", "📰"),
             ("Public Relations", "📈"),
@@ -39,7 +39,7 @@ watch_the_stars_data = {
             "income_track": [0, 0, 0, 0, 0, 100],
             "flag": "🇬🇧",
             "initial_currencies": [
-                ("Pokemon Dollars", 100),
+                ("Megabucks", 100),
                 ("Public Relations", 5),
             ],
         },
@@ -48,7 +48,7 @@ watch_the_stars_data = {
             "income_track": [0, 0, 0, 0, 0, 100],
             "flag": "🇺🇸",
             "initial_currencies": [
-                ("Pokemon Dollars", 100),
+                ("Megabucks", 100),
                 ("Public Relations", 5),
             ],
         },
@@ -57,7 +57,7 @@ watch_the_stars_data = {
             "income_track": [0, 0, 0, 0, 0, 100],
             "flag": "🇧🇷",
             "initial_currencies": [
-                ("Pokemon Dollars", 100),
+                ("Megabucks", 100),
                 ("Public Relations", 5),
             ],
         },
@@ -66,7 +66,7 @@ watch_the_stars_data = {
             "income_track": [0, 0, 0, 0, 0, 100],
             "flag": "🇫🇷",
             "initial_currencies": [
-                ("Pokemon Dollars", 100),
+                ("Megabucks", 100),
                 ("Public Relations", 5),
             ],
         },
@@ -75,7 +75,7 @@ watch_the_stars_data = {
             "income_track": [0, 0, 0, 0, 0, 100],
             "flag": "🇮🇳",
             "initial_currencies": [
-                ("Pokemon Dollars", 100),
+                ("Megabucks", 100),
                 ("Public Relations", 5),
             ],
         },
@@ -84,7 +84,7 @@ watch_the_stars_data = {
             "income_track": [0, 0, 0, 0, 0, 100],
             "flag": "🇷🇺",
             "initial_currencies": [
-                ("Pokemon Dollars", 100),
+                ("Megabucks", 100),
                 ("Public Relations", 5),
             ],
         },
@@ -93,7 +93,7 @@ watch_the_stars_data = {
             "income_track": [0, 0, 0, 0, 0, 100],
             "flag": "🇨🇳",
             "initial_currencies": [
-                ("Pokemon Dollars", 100),
+                ("Megabucks", 100),
                 ("Public Relations", 5),
             ],
         },
@@ -102,7 +102,7 @@ watch_the_stars_data = {
             "income_track": [0, 0, 0, 0, 0, 100],
             "flag": "🇯🇵",
             "initial_currencies": [
-                ("Pokemon Dollars", 100),
+                ("Megabucks", 100),
                 ("Public Relations", 5),
             ],
         },

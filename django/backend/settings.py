@@ -30,6 +30,7 @@ environ.Env.read_env(os.path.join(BASE_DIR, ".env"))
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 TOKEN = env("DISCORD_TOKEN")
+BOT_ID = env("DISCORD_BOT_ID")
 
 
 # Quick-start development settings - unsuitable for production

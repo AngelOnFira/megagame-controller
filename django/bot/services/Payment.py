@@ -105,6 +105,29 @@ def create_payment_view(
                     {
                         "x": 3,
                         "y": 0,
+                        "style": discord.ButtonStyle.primary,
+                        "disabled": False,
+                        "label": "Buy 4",
+                        # "custom_id": f"{payment.id}-3",
+                        "emoji": "✅",
+                        "do_next": Button.confirm.__name__,
+                        "callback_payload": {
+                            "success_callback": {
+                                "do_next": Button.make_payment.__name__,
+                                "callback_payload": {
+                                    "payment_id": payment.id,
+                                    "count": 4,
+                                },
+                            },
+                            "fail_callback": {
+                                "do_next": Button.cancel.__name__,
+                                "callback_payload": {},
+                            },
+                        },
+                    },
+                    {
+                        "x": 4,
+                        "y": 0,
                         "style": discord.ButtonStyle.secondary,
                         "disabled": False,
                         "label": "Lock Payment (Control only)",

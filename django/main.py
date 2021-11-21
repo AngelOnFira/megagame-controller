@@ -17,6 +17,7 @@ from json import JSONDecoder
 
 import discord
 import emojis
+from git import head
 import requests
 import sentry_sdk
 from aiohttp import payload
@@ -366,18 +367,20 @@ async def before_my_task():
         admin_id = list(filter(lambda x: x.name == "admin", guild.roles))[0].id
 
         def create_command(json, admin_id):
-            application_id = "881015675236270121"
+            application_id = settings.BOT_ID
             guild_id = "855215558994821120"
 
             url = f"https://discord.com/api/v8/applications/{application_id}/guilds/{guild_id}/commands"
-            headers = {
-                "Authorization": "Bot ODgxMDE1Njc1MjM2MjcwMTIx.YSmryQ.BqFwf7vhSHrBjuA0J6F5cXkzMwg"
-            }
+            headers = {"Authorization": f"Bot {settings.TOKEN}"}
+
+            print(url, headers)
             r = requests.post(url, headers=headers, json=json)
 
             text = JSONDecoder().decode(r.text)
 
-            debug(text["id"] if "id" in text else "No id")
+            if "id" not in text:
+                logger.error(f"Failed to create command: {text}")
+                return
 
             # Set permissions
             url = "https://discord.com/api/v8/applications/{}/guilds/{}/commands/{}/permissions".format(
