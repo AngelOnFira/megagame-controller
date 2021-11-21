@@ -265,3 +265,43 @@ class LockPayment(Service):
         payment.save()
 
         return payment
+
+
+class CreateCompletedTransaction(Service):
+    team_name = forms.CharField()
+    currency_name = forms.CharField()
+    amount = forms.IntegerField()
+
+    def process(self):
+        team_name = self.cleaned_data["team_name"]
+        currency_name = self.cleaned_data["currency_name"]
+        amount = self.cleaned_data["amount"]
+
+        team: Team = Team.objects.get(name=team_name)
+
+        try:
+            currency: Currency = Currency.objects.get(name=currency_name)
+
+        except Currency.DoesNotExist:
+            return "No currency with that name!"
+
+        bank_wallet = Wallet.objects.get_or_create(name="Bank")[0]
+
+        if amount > 0:
+            transaction = Transaction.objects.create(
+                from_wallet=bank_wallet,
+                to_wallet=team.wallet,
+                currency=currency,
+                amount=amount,
+                state="completed",
+            )
+            return f"Added {transaction.amount} {transaction.currency.name} to {team.name}'s wallet"
+        else:
+            transaction = Transaction.objects.create(
+                from_wallet=team.wallet,
+                to_wallet=bank_wallet,
+                currency=currency,
+                amount=-amount,
+                state="completed",
+            )
+            return f"Removed {transaction.amount} {transaction.currency.name} from {team.name}'s wallet"

@@ -13,6 +13,7 @@ import sys
 import time
 from distutils.log import info
 from importlib import import_module
+from json import JSONDecoder
 
 import discord
 import emojis
@@ -38,6 +39,7 @@ client = discord.Client(intents=intents)
 
 PAYMENT = "payment"
 TURN = "turn"
+ADJUST_CURRENCY = "adjust"
 
 # TODO: Add this to env vars
 use_sentry(
@@ -118,7 +120,9 @@ async def on_interaction(interaction: discord.Interaction):
     if interaction.type == discord.InteractionType.application_command:
         data = interaction.data
 
-        # Verify that user is admin
+        data_dict = {item["name"]: item["value"] for item in data["options"]}
+
+        # Verify that user is admin (should already be verified by discord)
         if "admin" not in [role.name for role in interaction.user.roles]:
             await interaction.response.send_message(
                 "❗ You are not an admin.",
@@ -127,10 +131,10 @@ async def on_interaction(interaction: discord.Interaction):
             return
 
         if data["name"] == PAYMENT:
-            if len(data["options"]) == 1:
+            if "cost" not in data_dict:
                 cost = 1
             else:
-                cost = data["options"][1]["value"]
+                cost = data_dict["cost"]
 
             # Make sure amount is greater than 0
             if cost == 0:
@@ -140,7 +144,7 @@ async def on_interaction(interaction: discord.Interaction):
                 return
 
             payment = await sync_to_async(Payment.objects.create)(
-                action=data["options"][0]["value"],
+                action=data_dict["action"],
                 cost=cost,
                 channel_id=interaction.channel.id,
             )
@@ -149,14 +153,14 @@ async def on_interaction(interaction: discord.Interaction):
             await sync_to_async(create_payment_view)(handler, payment, interaction)
 
         elif data["name"] == TURN:
-            info(f"Turn: {data['options'][0]['value']}")
+            info("Turn: {}".format(data_dict["turn"]))
             # TODO: send announcement
 
             from teams.services import GlobalTurnChange
 
             advance = True
 
-            if data["options"][0]["value"] == "turn_back":
+            if data_dict["turn"] == "turn_back":
                 advance = False
 
             await sync_to_async(GlobalTurnChange.execute)(
@@ -173,6 +177,33 @@ async def on_interaction(interaction: discord.Interaction):
                 await interaction.response.send_message(
                     content="Going back a turn", ephemeral=True
                 )
+
+        elif data["name"] == ADJUST_CURRENCY:
+            from currencies.services import CreateCompletedTransaction
+
+            if "currency" not in data_dict and "currency_custom" not in data_dict:
+                await interaction.response.send_message(
+                    content="Please specify a currency", ephemeral=True
+                )
+                return
+
+            if "currency" in data_dict and "currency_custom" in data_dict:
+                await interaction.response.send_message(
+                    content="Please specify only one currency", ephemeral=True
+                )
+                return
+
+            response = await sync_to_async(CreateCompletedTransaction.execute)(
+                {
+                    "team_name": data_dict["team"],
+                    "currency_name": data_dict["currency"]
+                    if "currency" in data_dict
+                    else data_dict["currency_custom"],
+                    "amount": data_dict["amount"],
+                }
+            )
+
+            await interaction.response.send_message(content=response, ephemeral=True)
 
 
 # Check for new tasks once a second
@@ -314,12 +345,28 @@ async def before_my_task():
         #         }
         #     )
 
-        def create_command(json):
-            url = "https://discord.com/api/v8/applications/881015675236270121/guilds/855215558994821120/commands"
+        admin_id = list(filter(lambda x: x.name == "admin", guild.roles))[0].id
+
+        def create_command(json, admin_id):
+            application_id = "881015675236270121"
+            guild_id = "855215558994821120"
+
+            url = f"https://discord.com/api/v8/applications/{application_id}/guilds/{guild_id}/commands"
             headers = {
                 "Authorization": "Bot ODgxMDE1Njc1MjM2MjcwMTIx.YSmryQ.BqFwf7vhSHrBjuA0J6F5cXkzMwg"
             }
             r = requests.post(url, headers=headers, json=json)
+
+            text = JSONDecoder().decode(r.text)
+
+            # Set permissions
+            url = "https://discord.com/api/v8/applications/{}/guilds/{}/commands/{}/permissions".format(
+                application_id, guild_id, text["id"]
+            )
+
+            json = {"permissions": [{"id": admin_id, "type": 1, "permission": True}]}
+
+            r = requests.put(url, headers=headers, json=json)
 
         # Payment command
         create_command(
@@ -327,6 +374,7 @@ async def before_my_task():
                 "name": PAYMENT,
                 "type": 1,
                 "description": "Create a payment that teams can react to",
+                "default_permission": False,
                 "options": [
                     {
                         "name": "action",
@@ -341,7 +389,8 @@ async def before_my_task():
                         "required": False,
                     },
                 ],
-            }
+            },
+            admin_id,
         )
 
         # Turn advance command
@@ -350,6 +399,7 @@ async def before_my_task():
                 "name": TURN,
                 "type": 1,
                 "description": "Advance or go back a turn",
+                "default_permission": False,
                 "options": [
                     {
                         "name": "turn",
@@ -362,7 +412,68 @@ async def before_my_task():
                         ],
                     },
                 ],
+            },
+            admin_id,
+        )
+
+        teams = await sync_to_async(list)(Team.objects.all())
+
+        team_choices = [
+            {"name": team.name, "value": team.name}
+            for team in teams
+            if team.name != "null"
+        ]
+
+        from currencies.models import Currency
+
+        currencies = await sync_to_async(list)(Currency.objects.all())
+
+        currency_choices = [
+            {
+                "name": f"{emojis.encode(currency.emoji)} {currency.name}",
+                "value": currency.name,
             }
+            for currency in currencies
+            if currency.currency_type in ["COM", "RAR", "LOG"]
+        ]
+
+        # Pay team command
+        create_command(
+            {
+                "name": ADJUST_CURRENCY,
+                "type": 1,
+                "description": "Add or remove an amount of a currency from a team",
+                "default_permission": False,
+                "options": [
+                    {
+                        "name": "team",
+                        "description": "The team to adjust",
+                        "type": 3,
+                        "required": True,
+                        "choices": team_choices,
+                    },
+                    {
+                        "name": "amount",
+                        "description": "The amount to adjust",
+                        "type": 4,
+                        "required": True,
+                    },
+                    {
+                        "name": "currency",
+                        "description": "The currency to adjust",
+                        "type": 3,
+                        "required": False,
+                        "choices": currency_choices,
+                    },
+                    {
+                        "name": "custom_currency",
+                        "description": "Adjust a non common/rare/logistics currency ",
+                        "type": 3,
+                        "required": False,
+                    },
+                ],
+            },
+            admin_id,
         )
 
     await intial_state_check(client)

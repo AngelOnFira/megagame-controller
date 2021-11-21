@@ -35,7 +35,6 @@ watch_the_stars_data = {
             ("Interceptors", "🛩"),
             ("Special Agents", "🕵️‍♂️"),
             ("Nuclear Missile", "💣"),
-            
         ],
     },
     "teams": {
