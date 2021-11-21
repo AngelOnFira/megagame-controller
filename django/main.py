@@ -156,6 +156,7 @@ async def on_interaction(interaction: discord.Interaction):
             info("Turn: {}".format(data_dict["turn"]))
             # TODO: send announcement
 
+            from teams.models import Team
             from teams.services import GlobalTurnChange
 
             advance = True
@@ -168,6 +169,13 @@ async def on_interaction(interaction: discord.Interaction):
                     "advance": advance,
                 }
             )
+
+            teams = await sync_to_async(list)(Team.objects.all())
+            for team in teams:
+                if team.name == "null":
+                    continue
+
+                await sync_to_async(team.update_bank_embed)(client)
 
             if advance:
                 await interaction.response.send_message(

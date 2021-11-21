@@ -23,6 +23,7 @@ class GlobalTurnChange(Service):
         bank_wallet = Wallet.objects.get_or_create(name="Bank")[0]
 
         # Go through each team
+        team: Team
         for team in Team.objects.all():
             if team.name == "null":
                 continue
