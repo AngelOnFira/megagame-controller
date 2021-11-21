@@ -112,10 +112,9 @@ def create_payment_view(
                         "do_next": Button.confirm.__name__,
                         "callback_payload": {
                             "success_callback": {
-                                "do_next": Button.make_payment.__name__,
+                                "do_next": Button.lock_payment.__name__,
                                 "callback_payload": {
                                     "payment_id": payment.id,
-                                    "count": 3,
                                 },
                             },
                             "fail_callback": {

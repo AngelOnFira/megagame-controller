@@ -142,6 +142,7 @@ async def on_interaction(interaction: discord.Interaction):
             payment = await sync_to_async(Payment.objects.create)(
                 action=data["options"][0]["value"],
                 cost=cost,
+                channel_id=interaction.channel.id,
             )
 
             handler = TaskHandler(discord.ui.View(timeout=None), client)

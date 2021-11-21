@@ -1,4 +1,4 @@
-watch_the_skies_data = {
+watch_the_stars_data = {
     "currencies": {
         "rare": [
             # Earth Item Cards
@@ -35,6 +35,7 @@ watch_the_skies_data = {
             ("Interceptors", "🛩"),
             ("Special Agents", "🕵️‍♂️"),
             ("Nuclear Missile", "💣"),
+            
         ],
     },
     "teams": {

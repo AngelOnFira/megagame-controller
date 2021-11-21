@@ -3,7 +3,7 @@ import random
 import emojis
 from django_seed import Seed
 
-from actions import watch_the_skies_data
+from actions import watch_the_stars_data
 from bot.accounts.models import User
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
@@ -80,8 +80,8 @@ class Command(BaseCommand):
 
         # seeder = Seed.seeder(locale="en_CA")
 
-        for currency_type in watch_the_skies_data["currencies"].keys():
-            for currency in watch_the_skies_data["currencies"][currency_type]:
+        for currency_type in watch_the_stars_data["currencies"].keys():
+            for currency in watch_the_stars_data["currencies"][currency_type]:
                 Currency.objects.create(
                     name=currency[0],
                     emoji=emojis.decode(currency[1]),
@@ -103,9 +103,9 @@ class Command(BaseCommand):
         for currency in Currency.objects.all():
             currency_lookup[currency.name] = currency
 
-        for i, (team_name, team) in enumerate(watch_the_skies_data["teams"].items()):
-            # if i > 1:
-            #     break
+        for i, (team_name, team) in enumerate(watch_the_stars_data["teams"].items()):
+            if i > 1:
+                break
 
             wallet = Wallet.objects.create(
                 name=f"{team_name}'s wallet",

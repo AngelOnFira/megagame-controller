@@ -5,7 +5,7 @@ import discord
 import emojis
 from asgiref.sync import sync_to_async
 
-from actions import watch_the_skies_data
+from actions import watch_the_stars_data
 from bot.discord_models.models import Channel, Guild, Role
 from currencies.models import Wallet
 from django.db import models
@@ -93,7 +93,7 @@ class Team(models.Model):
         return f"{self.name} ({self.id})"
 
     def get_income_track(self):
-        return watch_the_skies_data["teams"][self.name]["income_track"]
+        return watch_the_stars_data["teams"][self.name]["income_track"]
 
     def get_income(self):
         from currencies.models import Currency

@@ -8,7 +8,8 @@ from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.services.Dropdown import Dropdown
 from bot.users.models import Member
 from currencies.models import Currency, Payment, Trade, Transaction
-from currencies.services import CreateBankEmbed, CreateTrade, CreateTradeEmbed
+from currencies.services import (CreateBankEmbed, CreateTrade,
+                                 CreateTradeEmbed, LockPayment)
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
@@ -147,6 +148,11 @@ class Button(discord.ui.Button):
             team: Team = Team.objects.get(id=team_id)
 
             currencies = team.wallet.get_currencies_available()
+            currencies = [
+                currency
+                for currency in currencies
+                if currency.currency_type in ["COM", "RAR"]
+            ]
 
             return currencies
 
@@ -227,6 +233,13 @@ class Button(discord.ui.Button):
 
         query: PaymentSyncQuery = await get_team(user_id, payment_id)
 
+        if query.payment.completed:
+            await interaction.response.send_message(
+                content="This payment has already been completed!",
+                ephemeral=True,
+            )
+            return
+
         # Make sure the team has enough money to pay
         if (
             query.megabucks not in query.balance
@@ -256,6 +269,39 @@ class Button(discord.ui.Button):
 
         # Update the message
         await sync_to_async(update_payment_view)(query.payment, interaction)
+
+    async def lock_payment(self, interaction: discord.Interaction):
+        """When the "Lock Payment" is clicked
+
+        Locks the payment to the transaction
+
+        Args:
+            interaction (discord.Interaction): The interaction object
+
+        Payload:
+            payment_id
+        """
+        # Make sure an admin clicked this
+        if "admin" not in [role.name for role in interaction.user.roles]:
+            await interaction.response.send_message(
+                "❗ You are not an admin.",
+                ephemeral=True,
+            )
+            return
+
+        payment_id = self.callback_payload["payment_id"]
+
+        payment: Payment = await sync_to_async(LockPayment.execute)(
+            {"payment_id": payment_id}
+        )
+
+        channel: discord.TextChannel = interaction.guild.get_channel_or_thread(
+            payment.channel_id
+        )
+
+        message = await channel.fetch_message(payment.embed_id)
+
+        await message.edit(embed=message.embeds[0], view=None)
 
     async def currency_trade_currency_menu(self, interaction: discord.Interaction):
         currencies: Currency = await sync_to_async(list)(Currency.objects.all())
@@ -582,6 +628,7 @@ class Button(discord.ui.Button):
             self.lock_in_trade.__name__: self.lock_in_trade,
             self.start_trading.__name__: self.start_trading,
             self.make_payment.__name__: self.make_payment,
+            self.lock_payment.__name__: self.lock_payment,
             self.confirm.__name__: self.confirm,
             self.accept.__name__: self.accept,
             self.cancel.__name__: self.cancel,

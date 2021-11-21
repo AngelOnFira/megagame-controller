@@ -250,3 +250,18 @@ class SelectTradeReceiver(Service):
 
         trade.set_receiver(values)
         trade.save()
+
+
+class LockPayment(Service):
+    payment_id = forms.IntegerField()
+
+    def process(self):
+        payment_id = self.cleaned_data["payment_id"]
+
+        payment: Payment = Payment.objects.get(id=payment_id)
+
+        payment.completed = True
+
+        payment.save()
+
+        return payment
