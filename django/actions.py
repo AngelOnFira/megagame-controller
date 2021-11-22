@@ -1,3 +1,6 @@
+from asyncore import write
+
+
 watch_the_stars_data = {
     "currencies": {
         "rare": [
@@ -111,8 +114,57 @@ watch_the_stars_data = {
         "Head of State",
         "Foreign Minister",
         "Chief of Defense",
+        "Security Council",
     },
-    "channels": {"world-news": {}},
+    "channels": {
+        "world-news": {"description": "Announcements for world events"},
+        "media-release": {
+            "write": ["Head of State", "Foreign Minister"],
+            "read": ["Chief of Defense"],
+            "description": "News reports from Control and press releases from nations",
+        },
+        "world-summit": {
+            "write": ["Head of State"],
+            "description": "Meeting space for Heads of State, mainly for emergencies",
+        },
+        "united-nations": {
+            "write": ["foreign minister"],
+            "description": "UN council for Foreign Ministers",
+        },
+        "security-council": {
+            "write": ["security council"],
+            "description": "UN Security Council members",
+        },
+        "science-conference": {
+            "write": ["Head of State"],
+            "description": "Scientific developments",
+        },
+        "red-phone": {
+            "countries": ["Russia", "United States"],
+            "write": ["Head of State", "Foreign Minister"],
+        },
+        "nato": {
+            "countries": ["France", "UK", "United States"],
+            "write": ["Head of State", "Foreign Minister"],
+        },
+        "war-room": {
+            "write": ["Chief of Defense"],
+            "read": ["Head of State", "Foreign Minister"],
+            "description": "War room for Chief of Defense to deploy interceptors and make military maneuvers",
+        },
+        "operations-room": {
+            "write": ["Head of State"],
+            "read": ["Chief of Defense", "Foreign Minister"],
+            "description": "Operations room for Heads of State to give agents instructions",
+        },
+        "treaties": {
+            "write": ["Head of State", "Foreign Minister"],
+            "read": ["Chief of Defense"],
+            "description": "Treaties posted here. Only Head of State can react (sign)",
+        },
+        "tech-support": {"description": "Technical related Q/A"},
+        "wts-qa": {"description": "Rules related Q/A"},
+    },
 }
 
 
