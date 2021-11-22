@@ -170,9 +170,26 @@ class CreateBankEmbed(Service):
 
         team: Team = Team.objects.get(id=team_id)
 
-        embed: discord.Embed = discord.Embed(title=f"Bank of {team.name}")
-
         transaction_totals: dict[Currency, int] = team.wallet.get_bank_balance(new=True)
+        pr_currency = Currency.objects.get(name="Public Relations")
+
+        income_tracking_string = "|"
+        for i, number in enumerate(team.get_income_track()[1:]):
+            if i == transaction_totals[pr_currency]:
+                income_tracking_string += f" [ {number} ]"
+            else:
+                income_tracking_string += f" {number}"
+        income_tracking_string += " |"
+
+        desciption = "Public Relations: {}{}\nIncome track: {}".format(
+            "🟦" * transaction_totals[pr_currency],
+            "🟥" * (10 - transaction_totals[pr_currency]),
+            income_tracking_string
+        )
+
+        embed: discord.Embed = discord.Embed(
+            title=f"Bank of {team.name}", description=desciption
+        )
 
         type_lookup = defaultdict(list)
 

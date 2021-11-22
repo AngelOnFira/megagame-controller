@@ -122,14 +122,14 @@ class Command(BaseCommand):
             )
 
             # Set up each country's initial currencies
-            # for currency_name, currency_amount in team["initial_currencies"]:
-            #     Transaction.objects.create(
-            #         amount=currency_amount,
-            #         currency=currency_lookup[currency_name],
-            #         from_wallet=bank_wallet,
-            #         to_wallet=Wallet.objects.get(id=team_wallet_id),
-            #         state="completed",
-            #     )
+            for currency_name, currency_amount in team["initial_currencies"]:
+                Transaction.objects.create(
+                    amount=currency_amount,
+                    currency=currency_lookup[currency_name],
+                    from_wallet=bank_wallet,
+                    to_wallet=Wallet.objects.get(id=team_wallet_id),
+                    state="completed",
+                )
 
             # TODO: Pokemon
             for currency in random.sample(

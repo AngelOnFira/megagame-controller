@@ -196,13 +196,15 @@ async def on_interaction(interaction: discord.Interaction):
             from currencies.services import CreateCompletedTransaction
             from teams.models import Team
 
-            if "currency" not in data_dict and "currency_custom" not in data_dict:
+            print(data_dict)
+
+            if "currency" not in data_dict and "custom_currency" not in data_dict:
                 await interaction.response.send_message(
                     content="Please specify a currency", ephemeral=True
                 )
                 return
 
-            if "currency" in data_dict and "currency_custom" in data_dict:
+            if "currency" in data_dict and "custom_currency" in data_dict:
                 await interaction.response.send_message(
                     content="Please specify only one currency", ephemeral=True
                 )
@@ -213,7 +215,7 @@ async def on_interaction(interaction: discord.Interaction):
                     "team_name": data_dict["team"],
                     "currency_name": data_dict["currency"]
                     if "currency" in data_dict
-                    else data_dict["currency_custom"],
+                    else data_dict["custom_currency"],
                     "amount": data_dict["amount"],
                 }
             )
