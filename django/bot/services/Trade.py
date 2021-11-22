@@ -229,7 +229,7 @@ class TradeView:
                 "button_rows": button_rows,
                 "embed": {
                     "title": "Trade in progress",
-                    "description": "Waiting for {self.other_party.name} to send their offer.",
+                    "description": f"Waiting for {self.other_party.name} to send their offer.",
                 },
             },
         )
