@@ -13,8 +13,6 @@ from django.db.models.signals import post_save
 from tasks.models import TaskType
 from tasks.services import QueueTask
 
-from actions import watch_the_stars_data
-
 
 # Create your models here.
 class Team(models.Model):

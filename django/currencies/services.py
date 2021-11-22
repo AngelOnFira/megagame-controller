@@ -184,7 +184,7 @@ class CreateBankEmbed(Service):
         desciption = "Public Relations: {}{}\nIncome track: {}".format(
             "🟦" * transaction_totals[pr_currency],
             "🟥" * (10 - transaction_totals[pr_currency]),
-            income_tracking_string
+            income_tracking_string,
         )
 
         embed: discord.Embed = discord.Embed(

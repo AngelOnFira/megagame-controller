@@ -1,6 +1,6 @@
-from asyncore import read
 import json
 import logging
+from asyncore import read
 from code import interact
 from copyreg import pickle
 from distutils.log import debug, info
@@ -15,7 +15,8 @@ from asgiref.sync import sync_to_async
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
-from currencies.services import CreateBankEmbed, CreatePaymentEmbed, CreateTradeEmbed
+from currencies.services import (CreateBankEmbed, CreatePaymentEmbed,
+                                 CreateTradeEmbed)
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
@@ -228,7 +229,7 @@ class TaskHandler:
 
         overwrites = {}
 
-        team_category, team_guild, channel, team_role= await get_team(team_id)
+        team_category, team_guild, channel, team_role = await get_team(team_id)
 
         guild = self.client.get_guild(team_guild.discord_id)
 

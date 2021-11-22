@@ -1,6 +1,5 @@
 from asyncore import write
 
-
 watch_the_stars_data = {
     "currencies": {
         "rare": [

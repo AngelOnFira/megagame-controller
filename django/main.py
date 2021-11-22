@@ -9,13 +9,12 @@ the bot.
 import asyncio
 import logging
 import os
-from pydoc import describe
-from pydoc_data.topics import topics
 import sys
 import time
 from distutils.log import debug, info
 from importlib import import_module
 from json import JSONDecoder
+from pydoc import describe
 from unicodedata import category
 
 import discord
@@ -27,6 +26,7 @@ from asgiref.sync import async_to_sync, sync_to_async
 from discord.ext import tasks
 from discord_sentry_reporting import use_sentry
 from git import head
+from pydoc_data.topics import topics
 
 import django
 from bot.plugins.base import MethodPool
@@ -287,7 +287,7 @@ async def on_interaction(interaction: discord.Interaction):
             @sync_to_async
             def build_channels(roles, role_dict):
                 from actions import watch_the_stars_data
-                from bot.discord_models.models import Role, Guild, Channel
+                from bot.discord_models.models import Channel, Guild, Role
 
                 # Create roles that don't exist
                 for role in watch_the_stars_data["roles"]:
