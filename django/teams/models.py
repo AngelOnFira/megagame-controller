@@ -55,7 +55,7 @@ class Team(models.Model):
 
     general_channel = models.OneToOneField(
         "discord_models.Channel",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="team_general_channel",
@@ -63,7 +63,7 @@ class Team(models.Model):
 
     trade_channel = models.OneToOneField(
         "discord_models.Channel",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="team_trade_channel",
@@ -71,7 +71,7 @@ class Team(models.Model):
 
     menu_channel = models.OneToOneField(
         "discord_models.Channel",
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
         null=True,
         blank=True,
         related_name="team_menu_channel",
@@ -126,12 +126,16 @@ class Team(models.Model):
         )
         async_to_sync(menu_channel.delete)()
         self.menu_channel.delete()
+        self.menu_channel = None
 
         trade_channel: discord.TextChannel = guild.get_channel(
             self.trade_channel.discord_id
         )
         async_to_sync(trade_channel.delete)()
         self.trade_channel.delete()
+        self.trade_channel = None
+
+        self.save()
 
         # Delete active trades
 
@@ -141,6 +145,7 @@ class Team(models.Model):
         # Create a menu channel for the team
         menu_channel = Channel.objects.create(guild=self.guild, name="menu")
         self.menu_channel = menu_channel
+        self.save()
         QueueTask.execute(
             {
                 "task_type": TaskType.CREATE_TEAM_CHANNEL,
@@ -154,6 +159,7 @@ class Team(models.Model):
         # Create a trade channel for the team
         trade_channel = Channel.objects.create(guild=self.guild, name="trade")
         self.trade_channel = trade_channel
+        self.save()
         QueueTask.execute(
             {
                 "task_type": TaskType.CREATE_TEAM_CHANNEL,

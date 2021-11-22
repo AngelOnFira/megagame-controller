@@ -275,6 +275,7 @@ async def before_my_task():
             }
         )
 
+        # Add all users to the database
         for user in guild.members:
             # Create an object for each member
             member = guild.get_member(user.id)
