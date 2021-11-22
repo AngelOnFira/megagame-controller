@@ -96,6 +96,11 @@ class Transaction(models.Model):
     def complete(self):
         modified_date = timezone.now()
 
+    @transaction.atomic
+    @transition(field=state, source="*", target="cancelled")
+    def cancel(self):
+        modified_date = timezone.now()
+
     def __str__(self):
         return f"{self.from_wallet} -> {self.to_wallet} ({self.amount})"
 
@@ -231,6 +236,13 @@ class Trade(models.Model):
         # TODO: Add recipt
 
         return True
+
+    @transaction.atomic
+    @transition(field=state, source="*", target="cancelled")
+    def cancel(self):
+        for transaction in Transaction.objects.filter(trade=self):
+            transaction.cancel()
+            transaction.save()
 
     @transition(field=state, source="completed", target="new")
     def reset(self):

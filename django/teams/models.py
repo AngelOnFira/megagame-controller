@@ -118,6 +118,14 @@ class Team(models.Model):
         async_to_sync(message.edit)(embed=embed)
 
     def refresh_team(self, client: discord.Client):
+        # Kill all trades
+        from currencies.models import Trade
+
+        trades = Trade.objects.filter(initiating_party=self).exclude(state="complete")
+        for trade in trades:
+            trade.cancel()
+            trade.save()
+
         # Delete all the channels
         guild: discord.Guild = client.get_guild(self.guild.discord_id)
 

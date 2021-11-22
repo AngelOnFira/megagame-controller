@@ -234,6 +234,7 @@ async def on_interaction(interaction: discord.Interaction):
             for team in teams:
                 if team.name == "null":
                     continue
+
                 await sync_to_async(team.refresh_team)(client)
                 await sync_to_async(team.create_team_ephemeral_channels)()
 
@@ -287,39 +288,39 @@ async def before_my_task():
                 }
             )
 
-        # if settings.ERADICATE_SERVER and settings.DEBUG:
-        #     logger.debug("Deleting channels that aren't in the database...")
-        #     channels_stored: list[Channel] = await sync_to_async(list)(
-        #         Channel.objects.all()
-        #     )
-        #     channel_ids = [channel.discord_id for channel in channels_stored]
-        #     for channel in guild.channels:
-        #         if (
-        #             not channel.name.startswith("test-")
-        #             and (
-        #                 isinstance(channel, discord.TextChannel)
-        #                 or isinstance(channel, discord.VoiceChannel)
-        #             )
-        #             and channel.id not in channel_ids
-        #         ):
-        #             await channel.delete()
+        if settings.ERADICATE_SERVER and settings.DEBUG:
+            logger.debug("Deleting channels that aren't in the database...")
+            channels_stored: list[Channel] = await sync_to_async(list)(
+                Channel.objects.all()
+            )
+            channel_ids = [channel.discord_id for channel in channels_stored]
+            for channel in guild.channels:
+                if (
+                    not channel.name.startswith("test-")
+                    and (
+                        isinstance(channel, discord.TextChannel)
+                        or isinstance(channel, discord.VoiceChannel)
+                    )
+                    and channel.id not in channel_ids
+                ):
+                    await channel.delete()
 
-        #     logger.debug("Deleting categories that aren't in the database...")
-        #     categories_stored = await sync_to_async(list)(Category.objects.all())
-        #     category_ids = [category.discord_id for category in categories_stored]
-        #     for category in guild.categories:
-        #         if (
-        #             not category.name.startswith("dev-")
-        #             and category.id not in category_ids
-        #         ):
-        #             await category.delete()
+            logger.debug("Deleting categories that aren't in the database...")
+            categories_stored = await sync_to_async(list)(Category.objects.all())
+            category_ids = [category.discord_id for category in categories_stored]
+            for category in guild.categories:
+                if (
+                    not category.name.startswith("dev-")
+                    and category.id not in category_ids
+                ):
+                    await category.delete()
 
-        #     logger.debug("Deleting roles that aren't in the database...")
-        #     roles_stored = await sync_to_async(list)(Role.objects.all())
-        #     for role in guild.roles:
-        #         if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
-        #             await role.delete()
-        #     logger.debug("Done preparing...")
+            logger.debug("Deleting roles that aren't in the database...")
+            roles_stored = await sync_to_async(list)(Role.objects.all())
+            for role in guild.roles:
+                if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
+                    await role.delete()
+            logger.debug("Done preparing...")
 
         # TODO: create test channel to print all emojis of teams, currencies, and so on
 

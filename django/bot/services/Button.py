@@ -259,7 +259,7 @@ class Button(discord.ui.Button):
 
             query.player = member.player
 
-            query.balance = team.wallet.get_bank_balance()
+            query.balance = team.wallet.get_bank_balance(new=True)
 
             query.megabucks = Currency.objects.get(name="Megabucks")
 
@@ -463,6 +463,27 @@ class Button(discord.ui.Button):
         )
         await sync_to_async(trade_view.update_trade_view)()
 
+    # When cancel trade is pressed from either team
+    async def cancel_trade(self, interaction: discord.Interaction):
+        trade_id = self.callback_payload["trade_id"]
+
+        trade: Trade = await sync_to_async(Trade.objects.get)(id=trade_id)
+
+        # Update trade state
+        await sync_to_async(trade.cancel)()
+
+        # Delete the current thread
+        # await interaction.channel.delete()
+
+        await sync_to_async(trade.save)()
+
+        # pass off rest to trade function
+        handler = TaskHandler(discord.ui.View(timeout=None), self.client)
+        trade_view: TradeView = await sync_to_async(TradeView)(
+            trade, interaction, handler, self.client
+        )
+        await sync_to_async(trade_view.cancel_trade_view)()
+
     async def complete_trade(self, interaction: discord.Interaction):
         # get the trade id
         # TODO: Make sure there is enough money
@@ -542,17 +563,6 @@ class Button(discord.ui.Button):
         await interaction.channel.delete()
 
         # TODO: Lock down channel
-
-    async def cancel_trade(self, interaction: discord.Interaction):
-        trade_id = self.callback_payload["trade_id"]
-
-        trade: Trade = await sync_to_async(Trade.objects.get)(id=trade_id)
-
-        await sync_to_async(trade.reset)()
-
-        await sync_to_async(trade.save)()
-
-        await interaction.channel.delete()
 
     # When toggle trade accept is pressed
     async def confirm(self, interaction: discord.Interaction):
@@ -669,6 +679,7 @@ class Button(discord.ui.Button):
         # Can probably be done better
         function_lookup = {
             self.accept_trade.__name__: self.accept_trade,
+            self.cancel_trade.__name__: self.cancel_trade,
             self.adjust_currency_trade.__name__: self.adjust_currency_trade,
             self.currency_trade_adjustment_menu.__name__: self.currency_trade_adjustment_menu,
             self.currency_trade_currency_menu.__name__: self.currency_trade_currency_menu,

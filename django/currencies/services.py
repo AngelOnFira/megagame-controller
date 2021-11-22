@@ -172,7 +172,7 @@ class CreateBankEmbed(Service):
 
         embed: discord.Embed = discord.Embed(title=f"Bank of {team.name}")
 
-        transaction_totals: dict[Currency, int] = team.wallet.get_bank_balance()
+        transaction_totals: dict[Currency, int] = team.wallet.get_bank_balance(new=True)
 
         type_lookup = defaultdict(list)
 

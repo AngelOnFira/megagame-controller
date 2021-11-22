@@ -44,7 +44,7 @@ class TradeView:
             self.party_thread = self.trade.initiating_party_discord_trade_thread
             self.other_party_thread = self.trade.receiving_party_discord_trade_thread
 
-        elif trade.state == "receiving_party_view":
+        else:  # trade.state == "receiving_party_view":
             self.party = self.trade.receiving_party
             self.other_party = self.trade.initiating_party
 
@@ -153,7 +153,7 @@ class TradeView:
                 "disabled": False,
                 "label": "Cancel Trade",
                 "emoji": "❌",
-                "do_next": Button.accept_trade.__name__,
+                "do_next": Button.cancel_trade.__name__,
                 "callback_payload": {"trade_id": self.trade.id},
             }
         )
@@ -270,6 +270,28 @@ class TradeView:
             description=f"Waiting for {self.other_party.name} to send their offer.",
         )
         async_to_sync(receiving_message.edit)(view=receiving_updated_view, embed=embed)
+
+    def cancel_trade_view(self):
+        embed: discord.Embed = discord.Embed(
+            title="Trade was cancelled",
+            description=f"One of the teams cancelled the trade",
+        )
+
+        # Current party
+        current_party_discord_channel = self.client.get_channel(
+            self.party_thread.discord_id
+        )
+        current_party_message: discord.Message = async_to_sync(
+            current_party_discord_channel.fetch_message
+        )(self.party_embed)
+        async_to_sync(current_party_message.edit)(view=None, embed=embed)
+
+        # Other party
+        receiving_channel = self.client.get_channel(self.other_party_thread.discord_id)
+        receiving_message: discord.Message = async_to_sync(
+            receiving_channel.fetch_message
+        )(self.other_party_embed)
+        async_to_sync(receiving_message.edit)(view=None, embed=embed)
 
     # elif trade.state == "initiating_party_accepted":
     #     interacting_team: Team = trade.initiating_party
