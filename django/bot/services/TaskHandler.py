@@ -1,3 +1,4 @@
+from asyncore import read
 import json
 import logging
 from code import interact
@@ -14,8 +15,7 @@ from asgiref.sync import sync_to_async
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.users.models import Member
 from currencies.models import Currency, Trade
-from currencies.services import (CreateBankEmbed, CreatePaymentEmbed,
-                                 CreateTradeEmbed)
+from currencies.services import CreateBankEmbed, CreatePaymentEmbed, CreateTradeEmbed
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
@@ -224,11 +224,21 @@ class TaskHandler:
 
             channel = Channel.objects.get(id=channel_bind_model_id)
 
-            return team.category, team.guild, channel
+            return team.category, team.guild, channel, team.role
 
-        team_category, team_guild, channel = await get_team(team_id)
+        overwrites = {}
+
+        team_category, team_guild, channel, team_role= await get_team(team_id)
 
         guild = self.client.get_guild(team_guild.discord_id)
+
+        if "type" in payload:
+            overwrites[guild.default_role] = discord.PermissionOverwrite(
+                send_messages=False, view_channel=False
+            )
+            team_role = guild.get_role(team_role.discord_id)
+
+            overwrites[team_role] = discord.PermissionOverwrite(view_channel=True)
 
         # TODO: Remove fetch needed for cache busting
         category = await guild.fetch_channel(team_category.discord_id)
@@ -236,6 +246,7 @@ class TaskHandler:
         text_channel = await guild.create_text_channel(
             channel.name,
             category=category,
+            overwrites=overwrites,
         )
 
         channel.discord_id = text_channel.id

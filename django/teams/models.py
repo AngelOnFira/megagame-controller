@@ -13,6 +13,8 @@ from django.db.models.signals import post_save
 from tasks.models import TaskType
 from tasks.services import QueueTask
 
+from actions import watch_the_stars_data
+
 
 # Create your models here.
 class Team(models.Model):
@@ -151,7 +153,10 @@ class Team(models.Model):
 
     def create_team_ephemeral_channels(self):
         # Create a menu channel for the team
-        menu_channel = Channel.objects.create(guild=self.guild, name="menu")
+        name_altered = self.name.lower().replace(" ", "-")
+        menu_channel = Channel.objects.create(
+            guild=self.guild, name=f"{name_altered}-menu"
+        )
         self.menu_channel = menu_channel
         self.save()
         QueueTask.execute(
@@ -160,12 +165,15 @@ class Team(models.Model):
                 "payload": {
                     "team_id": self.id,
                     "channel_bind_model_id": menu_channel.id,
+                    "type": False,
                 },
             }
         )
 
         # Create a trade channel for the team
-        trade_channel = Channel.objects.create(guild=self.guild, name="trade")
+        trade_channel = Channel.objects.create(
+            guild=self.guild, name=f"{name_altered}-trade"
+        )
         self.trade_channel = trade_channel
         self.save()
         QueueTask.execute(
@@ -174,6 +182,7 @@ class Team(models.Model):
                 "payload": {
                     "team_id": self.id,
                     "channel_bind_model_id": trade_channel.id,
+                    "type": False,
                 },
             }
         )
@@ -308,7 +317,10 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
         instance.create_team_ephemeral_channels()
 
         # Create a general channel for the team
-        general_channel = Channel.objects.create(guild=instance.guild, name="general")
+        general_channel = Channel.objects.create(
+            guild=instance.guild,
+            name="{}-general".format(instance.name.lower().replace(" ", "-")),
+        )
         instance.general_channel = general_channel
         QueueTask.execute(
             {
@@ -320,15 +332,34 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
             }
         )
 
+        # Create a control channel for the team
+        control_channel = Channel.objects.create(
+            guild=instance.guild,
+            name="{}-control".format(instance.name.lower().replace(" ", "-")),
+        )
+        instance.control_channel = control_channel
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_TEAM_CHANNEL,
+                "payload": {
+                    "team_id": instance.id,
+                    "channel_bind_model_id": control_channel.id,
+                },
+            }
+        )
+
         # Create voice channels for the team
-        general_channel = Channel.objects.create(guild=instance.guild, name="general")
+        general_channel = Channel.objects.create(
+            guild=instance.guild,
+            name=watch_the_stars_data["teams"][instance.name]["capitol"],
+        )
         instance.general_channel = general_channel
         QueueTask.execute(
             {
                 "task_type": TaskType.CREATE_TEAM_VOICE_CHANNEL,
                 "payload": {
                     "team_id": instance.id,
-                    "name": "general",
+                    "name": general_channel.name,
                 },
             }
         )

@@ -9,11 +9,14 @@ the bot.
 import asyncio
 import logging
 import os
+from pydoc import describe
+from pydoc_data.topics import topics
 import sys
 import time
 from distutils.log import debug, info
 from importlib import import_module
 from json import JSONDecoder
+from unicodedata import category
 
 import discord
 import emojis
@@ -257,7 +260,7 @@ async def on_interaction(interaction: discord.Interaction):
             @sync_to_async
             def build_channels(roles, role_dict):
                 from actions import watch_the_stars_data
-                from bot.discord_models.models import Role, Guild
+                from bot.discord_models.models import Role, Guild, Channel
 
                 # Create roles that don't exist
                 for role in watch_the_stars_data["roles"]:
@@ -275,6 +278,91 @@ async def on_interaction(interaction: discord.Interaction):
                         new_role, _ = Role.objects.get_or_create(
                             discord_id=role_object.id,
                             name=role,
+                            guild=Guild.objects.get(discord_id=interaction.guild.id),
+                        )
+
+                # Earth Category
+                earth_category = list(
+                    filter(
+                        lambda x: x.name.lower() == "earth",
+                        interaction.guild.categories,
+                    )
+                )
+
+                if len(earth_category) > 1:
+                    logger.warning("There is more than one earth category!")
+
+                if len(earth_category) == 0:
+                    logger.error("No earth category!")
+
+                    sync_to_async(interaction.response.send_message)(
+                        content=f"Error creating the earth channel, could not find category",
+                        ephemeral=True,
+                    )
+
+                    return
+
+                earth_category = earth_category[0]
+
+                # Create channels that don't exist
+                for name, channel in watch_the_stars_data["channels"].items():
+                    # If it doesn't exist, create it
+                    if not Channel.objects.filter(name=role).exists():
+                        # Build overwrites
+                        overwrites = {}
+
+                        if "read" in channel:
+                            overwrites[
+                                interaction.guild.default_role
+                            ] = discord.PermissionOverwrite(read_messages=False)
+
+                            for role_name in channel["read"]:
+                                role = interaction.guild.get_role(
+                                    Role.objects.get(name=role_name).discord_id
+                                )
+                                overwrites[role] = discord.PermissionOverwrite(
+                                    read_messages=True, send_messages=False
+                                )
+
+                        if "write" in channel:
+                            overwrites[
+                                interaction.guild.default_role
+                            ] = discord.PermissionOverwrite(read_messages=False)
+
+                            for role_name in channel["write"]:
+                                role = interaction.guild.get_role(
+                                    Role.objects.get(name=role_name).discord_id
+                                )
+                                overwrites[role] = discord.PermissionOverwrite(
+                                    read_messages=True, send_messages=True
+                                )
+
+                        if "countries" in channel:
+                            overwrites[
+                                interaction.guild.default_role
+                            ] = discord.PermissionOverwrite(read_messages=False)
+
+                            for country in channel["countries"]:
+                                role = interaction.guild.get_role(
+                                    Role.objects.get(name=country).discord_id
+                                )
+                                overwrites[role] = discord.PermissionOverwrite(
+                                    read_messages=True, send_messages=True
+                                )
+
+                        # Create channel
+                        channel_object = async_to_sync(
+                            interaction.guild.create_text_channel
+                        )(
+                            name,
+                            category=earth_category,
+                            topic=channel["description"] if "description" in channel else "",
+                            overwrites=overwrites,
+                        )
+
+                        new_channel, _ = Channel.objects.get_or_create(
+                            discord_id=channel_object.id,
+                            name=name,
                             guild=Guild.objects.get(discord_id=interaction.guild.id),
                         )
 
@@ -369,7 +457,10 @@ async def before_my_task():
             logger.debug("Deleting roles that aren't in the database...")
             roles_stored = await sync_to_async(list)(Role.objects.all())
             for role in guild.roles:
-                if role.colour in [TEAM_ROLE_COLOUR, DISCORD_ROLE_COLOR] and role.id not in roles_stored:
+                if (
+                    role.colour in [TEAM_ROLE_COLOUR, DISCORD_ROLE_COLOR]
+                    and role.id not in roles_stored
+                ):
                     await role.delete()
             logger.debug("Done preparing...")
 

@@ -57,15 +57,15 @@ class Command(BaseCommand):
         # )
 
         # # Create a category for the general game channels
-        # QueueTask.execute(
-        #     {
-        #         "task_type": TaskType.CREATE_CATEGORY,
-        #         "payload": {
-        #             "category_name": "general",
-        #             "guild_id": guild.discord_id,
-        #         },
-        #     }
-        # )
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CATEGORY,
+                "payload": {
+                    "category_name": "earth",
+                    "guild_id": guild.discord_id,
+                },
+            }
+        )
 
         # # Create a category for the trades
         # QueueTask.execute(
@@ -131,13 +131,25 @@ class Command(BaseCommand):
                     state="completed",
                 )
 
-            # TODO: Pokemon
-            for currency in random.sample(
-                list(Currency.objects.filter(currency_type="RAR")), k=4
-            ):
+            random_list = [
+                "Dead Alien",
+                "Saucer Wreck",
+                "Exotic Materials",
+                "Unidentified Alien Items",
+                "Live Alien",
+                "Alien Entertainment System",
+                "Alien Personal Weapons",
+                "Alien Power Generator",
+                "Alien Energy Crystals",
+                "Alien Foods",
+                "Alien Communications System",
+                "Alien Computer",
+            ]
+
+            for i in range(4):
                 Transaction.objects.create(
                     amount=1,
-                    currency=currency,
+                    currency=Currency.objects.get(name=random.choice(random_list)),
                     from_wallet=bank_wallet,
                     to_wallet=Wallet.objects.get(id=team_wallet_id),
                     state="completed",
@@ -146,8 +158,7 @@ class Command(BaseCommand):
             # Pay each country their income
             Transaction.objects.create(
                 amount=team["income_track"][5],
-                currency=currency_lookup["Megabucks"],  # TODO: Pokemon
-                # currency=currency_lookup["Megabucks"],
+                currency=currency_lookup["Megabucks"],
                 from_wallet=bank_wallet,
                 to_wallet=Wallet.objects.get(id=team_wallet_id),
                 state="completed",

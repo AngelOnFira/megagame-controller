@@ -5,173 +5,6 @@ watch_the_stars_data = {
     "currencies": {
         "rare": [
             # Earth Item Cards
-            ("Pikachu", "🟡"),
-            ("Charmander", "🟠"),
-            ("Bulbasaur", "🟢"),
-            ("Squirtle", "🔵"),
-            ("Pidgey", "🔴"),
-            ("Eevee", "🔶"),
-            ("Jigglypuff", "🔷"),
-            ("Psyduck", "🔸"),
-            ("Mankey", "🔹"),
-            ("Growlithe", "🔺"),
-            ("Vulpix", "🔻"),
-            ("Rattata", "🔜"),
-            ("Meowth", "🔝"),
-            ("Koffing", "🔞"),
-            ("Gastly", "🔟"),
-            ("Gengar", "🔠"),
-            ("Cubone", "🔡"),
-        ],
-        "common": [("Megabucks", "💵")],
-        "admin": [
-            ("Public Order", "📰"),
-            ("Public Relations", "📈"),
-            ("Income bonus", "💸"),
-            # income currency, bonus income
-        ],
-        "logistics": [
-            ("Apple", "🍎"),
-            ("Banana", "🍌"),
-            ("Egg Nog", "🍩"),
-        ],
-    },
-    "teams": {
-        "United Kingdom": {
-            "abreviation": "UK",
-            "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            "flag": "🇬🇧",
-            "initial_currencies": [
-                ("Megabucks", 100),
-                ("Public Relations", 5),
-            ],
-        },
-        "United States": {
-            "abreviation": "US",
-            "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            "flag": "🇺🇸",
-            "initial_currencies": [
-                ("Megabucks", 100),
-                ("Public Relations", 5),
-            ],
-        },
-        "Brazil": {
-            "abreviation": "BR",
-            "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            "flag": "🇧🇷",
-            "initial_currencies": [
-                ("Megabucks", 100),
-                ("Public Relations", 5),
-            ],
-        },
-        "France": {
-            "abreviation": "FR",
-            "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            "flag": "🇫🇷",
-            "initial_currencies": [
-                ("Megabucks", 100),
-                ("Public Relations", 5),
-            ],
-        },
-        "India": {
-            "abreviation": "IN",
-            "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            "flag": "🇮🇳",
-            "initial_currencies": [
-                ("Megabucks", 100),
-                ("Public Relations", 5),
-            ],
-        },
-        "Russia": {
-            "abreviation": "RU",
-            "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            "flag": "🇷🇺",
-            "initial_currencies": [
-                ("Megabucks", 100),
-                ("Public Relations", 5),
-            ],
-        },
-        "China": {
-            "abreviation": "CN",
-            "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            "flag": "🇨🇳",
-            "initial_currencies": [
-                ("Megabucks", 100),
-                ("Public Relations", 5),
-            ],
-        },
-        "Japan": {
-            "abreviation": "JP",
-            "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-            "flag": "🇯🇵",
-            "initial_currencies": [
-                ("Megabucks", 100),
-                ("Public Relations", 5),
-            ],
-        },
-    },
-    "roles": {
-        "Head of State",
-        "Foreign Minister",
-        "Chief of Defense",
-        "Security Council",
-    },
-    "channels": {
-        "world-news": {"description": "Announcements for world events"},
-        "media-release": {
-            "write": ["Head of State", "Foreign Minister"],
-            "read": ["Chief of Defense"],
-            "description": "News reports from Control and press releases from nations",
-        },
-        "world-summit": {
-            "write": ["Head of State"],
-            "description": "Meeting space for Heads of State, mainly for emergencies",
-        },
-        "united-nations": {
-            "write": ["foreign minister"],
-            "description": "UN council for Foreign Ministers",
-        },
-        "security-council": {
-            "write": ["security council"],
-            "description": "UN Security Council members",
-        },
-        "science-conference": {
-            "write": ["Head of State"],
-            "description": "Scientific developments",
-        },
-        "red-phone": {
-            "countries": ["Russia", "United States"],
-            "write": ["Head of State", "Foreign Minister"],
-        },
-        "nato": {
-            "countries": ["France", "UK", "United States"],
-            "write": ["Head of State", "Foreign Minister"],
-        },
-        "war-room": {
-            "write": ["Chief of Defense"],
-            "read": ["Head of State", "Foreign Minister"],
-            "description": "War room for Chief of Defense to deploy interceptors and make military maneuvers",
-        },
-        "operations-room": {
-            "write": ["Head of State"],
-            "read": ["Chief of Defense", "Foreign Minister"],
-            "description": "Operations room for Heads of State to give agents instructions",
-        },
-        "treaties": {
-            "write": ["Head of State", "Foreign Minister"],
-            "read": ["Chief of Defense"],
-            "description": "Treaties posted here. Only Head of State can react (sign)",
-        },
-        "tech-support": {"description": "Technical related Q/A"},
-        "wts-qa": {"description": "Rules related Q/A"},
-    },
-}
-
-
-watch_the_stars_data_real = {
-    "currencies": {
-        "rare": [
-            # Earth Item Cards
             ("Useful Human Technology", "💻"),
             ("Human Cultural Item", "🎭"),
             ("Rare Earth Metals", "🔧"),
@@ -220,6 +53,7 @@ watch_the_stars_data_real = {
                 ("Special Agents", 2),
                 ("Public Relations", 5),
             ],
+            "capitol": "London",
         },
         "United States": {
             "abreviation": "US",
@@ -233,6 +67,7 @@ watch_the_stars_data_real = {
                 ("Special Agents", 4),
                 ("Public Relations", 5),
             ],
+            "capitol": "Washington",
         },
         "Brazil": {
             "abreviation": "BR",
@@ -245,6 +80,7 @@ watch_the_stars_data_real = {
                 ("Special Agents", 2),
                 ("Public Relations", 5),
             ],
+            "capitol": "Brasilia",
         },
         "France": {
             "abreviation": "FR",
@@ -258,6 +94,7 @@ watch_the_stars_data_real = {
                 ("Special Agents", 2),
                 ("Public Relations", 5),
             ],
+            "capitol": "Paris",
         },
         "India": {
             "abreviation": "IN",
@@ -271,6 +108,7 @@ watch_the_stars_data_real = {
                 ("Special Agents", 2),
                 ("Public Relations", 5),
             ],
+            "capitol": "New Delhi",
         },
         "Russia": {
             "abreviation": "RU",
@@ -284,6 +122,7 @@ watch_the_stars_data_real = {
                 ("Special Agents", 2),
                 ("Public Relations", 5),
             ],
+            "capitol": "Moscow",
         },
         "China": {
             "abreviation": "CN",
@@ -297,6 +136,7 @@ watch_the_stars_data_real = {
                 ("Special Agents", 2),
                 ("Public Relations", 5),
             ],
+            "capitol": "Beijing",
         },
         "Japan": {
             "abreviation": "JP",
@@ -309,6 +149,237 @@ watch_the_stars_data_real = {
                 ("Special Agents", 2),
                 ("Public Relations", 5),
             ],
+            "capitol": "Tokyo",
         },
     },
+    "roles": {
+        "Head of State",
+        "Foreign Minister",
+        "Chief of Defense",
+        "Security Council",
+    },
+    "channels": {
+        "world-news": {"description": "Announcements for world events"},
+        "media-release": {
+            "write": ["Head of State", "Foreign Minister"],
+            "read": ["Chief of Defense"],
+            "description": "News reports from Control and press releases from nations",
+        },
+        "world-summit": {
+            "write": ["Head of State"],
+            "description": "Meeting space for Heads of State, mainly for emergencies",
+        },
+        "united-nations": {
+            "write": ["Foreign Minister"],
+            "description": "UN council for Foreign Ministers",
+        },
+        "security-council": {
+            "write": ["Security Council"],
+            "description": "UN Security Council members",
+        },
+        "science-conference": {
+            "write": ["Head of State"],
+            "description": "Scientific developments",
+        },
+        "red-phone": {
+            "countries": ["Russia", "United States"],
+            # "write": ["Head of State", "Foreign Minister"],
+        },
+        "nato": {
+            "countries": ["France", "United Kingdom", "United States"],
+            # "write": ["Head of State", "Foreign Minister"],
+        },
+        "war-room": {
+            "write": ["Chief of Defense"],
+            "read": ["Head of State", "Foreign Minister"],
+            "description": "War room for Chief of Defense to deploy interceptors and make military maneuvers",
+        },
+        "operations-room": {
+            "write": ["Head of State"],
+            "read": ["Chief of Defense", "Foreign Minister"],
+            "description": "Operations room for Heads of State. Agent actions carried out here.",
+        },
+        "treaties": {
+            "write": ["Head of State", "Foreign Minister"],
+            "read": ["Chief of Defense"],
+            "description": "Treaties posted here. Only Head of State can react (sign)",
+        },
+        "tech-support": {"description": "Technical related Q/A"},
+        "wts-qa": {"description": "Rules related Q/A"},
+    },
 }
+
+
+# watch_the_stars_data = {
+#     "currencies": {
+#         "rare": [
+#             # Earth Item Cards
+#             ("Pikachu", "🟡"),
+#             ("Charmander", "🟠"),
+#             ("Bulbasaur", "🟢"),
+#             ("Squirtle", "🔵"),
+#             ("Pidgey", "🔴"),
+#             ("Eevee", "🔶"),
+#             ("Jigglypuff", "🔷"),
+#             ("Psyduck", "🔸"),
+#             ("Mankey", "🔹"),
+#             ("Growlithe", "🔺"),
+#             ("Vulpix", "🔻"),
+#             ("Rattata", "🔜"),
+#             ("Meowth", "🔝"),
+#             ("Koffing", "🔞"),
+#             ("Gastly", "🔟"),
+#             ("Gengar", "🔠"),
+#             ("Cubone", "🔡"),
+#         ],
+#         "common": [("Megabucks", "💵")],
+#         "admin": [
+#             ("Public Order", "📰"),
+#             ("Public Relations", "📈"),
+#             ("Income bonus", "💸"),
+#             # income currency, bonus income
+#         ],
+#         "logistics": [
+#             ("Apple", "🍎"),
+#             ("Banana", "🍌"),
+#             ("Egg Nog", "🍩"),
+#         ],
+#     },
+#     "teams": {
+#         "United Kingdom": {
+#             "abreviation": "UK",
+#             "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#             "flag": "🇬🇧",
+#             "initial_currencies": [
+#                 ("Megabucks", 100),
+#                 ("Public Relations", 5),
+#             ],
+#             "capitol": "London",
+#         },
+#         "United States": {
+#             "abreviation": "US",
+#             "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#             "flag": "🇺🇸",
+#             "initial_currencies": [
+#                 ("Megabucks", 100),
+#                 ("Public Relations", 5),
+#             ],
+#             "capitol": "Washington",
+#         },
+#         "Brazil": {
+#             "abreviation": "BR",
+#             "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#             "flag": "🇧🇷",
+#             "initial_currencies": [
+#                 ("Megabucks", 100),
+#                 ("Public Relations", 5),
+#             ],
+#             "capitol": "Brasilia",
+#         },
+#         "France": {
+#             "abreviation": "FR",
+#             "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#             "flag": "🇫🇷",
+#             "initial_currencies": [
+#                 ("Megabucks", 100),
+#                 ("Public Relations", 5),
+#             ],
+#             "capitol": "Paris",
+#         },
+#         "India": {
+#             "abreviation": "IN",
+#             "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#             "flag": "🇮🇳",
+#             "initial_currencies": [
+#                 ("Megabucks", 100),
+#                 ("Public Relations", 5),
+#             ],
+#             "capitol": "New Delhi",
+#         },
+#         "Russia": {
+#             "abreviation": "RU",
+#             "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#             "flag": "🇷🇺",
+#             "initial_currencies": [
+#                 ("Megabucks", 100),
+#                 ("Public Relations", 5),
+#             ],
+#             "capitol": "Moscow",
+#         },
+#         "China": {
+#             "abreviation": "CN",
+#             "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#             "flag": "🇨🇳",
+#             "initial_currencies": [
+#                 ("Megabucks", 100),
+#                 ("Public Relations", 5),
+#             ],
+#             "capitol": "Beijing",
+#         },
+#         "Japan": {
+#             "abreviation": "JP",
+#             "income_track": [-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+#             "flag": "🇯🇵",
+#             "initial_currencies": [
+#                 ("Megabucks", 100),
+#                 ("Public Relations", 5),
+#             ],
+#             "capitol": "Tokyo",
+#         },
+#     },
+#     "roles": {
+#         "Head of State",
+#         "Foreign Minister",
+#         "Chief of Defense",
+#         "Security Council",
+#     },
+#     "channels": {
+#         "world-news": {"description": "Announcements for world events"},
+#         "media-release": {
+#             "write": ["Head of State", "Foreign Minister"],
+#             "read": ["Chief of Defense"],
+#             "description": "News reports from Control and press releases from nations",
+#         },
+#         "world-summit": {
+#             "write": ["Head of State"],
+#             "description": "Meeting space for Heads of State, mainly for emergencies",
+#         },
+#         "united-nations": {
+#             "write": ["Foreign Minister"],
+#             "description": "UN council for Foreign Ministers",
+#         },
+#         "security-council": {
+#             "write": ["Security Council"],
+#             "description": "UN Security Council members",
+#         },
+#         "science-conference": {
+#             "write": ["Head of State"],
+#             "description": "Scientific developments",
+#         },
+#         "red-phone": {
+#             "countries": ["Russia", "United States"],
+#             # "write": ["Head of State", "Foreign Minister"],
+#         },
+#         "nato": {
+#             "countries": ["France", "United Kingdom", "United States"],
+#             # "write": ["Head of State", "Foreign Minister"],
+#         },
+#         "war-room": {
+#             "write": ["Chief of Defense"],
+#             "read": ["Head of State", "Foreign Minister"],
+#             "description": "War room for Chief of Defense to deploy interceptors and make military maneuvers",
+#         },
+#         "operations-room": {
+#             "write": ["Head of State"],
+#             "read": ["Chief of Defense", "Foreign Minister"],
+#             "description": "Operations room for Heads of State. Agent actions carried out here.",
+#         },
+#         "treaties": {
+#             "write": ["Head of State", "Foreign Minister"],
+#             "read": ["Chief of Defense"],
+#             "description": "Treaties posted here. Only Head of State can react (sign)",
+#         },
+#         "tech-support": {"description": "Technical related Q/A"},
+#         "wts-qa": {"description": "Rules related Q/A"},
+#     },
+# }
