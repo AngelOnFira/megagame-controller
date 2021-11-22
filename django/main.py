@@ -123,6 +123,33 @@ async def run_tasks_sync(client: discord.Client):
 
 
 @client.event
+async def on_member_update(before, after):
+    @sync_to_async
+    def update_member_roles(member_after):
+        # Get member
+        from bot.users.models import Member
+        from teams.models import Team
+
+        member = Member.objects.get(discord_id=member_after.id)
+
+        # Get player
+        player = member.player
+
+        # Get roles
+        roles = member_after.roles
+
+        for role in roles:
+            if Team.objects.filter(name=role.name).exists():
+                team = Team.objects.get(name=role.name)
+                player.team = team
+                player.save()
+                logger.info(f"{member_after} updated to team {team}")
+                return
+
+    await update_member_roles(after)
+
+
+@client.event
 async def on_interaction(interaction: discord.Interaction):
     from bot.services.Payment import create_payment_view
     from bot.services.TaskHandler import TaskHandler
@@ -356,7 +383,9 @@ async def on_interaction(interaction: discord.Interaction):
                         )(
                             name,
                             category=earth_category,
-                            topic=channel["description"] if "description" in channel else "",
+                            topic=channel["description"]
+                            if "description" in channel
+                            else "",
                             overwrites=overwrites,
                         )
 

@@ -33,7 +33,7 @@ def default_team(sender, instance, created, **kwargs):
     if created:
         # TODO: set back to null
         team, _ = Team.objects.get_or_create(name="null")
-        team, _ = Team.objects.get_or_create(name="United Kingdom")
+        # team, _ = Team.objects.get_or_create(name="United Kingdom")
         instance.team = team
 
         # TODO: Properly set guild
