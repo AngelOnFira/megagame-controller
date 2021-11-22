@@ -42,6 +42,9 @@ PAYMENT = "payment"
 TURN = "turn"
 ADJUST_CURRENCY = "adjust"
 REFRESH_TEAMS = "refresh_teams"
+BUILD_CHANNELS = "build_channels"
+
+DISCORD_ROLE_COLOR = discord.Colour.blue()
 
 # TODO: Add this to env vars
 use_sentry(
@@ -240,6 +243,52 @@ async def on_interaction(interaction: discord.Interaction):
                 await sync_to_async(team.refresh_team)(client)
                 await sync_to_async(team.create_team_ephemeral_channels)()
 
+            await interaction.response.send_message(
+                content="Refresh complete", ephemeral=True
+            )
+
+        elif data["name"] == BUILD_CHANNELS:
+            if data_dict["password"] != "123":
+                await interaction.response.send_message(
+                    content="Incorrect password", ephemeral=True
+                )
+                return
+
+            @sync_to_async
+            def build_channels(roles, role_dict):
+                from actions import watch_the_stars_data
+                from bot.discord_models.models import Role, Guild
+
+                # Create roles that don't exist
+                for role in watch_the_stars_data["roles"]:
+                    # If it doesn't exist, create it
+                    if not Role.objects.filter(name=role).exists():
+                        role_object = async_to_sync(
+                            client.get_guild(interaction.guild.id).create_role
+                        )(
+                            name=role,
+                            hoist=False,
+                            mentionable=True,
+                            colour=DISCORD_ROLE_COLOR,
+                        )
+
+                        new_role, _ = Role.objects.get_or_create(
+                            discord_id=role_object.id,
+                            name=role,
+                            guild=Guild.objects.get(discord_id=interaction.guild.id),
+                        )
+
+            roles = client.get_guild(interaction.guild.id).roles
+            role_dict = {}
+            for role in roles:
+                role_dict[role.name] = role
+
+            await build_channels(roles, role_dict)
+
+            await interaction.response.send_message(
+                content="Building channels complete", ephemeral=True
+            )
+
 
 # Check for new tasks once a second
 @tasks.loop(seconds=1.0)
@@ -320,7 +369,7 @@ async def before_my_task():
             logger.debug("Deleting roles that aren't in the database...")
             roles_stored = await sync_to_async(list)(Role.objects.all())
             for role in guild.roles:
-                if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
+                if role.colour in [TEAM_ROLE_COLOUR, DISCORD_ROLE_COLOR] and role.id not in roles_stored:
                     await role.delete()
             logger.debug("Done preparing...")
 
@@ -464,6 +513,25 @@ async def before_my_task():
                 "name": REFRESH_TEAMS,
                 "type": 1,
                 "description": "Delete any interactions teams have, required after server restart",
+                "default_permission": False,
+                "options": [
+                    {
+                        "name": "password",
+                        "description": "To stop misclicks",
+                        "type": 3,
+                        "required": True,
+                    },
+                ],
+            },
+            admin_id,
+        )
+
+        # Build all non-team channels
+        create_command(
+            {
+                "name": BUILD_CHANNELS,
+                "type": 1,
+                "description": "Create all text channels in the seed file",
                 "default_permission": False,
                 "options": [
                     {
