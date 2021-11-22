@@ -175,7 +175,7 @@ class CreateBankEmbed(Service):
 
         income_tracking_string = "|"
         for i, number in enumerate(team.get_income_track()[1:]):
-            if i == transaction_totals[pr_currency]:
+            if i == transaction_totals[pr_currency] - 1:
                 income_tracking_string += f" [ {number} ]"
             else:
                 income_tracking_string += f" {number}"

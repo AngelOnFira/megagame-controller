@@ -67,18 +67,18 @@ class Command(BaseCommand):
             }
         )
 
-        # # Create a category for the trades
-        # QueueTask.execute(
-        #     {
-        #         "task_type": TaskType.CREATE_CATEGORY,
-        #         "payload": {
-        #             "category_name": "comms",
-        #             "guild_id": guild.discord_id,
-        #         },
-        #     }
-        # )
+        # Create a category for the trades
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_CATEGORY,
+                "payload": {
+                    "category_name": "comms",
+                    "guild_id": guild.discord_id,
+                },
+            }
+        )
 
-        # seeder = Seed.seeder(locale="en_CA")
+        seeder = Seed.seeder(locale="en_CA")
 
         for currency_type in watch_the_stars_data["currencies"].keys():
             for currency in watch_the_stars_data["currencies"][currency_type]:
