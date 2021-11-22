@@ -41,6 +41,7 @@ client = discord.Client(intents=intents)
 PAYMENT = "payment"
 TURN = "turn"
 ADJUST_CURRENCY = "adjust"
+REFRESH_TEAMS = "refresh_teams"
 
 # TODO: Add this to env vars
 use_sentry(
@@ -120,6 +121,7 @@ async def on_interaction(interaction: discord.Interaction):
     from bot.services.Payment import create_payment_view
     from bot.services.TaskHandler import TaskHandler
     from currencies.models import Payment
+    from teams.models import Team
 
     if interaction.type == discord.InteractionType.application_command:
         data = interaction.data
@@ -221,6 +223,20 @@ async def on_interaction(interaction: discord.Interaction):
 
             await interaction.response.send_message(content=response, ephemeral=True)
 
+        elif data["name"] == REFRESH_TEAMS:
+            if data_dict["password"] != "123":
+                await interaction.response.send_message(
+                    content="Incorrect password", ephemeral=True
+                )
+                return
+
+            teams = await sync_to_async(list)(Team.objects.all())
+            for team in teams:
+                if team.name == "null":
+                    continue
+                await sync_to_async(team.refresh_team)(client)
+                await sync_to_async(team.create_team_ephemeral_channels)()
+
 
 # Check for new tasks once a second
 @tasks.loop(seconds=1.0)
@@ -270,39 +286,39 @@ async def before_my_task():
                 }
             )
 
-        logger.debug("Deleting channels that aren't in the database...")
-        channels_stored: list[Channel] = await sync_to_async(list)(
-            Channel.objects.all()
-        )
-        channel_ids = [channel.discord_id for channel in channels_stored]
-        for channel in guild.channels:
-            if (
-                not channel.name.startswith("test-")
-                and (
-                    isinstance(channel, discord.TextChannel)
-                    or isinstance(channel, discord.VoiceChannel)
-                )
-                and channel.id not in channel_ids
-            ):
-                await channel.delete()
+        if settings.ERADICATE_SERVER and settings.DEBUG:
+            logger.debug("Deleting channels that aren't in the database...")
+            channels_stored: list[Channel] = await sync_to_async(list)(
+                Channel.objects.all()
+            )
+            channel_ids = [channel.discord_id for channel in channels_stored]
+            for channel in guild.channels:
+                if (
+                    not channel.name.startswith("test-")
+                    and (
+                        isinstance(channel, discord.TextChannel)
+                        or isinstance(channel, discord.VoiceChannel)
+                    )
+                    and channel.id not in channel_ids
+                ):
+                    await channel.delete()
 
-        logger.debug("Deleting categories that aren't in the database...")
-        categories_stored = await sync_to_async(list)(Category.objects.all())
-        category_ids = [category.discord_id for category in categories_stored]
-        for category in guild.categories:
-            if not category.name.startswith("dev-") and category.id not in category_ids:
-                await category.delete()
+            logger.debug("Deleting categories that aren't in the database...")
+            categories_stored = await sync_to_async(list)(Category.objects.all())
+            category_ids = [category.discord_id for category in categories_stored]
+            for category in guild.categories:
+                if (
+                    not category.name.startswith("dev-")
+                    and category.id not in category_ids
+                ):
+                    await category.delete()
 
-        logger.debug("Deleting roles that aren't in the database...")
-        roles_stored = await sync_to_async(list)(Role.objects.all())
-        for role in guild.roles:
-            if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
-                await role.delete()
-        logger.debug("Done preparing...")
-
-        # Go through each team and remake their embeds
-        # TODO: get this to delete old messages
-        teams = await sync_to_async(list)(Team.objects.all())
+            logger.debug("Deleting roles that aren't in the database...")
+            roles_stored = await sync_to_async(list)(Role.objects.all())
+            for role in guild.roles:
+                if role.colour == TEAM_ROLE_COLOUR and role.id not in roles_stored:
+                    await role.delete()
+            logger.debug("Done preparing...")
 
         # TODO: create test channel to print all emojis of teams, currencies, and so on
 
@@ -432,6 +448,25 @@ async def before_my_task():
                             {"name": "Advance", "value": "turn_advance"},
                             {"name": "Go back", "value": "turn_back"},
                         ],
+                    },
+                ],
+            },
+            admin_id,
+        )
+
+        # Refresh teams
+        create_command(
+            {
+                "name": REFRESH_TEAMS,
+                "type": 1,
+                "description": "Delete any interactions teams have, required after server restart",
+                "default_permission": False,
+                "options": [
+                    {
+                        "name": "password",
+                        "description": "To stop misclicks",
+                        "type": 3,
+                        "required": True,
                     },
                 ],
             },

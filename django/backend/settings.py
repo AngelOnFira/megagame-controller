@@ -17,7 +17,9 @@ import environ
 
 env = environ.Env(
     # set casting, default value
-    DEBUG=(bool, False)
+    DEBUG=(bool, False),
+    FIRST_TIME_RUN=(bool, False),
+    ERADICATE_SERVER=(bool, False),
 )
 
 # Set the project base directory
@@ -32,6 +34,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 TOKEN = env("DISCORD_TOKEN")
 BOT_ID = env("DISCORD_BOT_ID")
 DISCORD_SERVER_ID = env("DISCORD_SERVER_ID")
+FIRST_TIME_RUN = bool(env("FIRST_TIME_RUN"))
+ERADICATE_SERVER = bool(env("ERADICATE_SERVER"))
 
 
 # Quick-start development settings - unsuitable for production

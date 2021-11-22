@@ -107,6 +107,12 @@ watch_the_stars_data = {
             ],
         },
     },
+    "roles": {
+        "Head of State",
+        "Foreign Minister",
+        "Chief of Defense",
+    },
+    "channels": {"world-news": {}},
 }
 
 

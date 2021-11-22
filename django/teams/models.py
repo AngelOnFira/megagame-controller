@@ -117,6 +117,127 @@ class Team(models.Model):
 
         async_to_sync(message.edit)(embed=embed)
 
+    def refresh_team(self, client: discord.Client):
+        # Delete all the channels
+        guild: discord.Guild = client.get_guild(self.guild.discord_id)
+
+        menu_channel: discord.TextChannel = guild.get_channel(
+            self.menu_channel.discord_id
+        )
+        async_to_sync(menu_channel.delete)()
+        self.menu_channel.delete()
+
+        trade_channel: discord.TextChannel = guild.get_channel(
+            self.trade_channel.discord_id
+        )
+        async_to_sync(trade_channel.delete)()
+        self.trade_channel.delete()
+
+        # Delete active trades
+
+        # Delete active transactions
+
+    def create_team_ephemeral_channels(self):
+        # Create a menu channel for the team
+        menu_channel = Channel.objects.create(guild=self.guild, name="menu")
+        self.menu_channel = menu_channel
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_TEAM_CHANNEL,
+                "payload": {
+                    "team_id": self.id,
+                    "channel_bind_model_id": menu_channel.id,
+                },
+            }
+        )
+
+        # Create a trade channel for the team
+        trade_channel = Channel.objects.create(guild=self.guild, name="trade")
+        self.trade_channel = trade_channel
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_TEAM_CHANNEL,
+                "payload": {
+                    "team_id": self.id,
+                    "channel_bind_model_id": trade_channel.id,
+                },
+            }
+        )
+
+        # Add bank message
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_MESSAGE,
+                "payload": {
+                    "channel_id": self.menu_channel.id,
+                    "message": "team_bank_embed",
+                    "team_id": self.id,
+                },
+            }
+        )
+
+        from bot.services.Button import Button
+
+        # Add bank message
+        button_rows = [
+            [
+                {
+                    "x": 0,
+                    "y": 0,
+                    "style": discord.ButtonStyle.primary,
+                    "disabled": False,
+                    "label": "Start Trade",
+                    # "custom_id": f"{self.id}",
+                    "emoji": "💱",
+                    "do_next": Button.start_trading.__name__,
+                    "callback_payload": {},
+                },
+                {
+                    "x": 1,
+                    "y": 0,
+                    "style": discord.ButtonStyle.primary,
+                    "disabled": False,
+                    "label": "Open Comms",
+                    # "custom_id": f"{self.id}-discuss",
+                    "emoji": "💬",
+                    "do_next": Button.open_comms.__name__,
+                    "callback_payload": {
+                        "team_id": self.id,
+                    },
+                },
+                {
+                    "x": 2,
+                    "y": 0,
+                    "style": discord.ButtonStyle.primary,
+                    "disabled": False,
+                    "label": "Update Bank",
+                    # "custom_id": f"{self.id}-treaty",
+                    "emoji": "💰",
+                    "do_next": Button.update_bank.__name__,
+                    "callback_payload": {
+                        "team_id": self.id,
+                    },
+                },
+            ]
+        ]
+
+        # Add a buttons message as a menu
+        QueueTask.execute(
+            {
+                "task_type": TaskType.CREATE_BUTTONS,
+                "payload": {
+                    "team_id": self.id,
+                    "guild_id": self.guild.discord_id,
+                    "button_rows": button_rows,
+                    "embed": {
+                        "title": "Team menu",
+                        "description": "Choose what you would like to do",
+                        "color": 0x00FF00,
+                    },
+                },
+            }
+        )
+
 
 def on_team_creation(sender, instance: Team, created, **kwargs):
     from currencies.services import CreateTrade
@@ -170,31 +291,7 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
         #     }
         # )
 
-        # Create a menu channel for the team
-        menu_channel = Channel.objects.create(guild=instance.guild, name="menu")
-        instance.menu_channel = menu_channel
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_TEAM_CHANNEL,
-                "payload": {
-                    "team_id": instance.id,
-                    "channel_bind_model_id": menu_channel.id,
-                },
-            }
-        )
-
-        # Create a trade channel for the team
-        trade_channel = Channel.objects.create(guild=instance.guild, name="trade")
-        instance.trade_channel = trade_channel
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_TEAM_CHANNEL,
-                "payload": {
-                    "team_id": instance.id,
-                    "channel_bind_model_id": trade_channel.id,
-                },
-            }
-        )
+        instance.create_team_ephemeral_channels()
 
         # Create a general channel for the team
         general_channel = Channel.objects.create(guild=instance.guild, name="general")
@@ -218,80 +315,6 @@ def on_team_creation(sender, instance: Team, created, **kwargs):
                 "payload": {
                     "team_id": instance.id,
                     "name": "general",
-                },
-            }
-        )
-
-        # Add bank message
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_MESSAGE,
-                "payload": {
-                    "channel_id": instance.menu_channel.id,
-                    "message": "team_bank_embed",
-                    "team_id": instance.id,
-                },
-            }
-        )
-
-        from bot.services.Button import Button
-
-        # Add bank message
-        button_rows = [
-            [
-                {
-                    "x": 0,
-                    "y": 0,
-                    "style": discord.ButtonStyle.primary,
-                    "disabled": False,
-                    "label": "Start Trade",
-                    # "custom_id": f"{instance.id}",
-                    "emoji": "💱",
-                    "do_next": Button.start_trading.__name__,
-                    "callback_payload": {},
-                },
-                {
-                    "x": 1,
-                    "y": 0,
-                    "style": discord.ButtonStyle.primary,
-                    "disabled": False,
-                    "label": "Open Comms",
-                    # "custom_id": f"{instance.id}-discuss",
-                    "emoji": "💬",
-                    "do_next": Button.open_comms.__name__,
-                    "callback_payload": {
-                        "team_id": instance.id,
-                    },
-                },
-                {
-                    "x": 2,
-                    "y": 0,
-                    "style": discord.ButtonStyle.primary,
-                    "disabled": False,
-                    "label": "Update Bank",
-                    # "custom_id": f"{instance.id}-treaty",
-                    "emoji": "💰",
-                    "do_next": Button.update_bank.__name__,
-                    "callback_payload": {
-                        "team_id": instance.id,
-                    },
-                },
-            ]
-        ]
-
-        # Add a buttons message as a menu
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_BUTTONS,
-                "payload": {
-                    "team_id": instance.id,
-                    "guild_id": instance.guild.discord_id,
-                    "button_rows": button_rows,
-                    "embed": {
-                        "title": "Team menu",
-                        "description": "Choose what you would like to do",
-                        "color": 0x00FF00,
-                    },
                 },
             }
         )

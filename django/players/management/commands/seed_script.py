@@ -45,38 +45,38 @@ class Command(BaseCommand):
         if len(User.objects.filter(username="f")) == 0:
             User.objects.create_superuser("f", "f@f.com", "password")
 
-        # Create a category for the admin game channels
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_CATEGORY,
-                "payload": {
-                    "category_name": "admin",
-                    "guild_id": guild.discord_id,
-                },
-            }
-        )
+        # # Create a category for the admin game channels
+        # QueueTask.execute(
+        #     {
+        #         "task_type": TaskType.CREATE_CATEGORY,
+        #         "payload": {
+        #             "category_name": "admin",
+        #             "guild_id": guild.discord_id,
+        #         },
+        #     }
+        # )
 
-        # Create a category for the general game channels
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_CATEGORY,
-                "payload": {
-                    "category_name": "general",
-                    "guild_id": guild.discord_id,
-                },
-            }
-        )
+        # # Create a category for the general game channels
+        # QueueTask.execute(
+        #     {
+        #         "task_type": TaskType.CREATE_CATEGORY,
+        #         "payload": {
+        #             "category_name": "general",
+        #             "guild_id": guild.discord_id,
+        #         },
+        #     }
+        # )
 
-        # Create a category for the trades
-        QueueTask.execute(
-            {
-                "task_type": TaskType.CREATE_CATEGORY,
-                "payload": {
-                    "category_name": "comms",
-                    "guild_id": guild.discord_id,
-                },
-            }
-        )
+        # # Create a category for the trades
+        # QueueTask.execute(
+        #     {
+        #         "task_type": TaskType.CREATE_CATEGORY,
+        #         "payload": {
+        #             "category_name": "comms",
+        #             "guild_id": guild.discord_id,
+        #         },
+        #     }
+        # )
 
         # seeder = Seed.seeder(locale="en_CA")
 
