@@ -31,6 +31,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 TOKEN = env("DISCORD_TOKEN")
 BOT_ID = env("DISCORD_BOT_ID")
+DISCORD_SERVER_ID = env("DISCORD_SERVER_ID")
 
 
 # Quick-start development settings - unsuitable for production

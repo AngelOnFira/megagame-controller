@@ -2,18 +2,15 @@ from os import sync
 
 import discord
 import emojis
-from asgiref.sync import sync_to_async
+from asgiref.sync import async_to_sync, sync_to_async
 
 from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.services.Dropdown import Dropdown
 from bot.users.models import Member
 from currencies.models import Currency, Payment, Trade, Transaction
-from currencies.services import (
-    CreateBankEmbed,
-    CreateTrade,
-    CreateTradeEmbed,
-    LockPayment,
-)
+from currencies.services import (CreateBankEmbed, CreateTrade,
+                                 CreateTradeEmbed, LockPayment)
+from django.db import models, transaction
 from players.models import Player
 from responses.models import Response
 from teams.models import Team
@@ -88,31 +85,65 @@ class Button(discord.ui.Button):
             )
             return
 
-        from_wallet = interacting_team_wallet
-        to_wallet = (
-            initiating_party_wallet
-            if initiating_party_wallet.id != from_wallet.id
-            else receiving_party_wallet
+        # @transaction.atomic
+        @sync_to_async
+        def check_and_change(
+            amount,
+            interacting_team_wallet,
+            interaction,
+            currency,
+            initiating_party_wallet,
+            receiving_party_wallet,
+            trade,
+        ):
+            # Make sure the from wallet has enough currency
+            if amount > 0:
+                bank_balance = interacting_team_wallet.get_bank_balance(new=True)
+
+                if bank_balance[currency] < amount:
+                    async_to_sync(interaction.response.send_message)(
+                        content="You don't have enough {} to adjust the trade.".format(
+                            currency.name
+                        ),
+                        ephemeral=True,
+                    )
+                    return
+
+            from_wallet = interacting_team_wallet
+            to_wallet = (
+                initiating_party_wallet
+                if initiating_party_wallet.id != from_wallet.id
+                else receiving_party_wallet
+            )
+
+            transaction, _ = Transaction.objects.get_or_create(
+                trade=trade,
+                currency=currency,
+                from_wallet=from_wallet,
+                to_wallet=to_wallet,
+                defaults={
+                    "amount": 0,
+                },
+            )
+
+            transaction.amount += amount
+            transaction.amount = max(transaction.amount, 0)
+
+            if transaction.amount == 0:
+                transaction.delete()
+            else:
+                trade.transactions.add(transaction)
+                transaction.save()
+
+        await check_and_change(
+            amount,
+            interacting_team_wallet,
+            interaction,
+            currency,
+            initiating_party_wallet,
+            receiving_party_wallet,
+            trade,
         )
-
-        transaction, _ = await sync_to_async(Transaction.objects.get_or_create)(
-            trade=trade,
-            currency=currency,
-            from_wallet=from_wallet,
-            to_wallet=to_wallet,
-            defaults={
-                "amount": 0,
-            },
-        )
-
-        transaction.amount += amount
-        transaction.amount = max(transaction.amount, 0)
-
-        if transaction.amount == 0:
-            await sync_to_async(transaction.delete)()
-        else:
-            await sync_to_async(trade.transactions.add)(transaction)
-            await sync_to_async(transaction.save)()
 
         trade.initiating_party_accepted = False
         trade.receiving_party_accepted = False
@@ -123,6 +154,8 @@ class Button(discord.ui.Button):
         trade_view = await sync_to_async(TradeView)(
             trade, interaction, handler, self.client
         )
+
+        await sync_to_async(interacting_team.update_bank_embed)(self.client)
 
         await sync_to_async(trade_view.update_trade_view)()
 
@@ -430,7 +463,7 @@ class Button(discord.ui.Button):
         )
         await sync_to_async(trade_view.update_trade_view)()
 
-    async def lock_in_trade(self, interaction: discord.Interaction):
+    async def complete_trade(self, interaction: discord.Interaction):
         # get the trade id
         # TODO: Make sure there is enough money
         trade_id = self.callback_payload["trade_id"]
@@ -501,14 +534,25 @@ class Button(discord.ui.Button):
         # Change the embeds on the menu channels
         @sync_to_async
         def update_embeds(trade: Trade, client: discord.Client):
-            trade.initiating_party.update_bank_embed()
-            trade.receiving_party.update_bank_embed()
+            trade.initiating_party.update_bank_embed(client)
+            trade.receiving_party.update_bank_embed(client)
 
         await update_embeds(trade, self.client)
 
         await interaction.channel.delete()
 
         # TODO: Lock down channel
+
+    async def cancel_trade(self, interaction: discord.Interaction):
+        trade_id = self.callback_payload["trade_id"]
+
+        trade: Trade = await sync_to_async(Trade.objects.get)(id=trade_id)
+
+        await sync_to_async(trade.reset)()
+
+        await sync_to_async(trade.save)()
+
+        await interaction.channel.delete()
 
     # When toggle trade accept is pressed
     async def confirm(self, interaction: discord.Interaction):
@@ -628,7 +672,7 @@ class Button(discord.ui.Button):
             self.adjust_currency_trade.__name__: self.adjust_currency_trade,
             self.currency_trade_adjustment_menu.__name__: self.currency_trade_adjustment_menu,
             self.currency_trade_currency_menu.__name__: self.currency_trade_currency_menu,
-            self.lock_in_trade.__name__: self.lock_in_trade,
+            self.complete_trade.__name__: self.complete_trade,
             self.start_trading.__name__: self.start_trading,
             self.make_payment.__name__: self.make_payment,
             self.lock_payment.__name__: self.lock_payment,

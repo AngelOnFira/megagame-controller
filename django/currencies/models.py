@@ -203,14 +203,12 @@ class Trade(models.Model):
         target="completed",
     )
     def complete(self):
-        initiating_party_balance: dict(
-            int
-        ) = self.initiating_party.wallet.get_bank_balance()
+        initiating_party_balance = self.initiating_party.wallet.get_bank_balance()
 
         for transaction in Transaction.objects.filter(
             trade=self, from_wallet=self.initiating_party.wallet, state="new"
         ):
-            if initiating_party_balance[transaction.currency.id] < transaction.amount:
+            if initiating_party_balance[transaction.currency] < transaction.amount:
                 print(
                     f"{transaction.amount} is greater than {initiating_party_balance[transaction.currency.id]} of {transaction.currency}"
                 )
@@ -255,7 +253,7 @@ class Wallet(models.Model):
             currency for currency, count in self.get_bank_balance().items() if count > 0
         )
 
-    def get_bank_balance(self) -> dict[Currency, int]:
+    def get_bank_balance(self, new=False) -> dict[Currency, int]:
         """Get the bank balance of this wallet
 
         Returns:
@@ -263,11 +261,15 @@ class Wallet(models.Model):
         """
         transaction_totals = defaultdict(int)
 
-        for credit in self.credits.filter(state="completed"):
-            transaction_totals[credit.currency] -= credit.amount
-
         for debit in self.debits.filter(state="completed"):
             transaction_totals[debit.currency] += debit.amount
+
+        to_check = ["completed"]
+        if new:
+            to_check.append("new")
+
+        for credit in self.credits.filter(state__in=to_check):
+            transaction_totals[credit.currency] -= credit.amount
 
         return dict(transaction_totals)
 

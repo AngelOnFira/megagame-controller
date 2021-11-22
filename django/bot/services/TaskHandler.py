@@ -66,7 +66,7 @@ class TaskHandler:
             content="_🔽_", view=self.view, ephemeral=True
         )
 
-        self.client.add_view(self.view, message_id=message.id)
+        # self.client.add_view(self.view, message_id=message.id)
 
     async def create_dropdown(self, payload: dict, interaction: discord.Interaction):
         from .Dropdown import Dropdown

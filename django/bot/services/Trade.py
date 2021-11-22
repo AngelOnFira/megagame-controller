@@ -100,11 +100,8 @@ class TradeView:
             ]
         ]
 
-        # If neither have accepted
-        if (
-            self.trade.initiating_party_accepted == False
-            and self.trade.receiving_party_accepted == False
-        ):
+        # If this is the start of the trade
+        if self.trade.first_iteration:
             button_rows[0].append(
                 {
                     "x": 0,
@@ -127,9 +124,9 @@ class TradeView:
                     "y": 1,
                     "style": discord.ButtonStyle.primary,
                     "disabled": not active,
-                    "label": "Lock in trade",
+                    "label": "Complete Trade",
                     "emoji": "🔒",
-                    "do_next": Button.lock_in_trade.__name__,
+                    "do_next": Button.complete_trade.__name__,
                     "callback_payload": {"trade_id": self.trade.id},
                 },
             )
@@ -141,7 +138,7 @@ class TradeView:
                     "y": 1,
                     "style": discord.ButtonStyle.success,
                     "disabled": not active,
-                    "label": f"Return to {self.other_party.name}",
+                    "label": f"Accept Trade",
                     "emoji": "✅",
                     "do_next": Button.accept_trade.__name__,
                     "callback_payload": {"trade_id": self.trade.id},
@@ -154,9 +151,9 @@ class TradeView:
                 "y": 1,
                 "style": discord.ButtonStyle.danger,
                 "disabled": False,
-                "label": "Cancel trade",
+                "label": "Cancel Trade",
                 "emoji": "❌",
-                "do_next": "cancel_trade",
+                "do_next": Button.accept_trade.__name__,
                 "callback_payload": {"trade_id": self.trade.id},
             }
         )
@@ -232,7 +229,7 @@ class TradeView:
                 "button_rows": button_rows,
                 "embed": {
                     "title": "Trade in progress",
-                    "description": f"Waiting for {self.other_party.name} to send the offer.",
+                    "description": "Waiting for {self.other_party.name} to send their offer.",
                 },
             },
         )
@@ -270,7 +267,7 @@ class TradeView:
         )
         embed: discord.Embed = discord.Embed(
             title="Trade in progress",
-            description=f"Waiting for {self.other_party.name} to send the offer.",
+            description=f"Waiting for {self.other_party.name} to send their offer.",
         )
         async_to_sync(receiving_message.edit)(view=receiving_updated_view, embed=embed)
 

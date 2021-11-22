@@ -17,13 +17,13 @@ from json import JSONDecoder
 
 import discord
 import emojis
-from git import head
 import requests
 import sentry_sdk
 from aiohttp import payload
 from asgiref.sync import async_to_sync, sync_to_async
 from discord.ext import tasks
 from discord_sentry_reporting import use_sentry
+from git import head
 
 import django
 from bot.plugins.base import MethodPool
@@ -368,12 +368,11 @@ async def before_my_task():
 
         def create_command(json, admin_id):
             application_id = settings.BOT_ID
-            guild_id = "855215558994821120"
+            guild_id = settings.DISCORD_SERVER_ID
 
             url = f"https://discord.com/api/v8/applications/{application_id}/guilds/{guild_id}/commands"
             headers = {"Authorization": f"Bot {settings.TOKEN}"}
 
-            print(url, headers)
             r = requests.post(url, headers=headers, json=json)
 
             text = JSONDecoder().decode(r.text)
