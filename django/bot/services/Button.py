@@ -303,12 +303,46 @@ class Button(discord.ui.Button):
 
             query.payment.transactions.add(transaction)
 
-        await create_transaction(query)
+            query.payment.save()
 
+            # If this is a fundraiser
+            if query.payment.fundraising_amount > 0:
+                total = sum(
+                    [
+                        transaction.amount
+                        for transaction in query.payment.transactions.all()
+                    ]
+                )
+
+                if total >= query.payment.fundraising_amount:
+                    transaction.amount -= total - query.payment.fundraising_amount
+                    if transaction.amount <= 0:
+                        transaction.delete()
+                        return False
+                    else:
+                        transaction.save()
+
+                    return True
+
+            return False
+
+        finished_fundraiser = await create_transaction(query)
+
+        # Update the bank of the team that paid
         await sync_to_async(query.team.update_bank_embed)(self.client)
+        
+        if finished_fundraiser:
+            await sync_to_async(LockPayment.execute)({"payment_id": payment_id})
+            channel: discord.TextChannel = interaction.guild.get_channel_or_thread(
+                query.payment.channel_id
+            )
+
+            message = await channel.fetch_message(query.payment.embed_id)
+            await message.edit(embed=message.embeds[0], view=None)
 
         # Update the message
         await sync_to_async(update_payment_view)(query.payment, interaction)
+
 
     async def lock_payment(self, interaction: discord.Interaction):
         """When the "Lock Payment" is clicked

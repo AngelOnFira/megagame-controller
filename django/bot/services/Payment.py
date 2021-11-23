@@ -224,10 +224,15 @@ def update_payment_view(payment: Payment, interaction: discord.Interaction):
 
     from .Button import Button
 
+    payment.refresh_from_db()
+
     message: discord.Message = async_to_sync(interaction.channel.fetch_message)(
         payment.embed_id
     )
 
     embed: discord.Embed = CreatePaymentEmbed.execute({"payment_id": payment.id})
 
-    async_to_sync(message.edit)(embed=embed)
+    if payment.completed:
+        async_to_sync(message.edit)(embed=embed, view=None)
+    else:
+        async_to_sync(message.edit)(embed=embed)

@@ -170,7 +170,17 @@ async def on_interaction(interaction: discord.Interaction):
             return
 
         if data["name"] == PAYMENT:
-            if "cost" not in data_dict:
+            if "raise_funds" in data_dict and "cost" in data_dict:
+                await interaction.response.send_message(
+                    content="You can only use cost or raise funds", ephemeral=True
+                )
+                return
+
+            fundraising_amount = 0
+            if "raise_funds" in data_dict:
+                fundraising_amount = int(data_dict["raise_funds"])
+                cost = 1
+            elif "cost" not in data_dict:
                 cost = 1
             else:
                 cost = data_dict["cost"]
@@ -185,6 +195,7 @@ async def on_interaction(interaction: discord.Interaction):
             payment = await sync_to_async(Payment.objects.create)(
                 action=data_dict["action"],
                 cost=cost,
+                fundraising_amount=fundraising_amount,
                 channel_id=interaction.channel.id,
             )
 
@@ -278,7 +289,7 @@ async def on_interaction(interaction: discord.Interaction):
             )
 
         elif data["name"] == BUILD_CHANNELS:
-            if data_dict["password"] != "asdjkfhajklh": # Don't want to mess this up
+            if data_dict["password"] != "asdjkfhajklh":  # Don't want to mess this up
                 await interaction.response.send_message(
                     content="Incorrect password", ephemeral=True
                 )
@@ -596,6 +607,12 @@ async def before_my_task():
                     {
                         "name": "cost",
                         "description": "Cost of this action, in the 'common' currency",
+                        "type": 4,
+                        "required": False,
+                    },
+                    {
+                        "name": "raise_funds",
+                        "description": "The amount of funds to raise collectively",
                         "type": 4,
                         "required": False,
                     },

@@ -294,7 +294,7 @@ class Wallet(models.Model):
 class Payment(models.Model):
     action = models.TextField(default="")
     cost = models.IntegerField(default=0)
-    completion_amount = models.IntegerField(default=0)
+    fundraising_amount = models.IntegerField(default=0)
 
     embed_id = models.BigIntegerField(null=True, blank=True)
     channel_id = models.BigIntegerField(null=True, blank=True)

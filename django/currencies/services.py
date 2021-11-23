@@ -105,7 +105,27 @@ class CreatePaymentEmbed(Service):
 
         payment: Payment = Payment.objects.get(id=payment_id)
 
-        description = f"{payment.action}\nCost: {payment.cost}"
+        if payment.fundraising_amount > 0:
+            # total = sum(
+            #     [transaction.amount for transaction in payment.transactions.all()]
+            # )
+            # if total >= payment.fundraising_amount:
+            if payment.completed:
+                description = f"""
+                **{payment.action} has been funded!**
+                """
+            else:
+                description = f"""
+                This payment is trying to raise funds for:
+                {payment.action}
+                
+                **{payment.fundraising_amount} Megacredits** need to be raised.
+                """
+        else:
+            if payment.completed:
+                description = f"Payment for **{payment.action}** is over."
+            else:
+                description = f"{payment.action}\nCost: {payment.cost}"
 
         embed: discord.Embed = discord.Embed(title="Payment", description=description)
 
@@ -124,12 +144,10 @@ class CreatePaymentEmbed(Service):
         transaction: Transaction
         for transaction in payment.transactions.all():
             name_string += f"{emojis.encode(transaction.from_wallet.team.emoji)} {transaction.from_wallet.team.name}\n"
-            payment_string += (
-                "{amount_purchased}x (Paid {paid} {currency_name})\n".format(
-                    amount_purchased=int(transaction.amount / payment.cost),
-                    paid=transaction.amount,
-                    currency_name=transaction.currency.name,
-                )
+            payment_string += "Paid {paid} {currency_name}\n".format(
+                amount_purchased=int(transaction.amount / payment.cost),
+                paid=transaction.amount,
+                currency_name=transaction.currency.name,
             )
             paid_by_string += (
                 f"<@{transaction.initiating_player.discord_member.discord_id}>\n"
