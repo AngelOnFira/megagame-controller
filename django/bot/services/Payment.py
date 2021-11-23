@@ -31,6 +31,123 @@ def create_payment_view(
             "payment_id": payment.id,
             "channel_discord_id": interaction.channel_id,
             "callback_payload": {},
+            # "button_rows": [
+            #     [
+            #         {
+            #             "x": 0,
+            #             "y": 0,
+            #             "style": discord.ButtonStyle.primary,
+            #             "disabled": False,
+            #             "label": "Buy 1",
+            #             # "custom_id": f"{payment.id}-1",
+            #             "emoji": "✅",
+            #             "do_next": Button.confirm.__name__,
+            #             "callback_payload": {
+            #                 "success_callback": {
+            #                     "do_next": Button.make_payment.__name__,
+            #                     "callback_payload": {
+            #                         "payment_id": payment.id,
+            #                         "count": 1,
+            #                     },
+            #                 },
+            #                 "fail_callback": {
+            #                     "do_next": Button.cancel.__name__,
+            #                     "callback_payload": {},
+            #                 },
+            #             },
+            #         },
+            #         {
+            #             "x": 1,
+            #             "y": 0,
+            #             "style": discord.ButtonStyle.primary,
+            #             "disabled": False,
+            #             "label": "Buy 2",
+            #             # "custom_id": f"{payment.id}-2",
+            #             "emoji": "✅",
+            #             "do_next": Button.confirm.__name__,
+            #             "callback_payload": {
+            #                 "success_callback": {
+            #                     "do_next": Button.make_payment.__name__,
+            #                     "callback_payload": {
+            #                         "payment_id": payment.id,
+            #                         "count": 2,
+            #                     },
+            #                 },
+            #                 "fail_callback": {
+            #                     "do_next": Button.cancel.__name__,
+            #                     "callback_payload": {},
+            #                 },
+            #             },
+            #         },
+            #         {
+            #             "x": 2,
+            #             "y": 0,
+            #             "style": discord.ButtonStyle.primary,
+            #             "disabled": False,
+            #             "label": "Buy 3",
+            #             # "custom_id": f"{payment.id}-3",
+            #             "emoji": "✅",
+            #             "do_next": Button.confirm.__name__,
+            #             "callback_payload": {
+            #                 "success_callback": {
+            #                     "do_next": Button.make_payment.__name__,
+            #                     "callback_payload": {
+            #                         "payment_id": payment.id,
+            #                         "count": 3,
+            #                     },
+            #                 },
+            #                 "fail_callback": {
+            #                     "do_next": Button.cancel.__name__,
+            #                     "callback_payload": {},
+            #                 },
+            #             },
+            #         },
+            #         {
+            #             "x": 3,
+            #             "y": 0,
+            #             "style": discord.ButtonStyle.primary,
+            #             "disabled": False,
+            #             "label": "Buy 4",
+            #             # "custom_id": f"{payment.id}-3",
+            #             "emoji": "✅",
+            #             "do_next": Button.confirm.__name__,
+            #             "callback_payload": {
+            #                 "success_callback": {
+            #                     "do_next": Button.make_payment.__name__,
+            #                     "callback_payload": {
+            #                         "payment_id": payment.id,
+            #                         "count": 4,
+            #                     },
+            #                 },
+            #                 "fail_callback": {
+            #                     "do_next": Button.cancel.__name__,
+            #                     "callback_payload": {},
+            #                 },
+            #             },
+            #         },
+            #         {
+            #             "x": 4,
+            #             "y": 0,
+            #             "style": discord.ButtonStyle.secondary,
+            #             "disabled": False,
+            #             "label": "Lock Payment (Control only)",
+            #             # "custom_id": f"{payment.id}-lock-in",
+            #             "do_next": Button.confirm.__name__,
+            #             "callback_payload": {
+            #                 "success_callback": {
+            #                     "do_next": Button.lock_payment.__name__,
+            #                     "callback_payload": {
+            #                         "payment_id": payment.id,
+            #                     },
+            #                 },
+            #                 "fail_callback": {
+            #                     "do_next": Button.cancel.__name__,
+            #                     "callback_payload": {},
+            #                 },
+            #             },
+            #         },
+            #     ]
+            # ],
             "button_rows": [
                 [
                     {
@@ -39,22 +156,10 @@ def create_payment_view(
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
                         "label": "Buy 1",
-                        # "custom_id": f"{payment.id}-1",
+                        "custom_id": f"{payment.id}",
                         "emoji": "✅",
-                        "do_next": Button.confirm.__name__,
-                        "callback_payload": {
-                            "success_callback": {
-                                "do_next": Button.make_payment.__name__,
-                                "callback_payload": {
-                                    "payment_id": payment.id,
-                                    "count": 1,
-                                },
-                            },
-                            "fail_callback": {
-                                "do_next": Button.cancel.__name__,
-                                "callback_payload": {},
-                            },
-                        },
+                        "do_next": Button.make_payment.__name__,
+                        "callback_payload": {"payment_id": payment.id, "count": 1},
                     },
                     {
                         "x": 1,
@@ -62,22 +167,10 @@ def create_payment_view(
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
                         "label": "Buy 2",
-                        # "custom_id": f"{payment.id}-2",
+                        "custom_id": f"{payment.id}-2",
                         "emoji": "✅",
-                        "do_next": Button.confirm.__name__,
-                        "callback_payload": {
-                            "success_callback": {
-                                "do_next": Button.make_payment.__name__,
-                                "callback_payload": {
-                                    "payment_id": payment.id,
-                                    "count": 2,
-                                },
-                            },
-                            "fail_callback": {
-                                "do_next": Button.cancel.__name__,
-                                "callback_payload": {},
-                            },
-                        },
+                        "do_next": Button.make_payment.__name__,
+                        "callback_payload": {"payment_id": payment.id, "count": 2},
                     },
                     {
                         "x": 2,
@@ -85,22 +178,10 @@ def create_payment_view(
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
                         "label": "Buy 3",
-                        # "custom_id": f"{payment.id}-3",
+                        "custom_id": f"{payment.id}-3",
                         "emoji": "✅",
-                        "do_next": Button.confirm.__name__,
-                        "callback_payload": {
-                            "success_callback": {
-                                "do_next": Button.make_payment.__name__,
-                                "callback_payload": {
-                                    "payment_id": payment.id,
-                                    "count": 3,
-                                },
-                            },
-                            "fail_callback": {
-                                "do_next": Button.cancel.__name__,
-                                "callback_payload": {},
-                            },
-                        },
+                        "do_next": Button.make_payment.__name__,
+                        "callback_payload": {"payment_id": payment.id, "count": 3},
                     },
                     {
                         "x": 3,
@@ -108,42 +189,21 @@ def create_payment_view(
                         "style": discord.ButtonStyle.primary,
                         "disabled": False,
                         "label": "Buy 4",
-                        # "custom_id": f"{payment.id}-3",
+                        "custom_id": f"{payment.id}-4",
                         "emoji": "✅",
-                        "do_next": Button.confirm.__name__,
-                        "callback_payload": {
-                            "success_callback": {
-                                "do_next": Button.make_payment.__name__,
-                                "callback_payload": {
-                                    "payment_id": payment.id,
-                                    "count": 4,
-                                },
-                            },
-                            "fail_callback": {
-                                "do_next": Button.cancel.__name__,
-                                "callback_payload": {},
-                            },
-                        },
+                        "do_next": Button.make_payment.__name__,
+                        "callback_payload": {"payment_id": payment.id, "count": 4},
                     },
                     {
                         "x": 4,
                         "y": 0,
                         "style": discord.ButtonStyle.secondary,
                         "disabled": False,
+                        "do_next": Button.cancel.__name__,
                         "label": "Lock Payment (Control only)",
-                        # "custom_id": f"{payment.id}-lock-in",
-                        "do_next": Button.confirm.__name__,
+                        "custom_id": f"{payment.id}-lock-in",
                         "callback_payload": {
-                            "success_callback": {
-                                "do_next": Button.lock_payment.__name__,
-                                "callback_payload": {
-                                    "payment_id": payment.id,
-                                },
-                            },
-                            "fail_callback": {
-                                "do_next": Button.cancel.__name__,
-                                "callback_payload": {},
-                            },
+                            "payment_id": payment.id,
                         },
                     },
                 ]

@@ -278,6 +278,10 @@ class LockPayment(Service):
 
         payment.completed = True
 
+        for transaction in payment.transactions.all():
+            transaction.complete()
+            transaction.save()
+
         payment.save()
 
         return payment

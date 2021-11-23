@@ -8,8 +8,12 @@ from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.services.Dropdown import Dropdown
 from bot.users.models import Member
 from currencies.models import Currency, Payment, Trade, Transaction
-from currencies.services import (CreateBankEmbed, CreateTrade,
-                                 CreateTradeEmbed, LockPayment)
+from currencies.services import (
+    CreateBankEmbed,
+    CreateTrade,
+    CreateTradeEmbed,
+    LockPayment,
+)
 from django.db import models, transaction
 from players.models import Player
 from responses.models import Response
@@ -301,6 +305,8 @@ class Button(discord.ui.Button):
 
         await create_transaction(query)
 
+        await sync_to_async(query.team.update_bank_embed)(self.client)
+
         # Update the message
         await sync_to_async(update_payment_view)(query.payment, interaction)
 
@@ -537,6 +543,7 @@ class Button(discord.ui.Button):
 
         # Go through each attached transaction, and make sure it's set to complete
         for transaction in transactions:
+            print("Closing", transaction.id)
             await sync_to_async(transaction.complete)()
             await sync_to_async(transaction.save)()
 
