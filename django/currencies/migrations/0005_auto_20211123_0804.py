@@ -6,17 +6,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('currencies', '0004_trade_first_iteration'),
+        ("currencies", "0004_trade_first_iteration"),
     ]
 
     operations = [
         migrations.RemoveField(
-            model_name='payment',
-            name='completion_amount',
+            model_name="payment",
+            name="completion_amount",
         ),
         migrations.AddField(
-            model_name='payment',
-            name='fundraising_amount',
+            model_name="payment",
+            name="fundraising_amount",
             field=models.BooleanField(default=False),
         ),
     ]

@@ -8,12 +8,8 @@ from bot.discord_models.models import Category, Channel, Guild, Role
 from bot.services.Dropdown import Dropdown
 from bot.users.models import Member
 from currencies.models import Currency, Payment, Trade, Transaction
-from currencies.services import (
-    CreateBankEmbed,
-    CreateTrade,
-    CreateTradeEmbed,
-    LockPayment,
-)
+from currencies.services import (CreateBankEmbed, CreateTrade,
+                                 CreateTradeEmbed, LockPayment)
 from django.db import models, transaction
 from players.models import Player
 from responses.models import Response
@@ -392,7 +388,6 @@ class Button(discord.ui.Button):
         message = await channel.fetch_message(payment.embed_id)
 
         embed = message.embeds[0]
-
 
         await message.edit(embed=embed, view=None)
 
