@@ -330,7 +330,7 @@ class Button(discord.ui.Button):
 
         # Update the bank of the team that paid
         await sync_to_async(query.team.update_bank_embed)(self.client)
-        
+
         if finished_fundraiser:
             await sync_to_async(LockPayment.execute)({"payment_id": payment_id})
             channel: discord.TextChannel = interaction.guild.get_channel_or_thread(
@@ -342,7 +342,6 @@ class Button(discord.ui.Button):
 
         # Update the message
         await sync_to_async(update_payment_view)(query.payment, interaction)
-
 
     async def lock_payment(self, interaction: discord.Interaction):
         """When the "Lock Payment" is clicked
@@ -369,13 +368,33 @@ class Button(discord.ui.Button):
             {"payment_id": payment_id}
         )
 
+        @sync_to_async
+        def cancel_transactions():
+            for transaction in payment.transactions.all():
+                transaction.cancel()
+                transaction.save()
+
+            for team in Team.objects.all():
+                if team.name == "null":
+                    continue
+
+                team.update_bank_embed(self.client)
+
+        # Check if this is a fundraiser
+        if payment.fundraising_amount > 0:
+            await cancel_transactions()
+            embed = await sync_to_async(update_payment_view)(payment, interaction)
+
         channel: discord.TextChannel = interaction.guild.get_channel_or_thread(
             payment.channel_id
         )
 
         message = await channel.fetch_message(payment.embed_id)
 
-        await message.edit(embed=message.embeds[0], view=None)
+        embed = message.embeds[0]
+
+
+        await message.edit(embed=embed, view=None)
 
     async def currency_trade_currency_menu(self, interaction: discord.Interaction):
         currencies: Currency = await sync_to_async(list)(Currency.objects.all())

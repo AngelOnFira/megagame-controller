@@ -199,8 +199,12 @@ def create_payment_view(
                         "y": 0,
                         "style": discord.ButtonStyle.secondary,
                         "disabled": False,
-                        "do_next": Button.cancel.__name__,
-                        "label": "Lock Payment (Control only)",
+                        "do_next": Button.lock_payment.__name__,
+                        "label": (
+                            "Lock Payment (Control only)"
+                            if payment.fundraising_amount == 0
+                            else "Cancel raising funds"
+                        ),
                         "custom_id": f"{payment.id}-lock-in",
                         "callback_payload": {
                             "payment_id": payment.id,

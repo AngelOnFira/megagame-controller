@@ -106,14 +106,19 @@ class CreatePaymentEmbed(Service):
         payment: Payment = Payment.objects.get(id=payment_id)
 
         if payment.fundraising_amount > 0:
-            # total = sum(
-            #     [transaction.amount for transaction in payment.transactions.all()]
-            # )
-            # if total >= payment.fundraising_amount:
+            total = sum(
+                [transaction.amount for transaction in payment.transactions.all()]
+            )
+
             if payment.completed:
-                description = f"""
-                **{payment.action} has been funded!**
-                """
+                if total >= payment.fundraising_amount:
+                    description = f"""
+                    **{payment.action} has been funded!**
+                    """
+                else:
+                    description = f"""
+                    **{payment.action} has been cancelled, funds have been returned to teams**
+                    """
             else:
                 description = f"""
                 This payment is trying to raise funds for:
