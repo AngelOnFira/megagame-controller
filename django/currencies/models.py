@@ -159,7 +159,7 @@ class Trade(models.Model):
     state = FSMField(default="initiating_party_view")
 
     def __str__(self):
-        return f"Trade between {self.initiating_party.name} and {self.receiving_party.name} ({self.state})"
+        return f"Trade between {self.initiating_party} and {self.receiving_party} ({self.state})"
 
     # States
     #
