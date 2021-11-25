@@ -124,7 +124,7 @@ class Team(models.Model):
         # Kill all trades
         from currencies.models import Trade
 
-        trades = Trade.objects.filter(initiating_party=self).exclude(state="complete")
+        trades = Trade.objects.filter(initiating_party=self, state__in=["new"])
         for trade in trades:
             trade.cancel()
             trade.save()
