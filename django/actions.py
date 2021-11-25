@@ -150,6 +150,16 @@ watch_the_stars_data = {
             ],
             "capitol": "Tokyo",
         },
+        "Research Project": {
+            "abreviation": "RP",
+            "income_track": [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            "flag": "🧪",
+            "initial_currencies": [
+                ("Megabucks", 200),
+                ("Public Relations", 5),
+            ],
+            "capitol": "LHC",
+        },
     },
     "roles": {
         "Head of State",

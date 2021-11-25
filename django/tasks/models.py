@@ -57,3 +57,6 @@ class Task(models.Model):
     )
 
     payload = models.JSONField(default=dict)
+
+    def __str__(self):
+        return f"{self.task_type} - {self.completed}"

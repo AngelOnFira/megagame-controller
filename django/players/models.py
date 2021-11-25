@@ -22,7 +22,7 @@ class Player(models.Model):
     )
 
     def __str__(self):
-        return f"{self.name}/{self.discord_member.name}"
+        return f"{self.name}/{self.discord_member.name} ({self.team.name})"
 
 
 def default_team(sender, instance, created, **kwargs):

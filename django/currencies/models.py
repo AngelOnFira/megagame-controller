@@ -102,7 +102,7 @@ class Transaction(models.Model):
         modified_date = timezone.now()
 
     def __str__(self):
-        return f"{self.from_wallet} -> {self.to_wallet} ({self.amount})"
+        return f"ID: {self.id}: {self.from_wallet} -> {self.to_wallet} ({self.amount})"
 
 
 class Trade(models.Model):
@@ -159,7 +159,7 @@ class Trade(models.Model):
     state = FSMField(default="initiating_party_view")
 
     def __str__(self):
-        return f"Trade between {self.initiating_party} and {self.receiving_party}"
+        return f"Trade between {self.initiating_party} and {self.receiving_party} ({self.state})"
 
     # States
     #

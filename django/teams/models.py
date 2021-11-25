@@ -105,6 +105,9 @@ class Team(models.Model):
         ]
 
     def update_bank_embed(self, client: discord.Client):
+        if self.name == "null":
+            return
+            
         from currencies.services import CreateBankEmbed
 
         embed: discord.Embed = CreateBankEmbed.execute({"team_id": self.id})
