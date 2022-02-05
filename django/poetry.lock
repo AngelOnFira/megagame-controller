@@ -420,7 +420,7 @@ resolved_reference = "45d498c1b76deaf3b394d17ccf56112fa691d160"
 
 [[package]]
 name = "django"
-version = "3.2.8"
+version = "3.2.11"
 description = "A high-level Python Web framework that encourages rapid development and clean, pragmatic design."
 category = "main"
 optional = false
@@ -1471,7 +1471,7 @@ testing = ["coverage (>=5.0.3)", "zope.event", "zope.testing"]
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "57512e91f9ed707bde03c6de11d4dc917861569b6f1b86a12bca35c6b27c4153"
+content-hash = "cc5a8954d88be7e4d1b208434bc0d5ddb613ebbfb0a97ae387d6b1afe3aa122b"
 
 [metadata.files]
 aiohttp = [
@@ -1717,8 +1717,8 @@ discord-sentry-reporting = [
 ]
 "discord.py" = []
 django = [
-    {file = "Django-3.2.8-py3-none-any.whl", hash = "sha256:42573831292029639b798fe4d3812996bfe4ff3275f04566da90764daec011a5"},
-    {file = "Django-3.2.8.tar.gz", hash = "sha256:f6d2c4069c9b9bfac03bedff927ea1f9e0d29e34525cec8a68fd28eb2a8df7af"},
+    {file = "Django-3.2.11-py3-none-any.whl", hash = "sha256:0a0a37f0b93aef30c4bf3a839c187e1175bcdeb7e177341da0cb7b8194416891"},
+    {file = "Django-3.2.11.tar.gz", hash = "sha256:69c94abe5d6b1b088bf475e09b7b74403f943e34da107e798465d2045da27e75"},
 ]
 django-environ = [
     {file = "django-environ-0.8.1.tar.gz", hash = "sha256:6f0bc902b43891656b20486938cba0861dc62892784a44919170719572a534cb"},
