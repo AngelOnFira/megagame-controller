@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.9"
-Django = "^3.2.11"
+Django = "^3.2.15"
 "discord.py" = {git = "https://github.com/Rapptz/discord.py.git", rev = "master"}
 psutil = "^5.8.0"
 tabulate = "^0.8.9"
